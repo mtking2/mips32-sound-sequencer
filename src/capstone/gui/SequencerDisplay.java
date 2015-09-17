@@ -1,3 +1,5 @@
+package capstone.gui;
+
 import javax.swing.JFrame;
 
 /**
