@@ -17,10 +17,18 @@ public class SequencerDisplay {
 	 * height, and width.
 	 * 
 	 * @param title the name of the program
+	 * @param width the width of the window
+	 * @param height the height of the window
 	 */
-	public SequencerDisplay(String title){
+	public SequencerDisplay(String title, int width, int height){
 		window = new JFrame();
 		
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		window.setFocusable(true);
+		window.setTitle(title);
+		
+		window.setSize(width, height);
+		
+		window.setVisible(true);
 	}
 }
