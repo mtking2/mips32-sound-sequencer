@@ -1,6 +1,5 @@
 package capstone.gui.buttons;
 
-import javax.swing.Icon;
 import javax.swing.JButton;
 
 /**
@@ -11,16 +10,24 @@ import javax.swing.JButton;
  * @version 9/17/15
  */
 public class NoteButton extends JButton {
-	/** True if this note is a rest (no note played) **/
-	private boolean empty;
+	private static final int EMPTY = -1;
 	
-	public NoteButton(Icon icon){
-		super(icon);
+	private int note;
+	
+	public NoteButton(){
+		super();
+		setBorderPainted(false);
 		
-		empty = true;
+		note = EMPTY;
+		
+		this.setText("poo");
 	}
 	
 	public boolean isEmpty(){
-		return empty;
+		return note == EMPTY;
+	}
+	
+	public int getNote(){
+		return note;
 	}
 }
