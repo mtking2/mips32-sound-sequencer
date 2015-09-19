@@ -1,17 +1,12 @@
 package capstone.gui;
 
 import java.awt.BorderLayout;
-import java.awt.LayoutManager;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTable;
-import javax.swing.table.TableCellEditor;
-
-import capstone.gui.buttons.NoteButton;
-
+import javax.swing.JTextArea;
 
 /**
  * A graphical interface that represents a music sequencer.
@@ -45,16 +40,17 @@ public class SequencerDisplay extends JFrame {
         west = new JPanel();
         east = new JPanel();
         
+        
         // 4 tracks, 16 beats
         
         int tracks = 4;
         int beats = 16;
         
-        center = new JTable(tracks, beats);
+        center = new NoteTable(tracks, beats, south);
         
         for(int i = 0; i < tracks; i++){
         	for(int j = 0; j < beats; j++){
-        		center.setValueAt("Note", i, j);
+        		center.setValueAt(i + "/" + j, i, j);
         	}
         }
 
@@ -63,8 +59,6 @@ public class SequencerDisplay extends JFrame {
 
         north.add(play);
         north.add(stop);
-        
-        center.add(new NoteButton());
         
         panel.add(south, BorderLayout.SOUTH);
         panel.add(north, BorderLayout.NORTH);
