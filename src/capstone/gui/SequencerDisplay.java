@@ -16,19 +16,14 @@ import javax.swing.border.EtchedBorder;
  */
 public class SequencerDisplay extends JFrame implements ActionListener {
 
-    private JPanel panel, north, south, east, west;
-    private JTable center;
+    private JPanel panel, north, south, east, west, center;
     private JMenuBar menuBar;
     private JMenu fileMenu;
-    private JMenuItem newMenuItem, exitMenuItem;
+    private JMenuItem newMenuItem, openMenuItem, exitMenuItem;
     private JButton play, stop;
+    
+    private Note currentNote;
 
-    /**
-     * Creates and displays a window with a certain name,
-     * height, and width.
-     *
-     * @param title the name of the program
-     */
     public SequencerDisplay(String title, int width, int height){
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setTitle(title);
@@ -52,14 +47,29 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         int tracks = 4;
         int beats = 16;
         
-        center = new NoteTable(tracks, beats, south);
+        center = new JPanel(new GridLayout(tracks, beats));
+        
+        ActionListener listener = new ActionListener(){
+        	@Override
+        	public void actionPerformed(ActionEvent e){
+        		// Get note that was clicked
+        		
+        		if(e.getSource() instanceof NoteButton)
+        			currentNote = ((NoteButton) e.getSource()).getNote();
+        	}
+        };
+        
+        // center = new NoteTable(tracks, beats, south);
         center.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
-        for(int i = 0; i < tracks; i++){
+        for(int i = 0; i < tracks; i++)
         	for(int j = 0; j < beats; j++){
-        		center.setValueAt(i + "/" + j, i, j);
+        		NoteButton button = new NoteButton(i, j);
+        		
+        		button.addActionListener(listener);
+        		
+        		center.add(button);
         	}
-        }
 
         play = new JButton("Play");
         play.setContentAreaFilled(false);
