@@ -21,6 +21,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
     private JMenu fileMenu;
     private JMenuItem newMenuItem, openMenuItem, exitMenuItem;
     private JButton play, stop;
+    
+    private Note currentNote;
 
     public SequencerDisplay(String title, int width, int height){
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -50,20 +52,10 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         ActionListener listener = new ActionListener(){
         	@Override
         	public void actionPerformed(ActionEvent e){
-        		// Get track and beat number from command
+        		// Get note that was clicked
         		
-        		String command = e.getActionCommand();
-        		
-        		int track = Integer.parseInt(
-        						// From beginning to /
-        						command.substring(0, command.indexOf('/')));
-        		
-        		int beat = Integer.parseInt(
-        						command.substring(
-        								// From / to end
-        								command.indexOf('/') + 1, command.length()));
-        		
-        		// TODO alter buttons based on what was clicked
+        		if(e.getSource() instanceof NoteButton)
+        			currentNote = ((NoteButton) e.getSource()).getNote();
         	}
         };
         
