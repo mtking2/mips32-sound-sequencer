@@ -10,7 +10,7 @@ volumeArray1:	.word 127, 127, 127, 127, 127, 127, 127, 127	# The volume of each 
 
 # TRACK 2 DATA #
 
-pitchArray2:	.word  67,  69,  71,  73,  74,  76,  78,  79	# The pitch for each note
+pitchArray2:	.word  50,  1,  71,  73,  74,  76,  78,  79	# The pitch for each note
 durationArray2: .word 200  200, 200, 200, 200, 200, 200, 200 	# The duration of each note
 volumeArray2:	.word 127, 127, 127, 127, 127, 127, 127, 127	# The volume of each note
 
@@ -51,6 +51,7 @@ main:
 	jal sleep
 
 	addi $t5, $t5, 1	# Increment notes played by 1
+	addi $t8, $t8, 4	# Increment offset by 1 byte
 
 	beq $t5, $t6, reset
 	j main
@@ -59,7 +60,7 @@ main:
 playNote:
 
 	li $v0, 37 	# Load MIDI playing service
-	
+
 	lw $a0, 0($t0)		# Load current pitch
 
 	lw $a1, 0($t1)		# Load current duration
@@ -67,8 +68,6 @@ playNote:
 	lw $a3, 0($t2)		# Load current volume
 
 	syscall		# Play sound
-	
-	addi $t8, $t8, 4	# Increment offset by 1 byte
 
 	jr $ra		# Jump to return address
 	
@@ -119,7 +118,8 @@ loadSecondTrack:
 	add $t2, $t2, $t8
 
 	la $a2, instruments	# Load ADDRESS of instrument array into param
-	lw $a2, 4($a2)		# Load second instrument from address (offset for instrument 1 == 4 bytes)
+	addi $a2, $a2, 4	# Add 4 to address to point to second instrument
+	lw $a2, 0($a2)		# Load second instrument from address
 
 	jr $ra			# Jump to return address
 
@@ -134,7 +134,8 @@ loadThirdTrack:
 	add $t2, $t2, $t8
 
 	la $a2, instruments	# Load ADDRESS of instrument array into param
-	lw $a2, 8($a2)		# Load third instrument from address (offset for instrument 1 == 8 bytes)
+	addi $a2, $a2, 8	# Add 8 to address to point to third instrument
+	lw $a2, 0($a2)		# Load third instrument from address
 
 	jr $ra			# Jump to return address
 
@@ -149,7 +150,8 @@ loadFourthTrack:
 	add $t2, $t2, $t8
 
 	la $a2, instruments	# Load ADDRESS of instrument array into param
-	lw $a2, 12($a2)		# Load fourth instrument from address (offset for instrument 1 == 12 bytes)
+	addi $a2, $a2, 12	# Add 12 to address to point to fourth instrument
+	lw $a2, 0($a2)		# Load fourth instrument from address
 
 	jr $ra			# Jump to return address
 
