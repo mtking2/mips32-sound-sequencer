@@ -29,12 +29,15 @@ public class SequencerDisplay extends JFrame implements ActionListener {
     private JButton play, stop;
     
     private Note currentNote;
+    private ValueType type;
 
     public SequencerDisplay(String title, int width, int height){
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setTitle(title);
         this.setResizable(false);
         menuInit();
+        
+        type = ValueType.PITCH;	// Set to pitch as default
 
         panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -136,6 +139,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	@Override
         	public void actionPerformed(ActionEvent e){
         		value.setText("" + currentNote.getPitch());
+        		
+        		type = ValueType.PITCH;
         	}
         };
         
@@ -149,6 +154,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	@Override
         	public void actionPerformed(ActionEvent e){
         		value.setText("" + currentNote.getVolume());
+        		
+        		type = ValueType.VOLUME;
         	}
         };
         
@@ -161,6 +168,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	@Override
         	public void actionPerformed(ActionEvent e){
         		value.setText("" + currentNote.getDuration());
+        		
+        		type = ValueType.DURATION;
         	}
         };
 
@@ -173,6 +182,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	@Override
         	public void actionPerformed(ActionEvent e){
         		value.setText("" + currentNote.getInstrument());
+        		
+        		type = ValueType.INSTRUMENT;
         	}
         };
         
@@ -187,9 +198,39 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         track.add(value, c);
         
         JSlider slider = new JSlider(0,127);
-        c.gridwidth = 3;
+        c.gridwidth = 2;
         c.gridx++;
         track.add(slider,c);
+        
+        ActionListener saveListener = new ActionListener(){
+        	@Override
+        	public void actionPerformed(ActionEvent e){
+        		switch(type){
+        		case PITCH:
+        			currentNote.setPitch(slider.getValue());
+        			value.setText("" + currentNote.getPitch());
+        			break;
+        		case VOLUME:
+        			currentNote.setVolume(slider.getValue());
+        			value.setText("" + currentNote.getVolume());
+        			break;
+        		case DURATION:
+        			currentNote.setDuration(slider.getValue());
+        			value.setText("" + currentNote.getDuration());
+        			break;
+        		case INSTRUMENT:
+        			currentNote.setInstrument(slider.getValue());
+        			value.setText("" + currentNote.getInstrument());
+        			break;
+        		}
+        	}
+        };
+        
+        JButton save = new JButton("Save");
+        c.gridwidth = 1;
+        c.gridx = c.gridx + 2; 
+        save.addActionListener(saveListener);
+        track.add(save, c);
         
         return track;
     }
