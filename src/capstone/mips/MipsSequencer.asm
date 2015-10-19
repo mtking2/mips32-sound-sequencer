@@ -1,28 +1,28 @@
 .data
 
-instruments:	.word 70, 53, 37, 9
+instruments:	.byte 90, 80, 1, 11
 
 # TRACK 1 DATA #
 
-pitchArray1:	.word  -1,  -1,  60,  60,  -1,  -1,  67,  67	# The pitch for each note
+pitchArray1:	.word  64,  66,  67,  -1,  67,  -1,  67,  -1	# The pitch for each note
 durationArray1:	.word 200, 200, 200, 200, 200, 200, 200, 200 	# The duration of each note
 volumeArray1:	.word 127, 127, 127, 127, 127, 127, 127, 127	# The volume of each note
 
 # TRACK 2 DATA #
 
-pitchArray2:	.word  -1,  -1,  67,  67,  -1,  -1,  78,  78	# The pitch for each note
+pitchArray2:	.word  -1,  -1,  -1,  -1,  59,  -1,  59,  -1	# The pitch for each note
 durationArray2: .word 200, 200, 200, 200, 200, 200, 200, 200 	# The duration of each note
 volumeArray2:	.word 127, 127, 127, 127, 127, 127, 127, 127	# The volume of each note
 
 # TRACK 3 DATA #
 
-pitchArray3:	.word  36,  36,  36,  36,  36,  36,  36,  36	# The pitch for each note
+pitchArray3:	.word  -1,  -1,  -1,  76,  -1,  76,  -1,  76	# The pitch for each note
 durationArray3:	.word 200, 200, 200, 200, 200, 200, 200, 200 	# The duration of each note
 volumeArray3:	.word 127, 127, 127, 127, 127, 127, 127, 127	# The volume of each note
 
 # TRACK 4 DATA #
 
-pitchArray4:	.word  36,  42,  38,  42,  38,  38,  36,  36	# The pitch for each note
+pitchArray4:	.word  71,  72,  74,  -1,  -1,  -1,  -1,  -1	# The pitch for each note
 durationArray4: .word 200, 200, 200, 200, 200, 200, 200, 200 	# The duration of each note
 volumeArray4:	.word 127, 127, 127, 127, 127, 127, 127, 127	# The volume of each note
 
@@ -36,7 +36,7 @@ setup:
 	li $t5, 0      	# Which note is being played
 	li $t6, 8	# How many notes to play
 
-	li $t7, 200	# Load tempo
+	li $t7, 250	# Load tempo (currently hardcoded)
 	li $t8, 0	# Offset for array values
 
 main:
@@ -111,9 +111,11 @@ loadFirstTrack:
 	li $a0, 0	# Load channel number
 
 	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lw $a1, 0($a1)		# Load second instrument from address (offset for instrument 1 == 0 bytes)
+	lb $a1, 0($a1)		# Load second instrument from address (offset for instrument 1 == 0 bytes)
 
 	syscall
+
+	li $a2, 0	# Set channel number to first channel
 
 	jr $ra			# Jump to return address
 
@@ -129,12 +131,14 @@ loadSecondTrack:
 
 	li $v0, 38 	# Load MIDI channel service
 
-	li $a0, 0	# Load channel number
+	li $a0, 1	# Load channel number
 
 	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lw $a1, 4($a1)		# Load second instrument from address
+	lb $a1, 1($a1)		# Load second instrument from address
 
 	syscall
+
+	li $a2, 1	# Set channel to second channel
 
 	jr $ra			# Jump to return address
 
@@ -150,12 +154,14 @@ loadThirdTrack:
 
 	li $v0, 38 	# Load MIDI channel service
 
-	li $a0, 0	# Load channel number
+	li $a0, 2	# Load channel number
 
 	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lw $a1, 8($a1)		# Load third instrument from address
+	lb $a1, 2($a1)		# Load third instrument from address
 
 	syscall
+
+	li $a2, 2	# Set channel to third channel
 
 	jr $ra			# Jump to return address
 
@@ -171,12 +177,14 @@ loadFourthTrack:
 
 	li $v0, 38 	# Load MIDI channel service
 
-	li $a0, 0	# Load channel number
+	li $a0, 3	# Load channel number
 
 	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lw $a1, 12($a1)		# Load fourth instrument from address
+	lb $a1, 3($a1)		# Load fourth instrument from address
 
 	syscall
+
+	li $a2, 3	# Set channel to fourth channel
 
 	jr $ra			# Jump to return address
 

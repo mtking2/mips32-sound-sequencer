@@ -17,11 +17,15 @@ import javax.swing.border.TitledBorder;
  * @version 9/17/15
  */
 public class SequencerDisplay extends JFrame implements ActionListener {
+	private static final String PITCH_NAME = "Pitch";
+	private static final String VOLUME_NAME = "Volume";
+	private static final String DURATION_NAME = "Duration";
+	private static final String INSTRUMENT_NAME = "Instrument";
 
     private JPanel panel, north, west, center, track1, track2, track3, track4;
     private JMenuBar menuBar;
     private JMenu fileMenu;
-    private JMenuItem newMenuItem, openMenuItem, exitMenuItem;
+    private JMenuItem newMenuItem, exitMenuItem;
     private JButton play, stop;
     
     private Note currentNote;
@@ -52,8 +56,11 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	public void actionPerformed(ActionEvent e){
         		// Get note that was clicked
         		
-        		if(e.getSource() instanceof NoteButton)
+        		if(e.getSource() instanceof NoteButton){
         			currentNote = ((NoteButton) e.getSource()).getNote();
+        		}
+        		
+        		// Otherwise, do nothing
         	}
         };
         
@@ -123,27 +130,65 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         trackTitle.setTitleJustification(TitledBorder.LEFT);
         track.setBorder(trackTitle);
         
-        JButton pitchButton = new JButton("Pitch");
+        JLabel value = new JLabel();
+        
+        ActionListener pitchListener = new ActionListener(){
+        	@Override
+        	public void actionPerformed(ActionEvent e){
+        		value.setText("" + currentNote.getPitch());
+        	}
+        };
+        
+        JButton pitchButton = new JButton(PITCH_NAME);
         c.gridx = 0;
         c.gridy = 0;
+        pitchButton.addActionListener(pitchListener);
         track.add(pitchButton, c);
         
-        JButton volumeButton = new JButton("Volume");
+        ActionListener volumeListener = new ActionListener(){
+        	@Override
+        	public void actionPerformed(ActionEvent e){
+        		value.setText("" + currentNote.getVolume());
+        	}
+        };
+        
+        JButton volumeButton = new JButton(VOLUME_NAME);
         c.gridx++;
+        volumeButton.addActionListener(volumeListener);
         track.add(volumeButton, c);
+        
+        ActionListener durationListener = new ActionListener(){
+        	@Override
+        	public void actionPerformed(ActionEvent e){
+        		value.setText("" + currentNote.getDuration());
+        	}
+        };
 
-        JButton durationButton = new JButton("Duration");
+        JButton durationButton = new JButton(DURATION_NAME);
         c.gridx++;
+        durationButton.addActionListener(durationListener);
         track.add(durationButton, c);
         
-        JButton instrumentButton = new JButton("Instrument");
+        ActionListener instrumentListener = new ActionListener(){
+        	@Override
+        	public void actionPerformed(ActionEvent e){
+        		value.setText("" + currentNote.getInstrument());
+        	}
+        };
+        
+        JButton instrumentButton = new JButton(INSTRUMENT_NAME);
         c.gridx++;
+        instrumentButton.addActionListener(instrumentListener);
         track.add(instrumentButton, c);
         
-        JSlider slider = new JSlider(0,127);
-        c.gridwidth = 4;
+        c.gridwidth = 1;
         c.gridx = 0;
         c.gridy++;
+        track.add(value, c);
+        
+        JSlider slider = new JSlider(0,127);
+        c.gridwidth = 3;
+        c.gridx++;
         track.add(slider,c);
         
         return track;
