@@ -1,6 +1,7 @@
 package capstone.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -19,7 +20,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -41,6 +41,14 @@ public class SequencerDisplay extends JFrame implements ActionListener {
     private JMenuItem newMenuItem, exitMenuItem;
     private JButton play, stop, previous;
     
+    private JLabel pitchValue;
+    private JLabel volumeValue;
+    private JLabel durationValue;
+    private JLabel instrumentValue;
+    
+    private JSlider slider;
+    private JLabel sliderValue;
+    
     private Note currentNote;
     private ValueType type;
 
@@ -58,7 +66,6 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         west = new JPanel(new GridLayout(4,1));
         north.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-
 
         // 4 tracks, 16 beats
         
@@ -79,12 +86,35 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         			button.setEnabled(false);
         			previous.setEnabled(true);
         			
+        			pitchValue.setText("" + currentNote.getPitch());
+        			volumeValue.setText("" + currentNote.getVolume());
+        			durationValue.setText("" + currentNote.getDuration());
+        			instrumentValue.setText("" + currentNote.getInstrument());
+        			
+        			// Move slider to new note's value
+        			switch(type){
+					case DURATION:
+						slider.setValue(currentNote.getDuration());
+						sliderValue.setText("" + currentNote.getDuration());
+						break;
+					case INSTRUMENT:
+						slider.setValue(currentNote.getInstrument());
+						sliderValue.setText("" + currentNote.getInstrument());
+						break;
+					case PITCH:
+						slider.setValue(currentNote.getPitch());
+						sliderValue.setText("" + currentNote.getPitch());
+						break;
+					case VOLUME:
+						slider.setValue(currentNote.getVolume());
+						sliderValue.setText("" + currentNote.getVolume());
+        			}
+        			
         			previous = button;
         		}
         	}
         };
         
-        // center = new NoteTable(tracks, beats, south);
         center.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
         for(int i = 0; i < tracks; i++)
@@ -111,10 +141,7 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         north.add(play);
         north.add(stop);
 
-        //west.add(new JSeparator());
-
-        for(int i = 0; i < tracks; i++)
-        	west.add(createTrack(i));
+        createTrackSelectionArea(west);
 
         panel.add(north, BorderLayout.NORTH);
         panel.add(center, BorderLayout.CENTER);
@@ -145,35 +172,33 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         fileMenu.add(exitMenuItem);
     }
     
-    public JPanel createTrack(int trackNumber){
+    public void createTrackSelectionArea(Container cont){
     	GridBagConstraints c = new GridBagConstraints();
 
-        JPanel track = new JPanel();
-        JSlider slider = new JSlider(0,127);
-        track.setLayout(new GridBagLayout());
+        cont.setLayout(new GridBagLayout());
         
         JButton pitchButton = new JButton(PITCH_NAME);
         JButton volumeButton = new JButton(VOLUME_NAME);
         JButton durationButton = new JButton(DURATION_NAME);
         JButton instrumentButton = new JButton(INSTRUMENT_NAME);
-
-        TitledBorder trackTitle = BorderFactory.createTitledBorder(
-        		BorderFactory.createEtchedBorder(EtchedBorder.RAISED), 
-        			"Track " + (trackNumber + 1));
-        trackTitle.setTitleJustification(TitledBorder.LEFT);
-        track.setBorder(trackTitle);
         
-        JLabel value = new JLabel();
+        pitchValue = new JLabel();
+        volumeValue = new JLabel();
+        durationValue = new JLabel();
+        instrumentValue = new JLabel();
+        
+        slider = new JSlider(0, 127);
+        sliderValue = new JLabel();
         
         // Add pitch button to panel
         c.gridx = 0;
         c.gridy = 0;
-        track.add(pitchButton, c);
+        cont.add(pitchButton, c);
         
         ActionListener pitchListener = new ActionListener(){
         	@Override
         	public void actionPerformed(ActionEvent e){
-        		value.setText("" + currentNote.getPitch());
+        		sliderValue.setText("" + currentNote.getPitch());
         		
         		slider.setValue(currentNote.getPitch());
         		
@@ -198,13 +223,20 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         
         pitchButton.addActionListener(pitchListener);
         
+        // Add pitch label to panel
         c.gridx++;
-        track.add(volumeButton, c);
+        pitchValue.setText("" + currentNote.getPitch());
+        cont.add(pitchValue, c);
+        
+        // Add volume button to panel
+        c.gridx = 0;
+        c.gridy++;
+        cont.add(volumeButton, c);
         
         ActionListener volumeListener = new ActionListener(){
         	@Override
         	public void actionPerformed(ActionEvent e){
-        		value.setText("" + currentNote.getVolume());
+        		sliderValue.setText("" + currentNote.getVolume());
         		
         		slider.setValue(currentNote.getVolume());
         		
@@ -228,15 +260,21 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         };
         
         volumeButton.addActionListener(volumeListener);
+        
+        // Add volume label to panel
+        c.gridx++;
+        volumeValue.setText("" + currentNote.getVolume());
+        cont.add(volumeValue, c);
 
         // Add duration button to panel
-        c.gridx++;
-        track.add(durationButton, c);
+        c.gridx = 0;
+        c.gridy++;
+        cont.add(durationButton, c);
         
         ActionListener durationListener = new ActionListener(){
         	@Override
         	public void actionPerformed(ActionEvent e){
-        		value.setText("" + currentNote.getDuration());
+        		sliderValue.setText("" + currentNote.getDuration());
         		
         		slider.setValue(currentNote.getDuration());
         		
@@ -261,14 +299,20 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         
         durationButton.addActionListener(durationListener);
         
-        // Add instrument button to panel
+        // Add duration label to panel
         c.gridx++;
-        track.add(instrumentButton, c);
+        durationValue.setText("" + currentNote.getDuration());
+        cont.add(durationValue, c);
+        
+        // Add instrument button to panel
+        c.gridx = 0;
+        c.gridy++;
+        cont.add(instrumentButton, c);
         
         ActionListener instrumentListener = new ActionListener(){
         	@Override
         	public void actionPerformed(ActionEvent e){
-        		value.setText("" + currentNote.getInstrument());
+        		sliderValue.setText("" + currentNote.getInstrument());
         		
         		slider.setValue(currentNote.getInstrument());
         		
@@ -293,10 +337,10 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         
         instrumentButton.addActionListener(instrumentListener);
         
-        c.gridwidth = 1;
-        c.gridx = 0;
-        c.gridy++;
-        track.add(value, c);
+        // Add instrument label to panel
+        c.gridx++;
+        instrumentValue.setText("" + currentNote.getInstrument());
+        cont.add(instrumentValue, c);
         
         // Add listener to slider so that when it scrolls, the value in the 
         // JLabel is updated.
@@ -306,7 +350,7 @@ public class SequencerDisplay extends JFrame implements ActionListener {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				if(slider.getValueIsAdjusting())	
-					value.setText("" + slider.getValue());	
+					sliderValue.setText("" + slider.getValue());	
 			}
         	
         };
@@ -314,9 +358,13 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         slider.addChangeListener(sliderListener);
         
         // Add slider to track
-        c.gridwidth = 2;
+        c.gridx = 0;
+        c.gridy++;
+        cont.add(slider,c);
+        
+        // Add slider label
         c.gridx++;
-        track.add(slider,c);
+        cont.add(sliderValue, c);
         
         ActionListener saveListener = new ActionListener(){
         	@Override
@@ -324,31 +372,34 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         		switch(type){
         		case PITCH:
         			currentNote.setPitch(slider.getValue());
-        			value.setText("" + currentNote.getPitch());
+        			sliderValue.setText("" + currentNote.getPitch());
+        			pitchValue.setText("" + currentNote.getPitch());
         			break;
         		case VOLUME:
         			currentNote.setVolume(slider.getValue());
-        			value.setText("" + currentNote.getVolume());
+        			sliderValue.setText("" + currentNote.getVolume());
+        			volumeValue.setText("" + currentNote.getVolume());
         			break;
         		case DURATION:
         			currentNote.setDuration(slider.getValue());
-        			value.setText("" + currentNote.getDuration());
+        			sliderValue.setText("" + currentNote.getDuration());
+        			durationValue.setText("" + currentNote.getDuration());
         			break;
         		case INSTRUMENT:
         			currentNote.setInstrument(slider.getValue());
-        			value.setText("" + currentNote.getInstrument());
+        			sliderValue.setText("" + currentNote.getInstrument());
+        			instrumentValue.setText("" + currentNote.getInstrument());
         			break;
         		}
         	}
         };
         
         JButton save = new JButton("Save");
-        c.gridwidth = 1;
-        c.gridx = c.gridx + 2; 
+        c.gridwidth = 2;
+        c.gridx = 0;
+        c.gridy++; 
         save.addActionListener(saveListener);
-        track.add(save, c);
-        
-        return track;
+        cont.add(save, c);
     }
 
     @Override
