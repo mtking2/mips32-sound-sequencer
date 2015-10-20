@@ -39,7 +39,7 @@ public class SequencerDisplay extends JFrame implements ActionListener {
     private JMenuBar menuBar;
     private JMenu fileMenu;
     private JMenuItem newMenuItem, exitMenuItem;
-    private JButton play, stop;
+    private JButton play, stop, previous;
     
     private Note currentNote;
     private ValueType type;
@@ -70,12 +70,17 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         ActionListener listener = new ActionListener(){
         	@Override
         	public void actionPerformed(ActionEvent e){
-        		// Get note that was clicked
-        		
-        		if(e.getSource() instanceof NoteButton)
-        			currentNote = ((NoteButton) e.getSource()).getNote();
-        		
-        		// Otherwise, do nothing
+        		if(e.getSource() instanceof NoteButton){
+        			NoteButton button = (NoteButton) e.getSource();
+        			
+        			currentNote = button.getNote();
+        			
+        			// Disable this note button, enable the last one selected
+        			button.setEnabled(false);
+        			previous.setEnabled(true);
+        			
+        			previous = button;
+        		}
         	}
         };
         
@@ -88,7 +93,12 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         		
         		button.addActionListener(listener);
         		
-        		if(i == 0 && j == 0) currentNote = button.getNote();	// Default note is first note
+        		if(i == 0 && j == 0){
+        			// Default note is first note
+        			currentNote = button.getNote();	
+        			button.setEnabled(false);
+        			previous = button;
+        		}
         		
         		center.add(button);
         	}
@@ -141,6 +151,11 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         JPanel track = new JPanel();
         JSlider slider = new JSlider(0,127);
         track.setLayout(new GridBagLayout());
+        
+        JButton pitchButton = new JButton(PITCH_NAME);
+        JButton volumeButton = new JButton(VOLUME_NAME);
+        JButton durationButton = new JButton(DURATION_NAME);
+        JButton instrumentButton = new JButton(INSTRUMENT_NAME);
 
         TitledBorder trackTitle = BorderFactory.createTitledBorder(
         		BorderFactory.createEtchedBorder(EtchedBorder.RAISED), 
@@ -150,6 +165,11 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         
         JLabel value = new JLabel();
         
+        // Add pitch button to panel
+        c.gridx = 0;
+        c.gridy = 0;
+        track.add(pitchButton, c);
+        
         ActionListener pitchListener = new ActionListener(){
         	@Override
         	public void actionPerformed(ActionEvent e){
@@ -157,15 +177,29 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         		
         		slider.setValue(currentNote.getPitch());
         		
+        		switch(type){
+        		case INSTRUMENT:
+        			instrumentButton.setEnabled(true);
+        			break;
+        		case VOLUME:
+        			volumeButton.setEnabled(true);
+        			break;
+        		case DURATION:
+        			durationButton.setEnabled(true);
+        			break;
+        		case PITCH:
+        		}
+        		
+        		pitchButton.setEnabled(false);
+        		
         		type = ValueType.PITCH;
         	}
         };
         
-        JButton pitchButton = new JButton(PITCH_NAME);
-        c.gridx = 0;
-        c.gridy = 0;
         pitchButton.addActionListener(pitchListener);
-        track.add(pitchButton, c);
+        
+        c.gridx++;
+        track.add(volumeButton, c);
         
         ActionListener volumeListener = new ActionListener(){
         	@Override
@@ -174,14 +208,30 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         		
         		slider.setValue(currentNote.getVolume());
         		
+        		switch(type){
+        		case PITCH:
+        			pitchButton.setEnabled(true);
+        			break;
+        		case INSTRUMENT:
+        			instrumentButton.setEnabled(true);
+        			break;
+        		case DURATION:
+        			durationButton.setEnabled(true);
+        			break;
+        		case VOLUME:
+        		}
+        		
+        		volumeButton.setEnabled(false);
+        		
         		type = ValueType.VOLUME;
         	}
         };
         
-        JButton volumeButton = new JButton(VOLUME_NAME);
-        c.gridx++;
         volumeButton.addActionListener(volumeListener);
-        track.add(volumeButton, c);
+
+        // Add duration button to panel
+        c.gridx++;
+        track.add(durationButton, c);
         
         ActionListener durationListener = new ActionListener(){
         	@Override
@@ -190,14 +240,30 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         		
         		slider.setValue(currentNote.getDuration());
         		
+        		switch(type){
+        		case PITCH:
+        			pitchButton.setEnabled(true);
+        			break;
+        		case VOLUME:
+        			volumeButton.setEnabled(true);
+        			break;
+        		case INSTRUMENT:
+        			instrumentButton.setEnabled(true);
+        			break;
+        		case DURATION:
+        		}
+        		
+        		durationButton.setEnabled(false);
+        		
         		type = ValueType.DURATION;
         	}
         };
-
-        JButton durationButton = new JButton(DURATION_NAME);
-        c.gridx++;
+        
         durationButton.addActionListener(durationListener);
-        track.add(durationButton, c);
+        
+        // Add instrument button to panel
+        c.gridx++;
+        track.add(instrumentButton, c);
         
         ActionListener instrumentListener = new ActionListener(){
         	@Override
@@ -206,14 +272,26 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         		
         		slider.setValue(currentNote.getInstrument());
         		
+        		switch(type){
+        		case PITCH:
+        			pitchButton.setEnabled(true);
+        			break;
+        		case VOLUME:
+        			volumeButton.setEnabled(true);
+        			break;
+        		case DURATION:
+        			durationButton.setEnabled(true);
+        			break;
+        		case INSTRUMENT:
+        		}
+        		
+        		instrumentButton.setEnabled(false);
+        		
         		type = ValueType.INSTRUMENT;
         	}
         };
         
-        JButton instrumentButton = new JButton(INSTRUMENT_NAME);
-        c.gridx++;
         instrumentButton.addActionListener(instrumentListener);
-        track.add(instrumentButton, c);
         
         c.gridwidth = 1;
         c.gridx = 0;
