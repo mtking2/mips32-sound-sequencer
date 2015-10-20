@@ -1,14 +1,27 @@
 package capstone.gui;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
-import javax.swing.*;
-import javax.swing.border.Border;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * A graphical interface that represents a music sequencer.
@@ -22,7 +35,7 @@ public class SequencerDisplay extends JFrame implements ActionListener {
 	private static final String DURATION_NAME = "Duration";
 	private static final String INSTRUMENT_NAME = "Instrument";
 
-    private JPanel panel, north, west, center, track1, track2, track3, track4;
+    private JPanel panel, north, west, center;
     private JMenuBar menuBar;
     private JMenu fileMenu;
     private JMenuItem newMenuItem, exitMenuItem;
@@ -59,9 +72,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	public void actionPerformed(ActionEvent e){
         		// Get note that was clicked
         		
-        		if(e.getSource() instanceof NoteButton){
+        		if(e.getSource() instanceof NoteButton)
         			currentNote = ((NoteButton) e.getSource()).getNote();
-        		}
         		
         		// Otherwise, do nothing
         	}
@@ -75,6 +87,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         		NoteButton button = new NoteButton(i, j);
         		
         		button.addActionListener(listener);
+        		
+        		if(i == 0 && j == 0) currentNote = button.getNote();	// Default note is first note
         		
         		center.add(button);
         	}
@@ -125,6 +139,7 @@ public class SequencerDisplay extends JFrame implements ActionListener {
     	GridBagConstraints c = new GridBagConstraints();
 
         JPanel track = new JPanel();
+        JSlider slider = new JSlider(0,127);
         track.setLayout(new GridBagLayout());
 
         TitledBorder trackTitle = BorderFactory.createTitledBorder(
@@ -139,6 +154,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	@Override
         	public void actionPerformed(ActionEvent e){
         		value.setText("" + currentNote.getPitch());
+        		
+        		slider.setValue(currentNote.getPitch());
         		
         		type = ValueType.PITCH;
         	}
@@ -155,6 +172,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	public void actionPerformed(ActionEvent e){
         		value.setText("" + currentNote.getVolume());
         		
+        		slider.setValue(currentNote.getVolume());
+        		
         		type = ValueType.VOLUME;
         	}
         };
@@ -168,6 +187,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	@Override
         	public void actionPerformed(ActionEvent e){
         		value.setText("" + currentNote.getDuration());
+        		
+        		slider.setValue(currentNote.getDuration());
         		
         		type = ValueType.DURATION;
         	}
@@ -183,6 +204,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         	public void actionPerformed(ActionEvent e){
         		value.setText("" + currentNote.getInstrument());
         		
+        		slider.setValue(currentNote.getInstrument());
+        		
         		type = ValueType.INSTRUMENT;
         	}
         };
@@ -197,7 +220,22 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         c.gridy++;
         track.add(value, c);
         
-        JSlider slider = new JSlider(0,127);
+        // Add listener to slider so that when it scrolls, the value in the 
+        // JLabel is updated.
+        
+        ChangeListener sliderListener = new ChangeListener() {
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				if(slider.getValueIsAdjusting())	
+					value.setText("" + slider.getValue());	
+			}
+        	
+        };
+        
+        slider.addChangeListener(sliderListener);
+        
+        // Add slider to track
         c.gridwidth = 2;
         c.gridx++;
         track.add(slider,c);
