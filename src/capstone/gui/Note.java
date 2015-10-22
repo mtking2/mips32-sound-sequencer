@@ -27,7 +27,10 @@ public class Note {
 		
 		public int getInstrument() { return instrument; }
 		
-		public void setPitch(int pitch){ this.pitch = pitch; }
+		public void setPitch(int pitch){
+			this.pitch = pitch;
+			this.rest = false;
+		}
 		
 		public void setVolume(int volume){ this.volume = volume; }
 		
@@ -71,8 +74,13 @@ public class Note {
 	public void makeRest(){
 		noteInfo = REST;
 	}
+
+	public boolean isRest() { return noteInfo.isRest();}
 	
-	public void setPitch(int pitch){ 	noteInfo.setPitch(pitch);	}
+	public void setPitch(int pitch){
+		noteInfo.setPitch(pitch);
+		noteInfo.rest = false;
+	}
 	
 	public void setVolume(int volume){ 	noteInfo.setVolume(volume);	}
 	
