@@ -53,7 +53,7 @@ public class SequencerDisplay extends JFrame implements ActionListener {
     private JMenuBar menuBar;
     private JMenu fileMenu;
     private JMenuItem newMenuItem, exitMenuItem, saveMenuItem;
-    private JButton play, stop, saveBtn, pitchBtn, volumeBtn, durationBtn, instrumentBtn, previous;
+    private JButton play, stop, confBtn, pitchBtn, volumeBtn, durationBtn, instrumentBtn, previous;
 
     private JLabel pitchValue;
     private JLabel volumeValue;
@@ -322,12 +322,12 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         cont.add(sliderValue, c);
 
 
-        saveBtn = new JButton("Save");
+        confBtn = new JButton("Confirm Changes");
         c.gridwidth = 2;
         c.gridx = 0;
         c.gridy++;
-        saveBtn.addActionListener(this);
-        cont.add(saveBtn, c);
+        confBtn.addActionListener(this);
+        cont.add(confBtn, c);
     }
 
     @Override
@@ -432,7 +432,7 @@ public class SequencerDisplay extends JFrame implements ActionListener {
                     sliderValue.setText("" + currentNote.getVolume());
             }
             previous = button;
-        } else if (c.equals(saveBtn)) {
+        } else if (c.equals(confBtn)) {
             switch(type){
                 case PITCH:
                     currentNote.setPitch(slider.getValue());
