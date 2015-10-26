@@ -1,13 +1,6 @@
 package capstone.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -27,7 +20,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
@@ -55,7 +47,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
     private JMenuBar menuBar;
     private JMenu fileMenu, editMenu;
     private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem;
-    private JButton play, stop, confBtn, pitchBtn, volumeBtn, durationBtn, instrumentBtn, previous;
+    private JButton play, stop, confBtn, clearNote, previous;
     
     private JLabel pitchValue, volumeValue, durationValue, instrumentValue,tempoLabel;
     private JSlider volume, pitch, duration, instrument;
