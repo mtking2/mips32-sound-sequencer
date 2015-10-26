@@ -1,13 +1,6 @@
 package capstone.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -41,7 +34,7 @@ import javax.swing.event.ChangeListener;
  * @author Brad Westley and Michael King
  * @version 9/17/15
  */
-public class SequencerDisplay extends JFrame implements ActionListener {
+public class SequencerDisplay extends JFrame implements ActionListener, ChangeListener {
     private static final String PITCH_NAME = "Pitch";
     private static final String VOLUME_NAME = "Volume";
     private static final String DURATION_NAME = "Duration";
@@ -53,16 +46,10 @@ public class SequencerDisplay extends JFrame implements ActionListener {
     private JMenuBar menuBar;
     private JMenu fileMenu;
     private JMenuItem newMenuItem, exitMenuItem, saveMenuItem;
-    private JButton play, stop, saveBtn, pitchBtn, volumeBtn, durationBtn, instrumentBtn, previous;
+    private JButton play, stop, confBtn, clearNote, previous;
 
-    private JLabel pitchValue;
-    private JLabel volumeValue;
-    private JLabel durationValue;
-    private JLabel instrumentValue;
-
-    private JSlider slider;
-    private JLabel sliderValue;
-
+    private JLabel pitchValue, volumeValue, durationValue, instrumentValue;
+    private JSlider volume, pitch, duration, instrument;
     private Note currentNote;
     private ValueType type;
 
@@ -77,10 +64,10 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         panel = new JPanel();
         panel.setLayout(new BorderLayout());
         north = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        west = new JPanel();
+        west = new JPanel(new BorderLayout());
         north.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-        west.setPreferredSize(new Dimension(310,200));
+        west.setPreferredSize(new Dimension(315, 200));
 
         // 4 tracks, 16 beats
         int tracks = 4;
@@ -104,6 +91,7 @@ public class SequencerDisplay extends JFrame implements ActionListener {
                 }
 
                 notes[i][j] = button;
+                notes[i][j].getNote().setVolume(127);
             }
 
         for(NoteButton[] noteRow : notes)
@@ -225,109 +213,102 @@ public class SequencerDisplay extends JFrame implements ActionListener {
     }
 
     public void createTrackSelectionArea(Container cont){
+
+        JPanel subNorth = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel subCenter = new JPanel(new GridBagLayout());
+        JPanel subSouth = new JPanel(new FlowLayout());
+        clearNote = new JButton("Clear Note");
+        clearNote.addActionListener(this);
+        subNorth.add(clearNote);
+
         GridBagConstraints c = new GridBagConstraints();
 
-        cont.setLayout(new GridBagLayout());
-
-        pitchBtn = new JButton(PITCH_NAME);
-        volumeBtn = new JButton(VOLUME_NAME);
-        durationBtn = new JButton(DURATION_NAME);
-        instrumentBtn = new JButton(INSTRUMENT_NAME);
+        pitch = new JSlider(0, 127, 0);
+        volume = new JSlider(0, 127, 127);
+        duration = new JSlider(0, 2000);
+        instrument = new JSlider(0, 127, 0);
 
         pitchValue = new JLabel();
         volumeValue = new JLabel();
         durationValue = new JLabel();
         instrumentValue = new JLabel();
 
-        slider = new JSlider(0, 127);
-        sliderValue = new JLabel();
+        pitchValue.setText("" + pitch.getValue());
+        volumeValue.setText("" + volume.getValue());
+        durationValue.setText("" + duration.getValue());
+        instrumentValue.setText("" + instrument.getValue());
 
-        c.anchor = GridBagConstraints.EAST;
-        c.insets = new Insets(5,0,5,0);
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(5,2,5,0);
         c.ipady = 10;
         c.fill = GridBagConstraints.HORIZONTAL;
-        //c.ipadx = 20;
-        //c.weightx = 0.5;
+        //c.ipadx = 2;
+        c.weightx = 0.5;
 
-        // Add pitch button to panel
+        // Add pitch slider to panel
         c.gridx = 0;
         c.gridy = 0;
-        cont.add(pitchBtn, c);
+        subCenter.add(new JLabel("Pitch "), c);
+        c.gridx++;
+        subCenter.add(pitch, c);
 
-        pitchBtn.addActionListener(this);
-
-        String spaceBuf = "     ";
 
         // Add pitch label to panel
         c.gridx++;
-        pitchValue.setText(spaceBuf + currentNote.getPitch());
-        cont.add(pitchValue, c);
+        subCenter.add(pitchValue, c);
 
-        // Add volume button to panel
+        // Add volume slider to panel
         c.gridx = 0;
         c.gridy++;
-        cont.add(volumeBtn, c);
-
-        volumeBtn.addActionListener(this);
+        subCenter.add(new JLabel("Volume "), c);
+        c.gridx++;
+        subCenter.add(volume, c);
 
         // Add volume label to panel
         c.gridx++;
-        volumeValue.setText(spaceBuf + currentNote.getVolume());
-        cont.add(volumeValue, c);
+        subCenter.add(volumeValue, c);
 
-        // Add duration button to panel
+        // Add duration slider to panel
         c.gridx = 0;
         c.gridy++;
-        cont.add(durationBtn, c);
-
-        durationBtn.addActionListener(this);
+        subCenter.add(new JLabel("Duration "), c);
+        c.gridx++;
+        subCenter.add(duration, c);
 
         // Add duration label to panel
         c.gridx++;
-        durationValue.setText(spaceBuf + currentNote.getDuration());
-        cont.add(durationValue, c);
+        subCenter.add(durationValue, c);
 
-        // Add instrument button to panel
+        // Add instrument slider to panel
         c.gridx = 0;
         c.gridy++;
-        cont.add(instrumentBtn, c);
-
-        instrumentBtn.addActionListener(this);
+        subCenter.add(new JLabel("Instrument "), c);
+        c.gridx++;
+        subCenter.add(instrument, c);
 
         // Add instrument label to panel
         c.gridx++;
-        instrumentValue.setText(spaceBuf + currentNote.getInstrument());
-        cont.add(instrumentValue, c);
+        subCenter.add(instrumentValue, c);
 
         // Add listener to slider so that when it scrolls, the value in the 
         // JLabel is updated.
 
-        ChangeListener sliderListener = new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                if(slider.getValueIsAdjusting())
-                    sliderValue.setText("" + slider.getValue());
-            }
-        };
+        pitch.addChangeListener(this);
+        volume.addChangeListener(this);
+        duration.addChangeListener(this);
+        instrument.addChangeListener(this);
 
-        slider.addChangeListener(sliderListener);
-
-        // Add slider to track
-        c.gridx = 0;
-        c.gridy++;
-        cont.add(slider,c);
-
-        // Add slider label
-        c.gridx++;
-        cont.add(sliderValue, c);
-
-
-        saveBtn = new JButton("Save");
+        confBtn = new JButton("Confirm Changes");
         c.gridwidth = 2;
         c.gridx = 0;
         c.gridy++;
-        saveBtn.addActionListener(this);
-        cont.add(saveBtn, c);
+        confBtn.addActionListener(this);
+        subCenter.add(confBtn, c);
+
+
+        cont.add(subNorth, BorderLayout.NORTH);
+        cont.add(subCenter, BorderLayout.CENTER);
+        cont.add(subSouth, BorderLayout.SOUTH);
     }
 
     @Override
@@ -335,7 +316,7 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         Object c = e.getSource();
         if (c.equals(exitMenuItem)) {
             System.exit(0);
-        } else if(e.getSource().equals(saveMenuItem)){
+        } else if(e.getSource().equals(saveMenuItem)) {
             File file = new File(getPathToGUI() + "mips.asm");
 
             byte[] data = exportNotesToMIPS().getBytes();
@@ -355,10 +336,10 @@ public class SequencerDisplay extends JFrame implements ActionListener {
 
             byte[] contents = new byte[data.length + code.length];
 
-            for(int i = 0; i < data.length; i++)
+            for (int i = 0; i < data.length; i++)
                 contents[i] = data[i];
 
-            for(int i = data.length; i < data.length + code.length; i++)
+            for (int i = data.length; i < data.length + code.length; i++)
                 contents[i] = code[i - data.length];
 
             try {
@@ -370,35 +351,6 @@ public class SequencerDisplay extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this,
                         "Error saving to file:\n" + ex.getMessage());
             }
-        } else if (c.equals(pitchBtn)||c.equals(volumeBtn)||c.equals(durationBtn)||c.equals(instrumentBtn)) {
-
-            pitchBtn.setEnabled(true);
-            volumeBtn.setEnabled(true);
-            durationBtn.setEnabled(true);
-            instrumentBtn.setEnabled(true);
-
-            if (c.equals(pitchBtn)) {
-                pitchBtn.setEnabled(false);
-                sliderValue.setText("" + currentNote.getPitch());
-                slider.setValue(currentNote.getPitch());
-                type = ValueType.PITCH;
-            } else if (c.equals(volumeBtn)) {
-                volumeBtn.setEnabled(false);
-                sliderValue.setText("" + currentNote.getVolume());
-                slider.setValue(currentNote.getVolume());
-                type = ValueType.VOLUME;
-            } else if (c.equals(durationBtn)) {
-                durationBtn.setEnabled(false);
-                sliderValue.setText("" + currentNote.getDuration());
-                slider.setValue(currentNote.getDuration());
-                type = ValueType.DURATION;
-            } else if (c.equals(instrumentBtn)) {
-                instrumentBtn.setEnabled(false);
-                sliderValue.setText("" + currentNote.getInstrument());
-                slider.setValue(currentNote.getInstrument());
-                type = ValueType.INSTRUMENT;
-            }
-
         } else if (c instanceof NoteButton) {
             NoteButton button = (NoteButton) e.getSource();
 
@@ -408,54 +360,51 @@ public class SequencerDisplay extends JFrame implements ActionListener {
             button.setEnabled(false);
             previous.setEnabled(true);
 
-            pitchValue.setText("     " + currentNote.getPitch());
-            volumeValue.setText("     " + currentNote.getVolume());
-            durationValue.setText("     " + currentNote.getDuration());
-            instrumentValue.setText("     " + currentNote.getInstrument());
+            pitch.setValue(currentNote.getPitch());
+            volume.setValue(currentNote.getVolume());
+            duration.setValue(currentNote.getDuration());
+            instrument.setValue(currentNote.getInstrument());
 
-            // Move slider to new note's value
-            switch(type){
-                case DURATION:
-                    slider.setValue(currentNote.getDuration());
-                    sliderValue.setText("" + currentNote.getDuration());
-                    break;
-                case INSTRUMENT:
-                    slider.setValue(currentNote.getInstrument());
-                    sliderValue.setText("" + currentNote.getInstrument());
-                    break;
-                case PITCH:
-                    slider.setValue(currentNote.getPitch());
-                    sliderValue.setText("" + currentNote.getPitch());
-                    break;
-                case VOLUME:
-                    slider.setValue(currentNote.getVolume());
-                    sliderValue.setText("" + currentNote.getVolume());
-            }
+            pitchValue.setText("" + currentNote.getPitch());
+            volumeValue.setText("" + currentNote.getVolume());
+            durationValue.setText("" + currentNote.getDuration());
+            instrumentValue.setText("" + currentNote.getInstrument());
+
             previous = button;
-        } else if (c.equals(saveBtn)) {
-            switch(type){
-                case PITCH:
-                    currentNote.setPitch(slider.getValue());
-                    sliderValue.setText("" + currentNote.getPitch());
-                    pitchValue.setText("     " + currentNote.getPitch());
-                    break;
-                case VOLUME:
-                    currentNote.setVolume(slider.getValue());
-                    sliderValue.setText("" + currentNote.getVolume());
-                    volumeValue.setText("     " + currentNote.getVolume());
-                    break;
-                case DURATION:
-                    currentNote.setDuration(slider.getValue());
-                    sliderValue.setText("" + currentNote.getDuration());
-                    durationValue.setText("     " + currentNote.getDuration());
-                    break;
-                case INSTRUMENT:
-                    currentNote.setInstrument(slider.getValue());
-                    sliderValue.setText("" + currentNote.getInstrument());
-                    instrumentValue.setText("     " + currentNote.getInstrument());
-                    break;
-            }
+
+        } else if (c.equals(confBtn)) {
+            currentNote.setPitch(pitch.getValue());
+            currentNote.setVolume(volume.getValue());
+            currentNote.setDuration(duration.getValue());
+            currentNote.setInstrument(instrument.getValue());
+            previous.setBackground(Color.green);
+        } else if (c.equals(clearNote)) {
+            currentNote.setPitch(0);
+            currentNote.setVolume(127);
+            currentNote.setDuration(0);
+            currentNote.setInstrument(0);
+            pitch.setValue(currentNote.getPitch());
+            volume.setValue(currentNote.getVolume());
+            duration.setValue(currentNote.getDuration());
+            instrument.setValue(currentNote.getInstrument());
+            pitchValue.setText("" + currentNote.getPitch());
+            volumeValue.setText("" + currentNote.getVolume());
+            durationValue.setText("" + currentNote.getDuration());
+            instrumentValue.setText("" + currentNote.getInstrument());
+            previous.setBackground(null);
         }
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        if (pitch.getValueIsAdjusting())
+            pitchValue.setText("" + pitch.getValue());
+        else if (volume.getValueIsAdjusting())
+            volumeValue.setText("" + volume.getValue());
+        else if (duration.getValueIsAdjusting())
+            durationValue.setText("" + duration.getValue());
+        else if (instrument.getValueIsAdjusting())
+            instrumentValue.setText("" + instrument.getValue());
     }
 
     private String getPathToGUI(){
