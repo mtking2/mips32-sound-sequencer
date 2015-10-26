@@ -1,18 +1,23 @@
 package capstone.gui;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,8 +26,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
@@ -41,14 +46,18 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
     private static final String INSTRUMENT_NAME = "Instrument";
 
     private NoteButton[][] notes;
+    
+    private int tempo;
+    
+    private JOptionPane tempoSelect;
 
     private JPanel panel, north, west, center;
     private JMenuBar menuBar;
-    private JMenu fileMenu;
-    private JMenuItem newMenuItem, exitMenuItem, saveMenuItem;
-    private JButton play, stop, confBtn, clearNote, previous;
-
-    private JLabel pitchValue, volumeValue, durationValue, instrumentValue;
+    private JMenu fileMenu, editMenu;
+    private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem;
+    private JButton play, stop, confBtn, pitchBtn, volumeBtn, durationBtn, instrumentBtn, previous;
+    
+    private JLabel pitchValue, volumeValue, durationValue, instrumentValue,tempoLabel;
     private JSlider volume, pitch, duration, instrument;
     private Note currentNote;
     private ValueType type;
@@ -58,6 +67,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         this.setTitle(title);
         this.setResizable(false);
         menuInit();
+        
+        tempoSelect = null;
+        
+        tempo = 120;
+        tempoLabel = new JLabel("Tempo: " + tempo);
+        tempoLabel.setAlignmentX(SwingConstants.RIGHT);
 
         type = ValueType.PITCH;	// Set to pitch as default
 
@@ -104,6 +119,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
         north.add(play);
         north.add(stop);
+        
+        north.add(tempoLabel);
 
         createTrackSelectionArea(west);
 
@@ -125,6 +142,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         fileMenu = new JMenu("File");
         fileMenu.setMnemonic(KeyEvent.VK_F);
         menuBar.add(fileMenu);
+        
+        // Edit Menu, E - Mnemonic
+        editMenu = new JMenu("Edit");
+        editMenu.setMnemonic(KeyEvent.VK_E);
+        menuBar.add(editMenu);
 
         // File->New, N - Mnemonic
         newMenuItem = new JMenuItem("New", KeyEvent.VK_N);
@@ -139,6 +161,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         exitMenuItem = new JMenuItem("Exit", KeyEvent.VK_X);
         exitMenuItem.addActionListener(this);
         fileMenu.add(exitMenuItem);
+        
+        // Edit -> Tempo..., T - Mnemonic
+        tempoMenuItem = new JMenuItem("Tempo...", KeyEvent.VK_T);
+        tempoMenuItem.addActionListener(this);
+        editMenu.add(tempoMenuItem);
     }
 
     public String exportNotesToMIPS(){
@@ -164,6 +191,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
             builder.append("\n");
         }
+        
+        builder.append("\n");
+        
+        builder.append("tempo:        .word    "
+        			   + tempo);
 
         return builder.toString();
     }
@@ -351,6 +383,23 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
                 JOptionPane.showMessageDialog(this,
                         "Error saving to file:\n" + ex.getMessage());
             }
+        } else if (c.equals(tempoMenuItem)) {
+            String answer = JOptionPane.showInputDialog(this,
+                    "Enter a new tempo:",
+                    tempo);
+
+            try {
+                tempo = Integer.parseInt(answer);
+            } catch (NumberFormatException ex){
+                tempoError();
+            }
+
+            if(tempo > 0 && tempo <= 300){
+                tempo = Integer.parseInt(answer);
+                tempoLabel.setText("Tempo: " + tempo);
+            } else {
+                tempoError();
+            }
         } else if (c instanceof NoteButton) {
             NoteButton button = (NoteButton) e.getSource();
 
@@ -392,6 +441,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
             durationValue.setText("" + currentNote.getDuration());
             instrumentValue.setText("" + currentNote.getInstrument());
             previous.setBackground(null);
+        } else if (c.equals(tempoSelect)){
+            try{
+                tempo = Integer.parseInt(e.getActionCommand());
+            } catch(NumberFormatException ex){
+                if(e.getActionCommand().equals("")){
+
+                }
+            }
         }
     }
 
@@ -418,10 +475,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
         return builder.toString();
     }
-
-    private Path getMIPSStemPath(){
-        File f = new File(System.getProperty("user.dir") + File.separator + "SequencerStem.asm");
-
-        return Paths.get(f.getPath());
+    
+    private void tempoError(){
+    	JOptionPane.showMessageDialog(this, "Please enter a valid tempo value from 1 - 300.");
     }
 }
