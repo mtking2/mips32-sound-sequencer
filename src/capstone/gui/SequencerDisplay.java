@@ -14,12 +14,10 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -28,8 +26,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
@@ -48,17 +46,22 @@ public class SequencerDisplay extends JFrame implements ActionListener {
     private static final String INSTRUMENT_NAME = "Instrument";
 
     private NoteButton[][] notes;
+    
+    private int tempo;
+    
+    private JOptionPane tempoSelect;
 
     private JPanel panel, north, west, center;
     private JMenuBar menuBar;
-    private JMenu fileMenu;
-    private JMenuItem newMenuItem, exitMenuItem, saveMenuItem;
+    private JMenu fileMenu, editMenu;
+    private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem;
     private JButton play, stop, confBtn, pitchBtn, volumeBtn, durationBtn, instrumentBtn, previous;
 
     private JLabel pitchValue;
     private JLabel volumeValue;
     private JLabel durationValue;
     private JLabel instrumentValue;
+    private JLabel tempoLabel;
 
     private JSlider slider;
     private JLabel sliderValue;
@@ -71,6 +74,12 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         this.setTitle(title);
         this.setResizable(false);
         menuInit();
+        
+        tempoSelect = null;
+        
+        tempo = 120;
+        tempoLabel = new JLabel("Tempo: " + tempo);
+        tempoLabel.setAlignmentX(SwingConstants.RIGHT);
 
         type = ValueType.PITCH;	// Set to pitch as default
 
@@ -81,6 +90,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         north.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         west.setPreferredSize(new Dimension(310,200));
+        
+        
 
         // 4 tracks, 16 beats
         int tracks = 4;
@@ -116,6 +127,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
 
         north.add(play);
         north.add(stop);
+        
+        north.add(tempoLabel);
 
         createTrackSelectionArea(west);
 
@@ -137,6 +150,11 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         fileMenu = new JMenu("File");
         fileMenu.setMnemonic(KeyEvent.VK_F);
         menuBar.add(fileMenu);
+        
+        // Edit Menu, E - Mnemonic
+        editMenu = new JMenu("Edit");
+        editMenu.setMnemonic(KeyEvent.VK_E);
+        menuBar.add(editMenu);
 
         // File->New, N - Mnemonic
         newMenuItem = new JMenuItem("New", KeyEvent.VK_N);
@@ -151,6 +169,11 @@ public class SequencerDisplay extends JFrame implements ActionListener {
         exitMenuItem = new JMenuItem("Exit", KeyEvent.VK_X);
         exitMenuItem.addActionListener(this);
         fileMenu.add(exitMenuItem);
+        
+        // Edit -> Tempo..., T - Mnemonic
+        tempoMenuItem = new JMenuItem("Tempo...", KeyEvent.VK_T);
+        tempoMenuItem.addActionListener(this);
+        editMenu.add(tempoMenuItem);
     }
 
     public String exportNotesToMIPS(){
@@ -176,6 +199,11 @@ public class SequencerDisplay extends JFrame implements ActionListener {
 
             builder.append("\n");
         }
+        
+        builder.append("\n");
+        
+        builder.append("tempo:        .word    "
+        			   + tempo);
 
         return builder.toString();
     }
@@ -370,7 +398,24 @@ public class SequencerDisplay extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this,
                         "Error saving to file:\n" + ex.getMessage());
             }
-        } else if (c.equals(pitchBtn)||c.equals(volumeBtn)||c.equals(durationBtn)||c.equals(instrumentBtn)) {
+        } else if (c.equals(tempoMenuItem)) {
+        	String answer = JOptionPane.showInputDialog(this,
+        												"Enter a new tempo:",
+        												tempo);
+        	
+        	try {
+        		tempo = Integer.parseInt(answer);
+        	} catch (NumberFormatException ex){
+        		tempoError();
+        	}
+        	
+        	if(tempo > 0 && tempo <= 300){
+    			tempo = Integer.parseInt(answer);
+    			tempoLabel.setText("Tempo: " + tempo);
+    		} else {
+    			tempoError();
+    		}
+    	} else if (c.equals(pitchBtn)||c.equals(volumeBtn)||c.equals(durationBtn)||c.equals(instrumentBtn)) {
 
             pitchBtn.setEnabled(true);
             volumeBtn.setEnabled(true);
@@ -455,6 +500,14 @@ public class SequencerDisplay extends JFrame implements ActionListener {
                     instrumentValue.setText("     " + currentNote.getInstrument());
                     break;
             }
+        } else if (c.equals(tempoSelect)){
+        	try{
+        		tempo = Integer.parseInt(e.getActionCommand());
+        	} catch(NumberFormatException ex){
+        		if(e.getActionCommand().equals("")){
+        			
+        		}
+        	}
         }
     }
 
@@ -469,10 +522,8 @@ public class SequencerDisplay extends JFrame implements ActionListener {
 
         return builder.toString();
     }
-
-    private Path getMIPSStemPath(){
-        File f = new File(System.getProperty("user.dir") + File.separator + "SequencerStem.asm");
-
-        return Paths.get(f.getPath());
+    
+    private void tempoError(){
+    	JOptionPane.showMessageDialog(this, "Please enter a valid tempo value from 1 - 300.");
     }
 }
