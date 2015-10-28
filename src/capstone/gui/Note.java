@@ -1,7 +1,7 @@
 package capstone.gui;
 
 public class Note {
-	private final MidiInfo REST = new MidiInfo(0, 0, 0, 1, true);
+	private final MidiInfo REST = new MidiInfo(0, 127, 0, 1, true);
 	
 	private class MidiInfo {
 		private int pitch;
@@ -43,16 +43,30 @@ public class Note {
 	
 	private MidiInfo noteInfo;
 	private int track;
+	private int beat;
 	
-	public Note(int track){
+	public Note(int track, int beat){
 		this.track = track;
+		this.beat = beat;
 		
 		// New notes are rests
 		noteInfo = REST;
 	}
 	
+	public Note(int track, int beat, int pitch, 
+				int volume, int duration, int instrument){
+		this.track = track;
+		this.beat = beat;
+		
+		noteInfo = new MidiInfo(pitch, volume, duration, instrument, false);
+	}
+	
 	public int getTrack(){
 		return track;
+	}
+	
+	public int getBeat(){
+		return beat;
 	}
 	
 	public int getPitch(){ return noteInfo.getPitch(); }
