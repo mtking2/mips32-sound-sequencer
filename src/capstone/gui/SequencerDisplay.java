@@ -32,12 +32,7 @@ import javax.swing.event.ChangeListener;
  * @version 9/17/15
  */
 public class SequencerDisplay extends JFrame implements ActionListener, ChangeListener {
-    private static final String PITCH_NAME = "Pitch";
-    private static final String VOLUME_NAME = "Volume";
-    private static final String DURATION_NAME = "Duration";
-    private static final String INSTRUMENT_NAME = "Instrument";
-
-    private NoteButton[][] notes;
+    private NoteCollection notes;
     
     private int tempo;
     
@@ -47,12 +42,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
     private JMenuBar menuBar;
     private JMenu fileMenu, editMenu;
     private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem;
-    private JButton play, stop, confBtn, clearNote, previous;
+    private JButton play, stop, confirm, reset, clearNote, previous;
     
     private JLabel pitchValue, volumeValue, durationValue, instrumentValue,tempoLabel;
     private JSlider volume, pitch, duration, instrument;
     private Note currentNote;
-    private ValueType type;
 
     public SequencerDisplay(String title, int width, int height){
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -66,8 +60,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         tempoLabel = new JLabel("Tempo: " + tempo);
         tempoLabel.setAlignmentX(SwingConstants.RIGHT);
 
-        type = ValueType.PITCH;	// Set to pitch as default
-
         panel = new JPanel();
         panel.setLayout(new BorderLayout());
         north = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -79,39 +71,52 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         // 4 tracks, 16 beats
         int tracks = 4;
         int beats = 16;
+        
 
-        notes = new NoteButton[tracks][beats];
+        notes = new NoteCollection(tracks, beats);
 
         center = new JPanel(new GridLayout(tracks, beats));
         center.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
-        for(int i = 0; i < tracks; i++)
+        for(int i = 0; i < tracks; i++){
             for(int j = 0; j < beats; j++){
-                NoteButton button = new NoteButton(i, j);
+            	Note note = new Note(i);
+                NoteButton button = new NoteButton(note);
                 button.addActionListener(this);
 
                 if(i == 0 && j == 0){
                     // Default note is first note
-                    currentNote = button.getNote();
+                    currentNote = note;
                     button.setEnabled(false);
                     previous = button;
                 }
 
-                notes[i][j] = button;
-                notes[i][j].getNote().setVolume(127);
+                notes.setNote(i, j, note);
+                note.setVolume(127);
+                
+                center.add(button);
             }
-
-        for(NoteButton[] noteRow : notes)
-            for(NoteButton note : noteRow)	center.add(note);
+    	}
+        
+        notes.commit();
 
         play = new JButton("Play");
         play.setContentAreaFilled(false);
         stop = new JButton("Stop");
         stop.setContentAreaFilled(false);
+        
+        confirm = new JButton("Commit Changes");
+        confirm.setContentAreaFilled(false);
+        confirm.addActionListener(this);
+        
+        reset = new JButton("Reset Changes");
+        reset.setContentAreaFilled(false);
+        reset.addActionListener(this);
 
         north.add(play);
         north.add(stop);
-        
+        north.add(confirm);
+        north.add(reset);
         north.add(tempoLabel);
 
         createTrackSelectionArea(west);
@@ -168,15 +173,15 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
         builder.append("instruments:    .word ");
 
-        for(int i = 0; i < notes.length; i++){
+        for(int i = 0; i < notes.getAll().length; i++){
             if(i > 0) builder.append(", ");
 
-            builder.append(notes[i][0].getNote().getInstrument());
+            builder.append(notes.getNote(i, 0).getInstrument());
         }
 
         builder.append("\n\n");
 
-        for(int i = 0; i < notes.length; i++){
+        for(int i = 0; i < notes.getAll().length; i++){
             builder.append("# TRACK " + (i + 1) + " DATA #\n\n");
 
             builder.append(notesDataToMIPS(i));
@@ -198,11 +203,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         // Add pitch array
         builder.append("pitchArray" + (track + 1) + ":    .word ");
 
-        for(int i = 0; i < notes[track].length; i++){
+        for(int i = 0; i < notes.getRow(track).length; i++){
             if(i > 0) builder.append(", ");
 
-            if(!notes[track][i].getNote().isRest()){
-                builder.append(notes[track][i].getNote().getPitch());
+            if(!notes.getNote(track, i).isRest()){
+                builder.append(notes.getNote(track, i).getPitch());
             } else {
                 // -1 is value designating a rest
                 builder.append(-1);
@@ -214,10 +219,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         // Add volume array
         builder.append("volumeArray" + (track + 1) + ":    .word ");
 
-        for(int i = 0; i < notes[track].length; i++){
+        for(int i = 0; i < notes.getRow(track).length; i++){
             if(i > 0) builder.append(", ");
 
-            builder.append(notes[track][i].getNote().getVolume());
+            builder.append(notes.getNote(track, i).getVolume());
         }
 
         builder.append("\n");
@@ -225,10 +230,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         // Add duration array
         builder.append("durationArray" + (track + 1) + ":    .word ");
 
-        for(int i = 0; i < notes[track].length; i++){
+        for(int i = 0; i < notes.getRow(track).length; i++){
             if(i > 0) builder.append(", ");
 
-            builder.append(notes[track][i].getNote().getDuration());
+            builder.append(notes.getNote(track, i).getDuration());
         }
 
         builder.append("\n");
@@ -247,10 +252,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
         GridBagConstraints c = new GridBagConstraints();
 
-        pitch = new JSlider(0, 127, 0);
-        volume = new JSlider(0, 127, 127);
-        duration = new JSlider(0, 2000);
-        instrument = new JSlider(0, 127, 0);
+        pitch = new JSlider(0, 127, currentNote.getPitch());
+        volume = new JSlider(0, 127, currentNote.getVolume());
+        duration = new JSlider(0, currentNote.getDuration());
+        instrument = new JSlider(0, 127, currentNote.getInstrument());
 
         pitchValue = new JLabel();
         volumeValue = new JLabel();
@@ -322,14 +327,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         duration.addChangeListener(this);
         instrument.addChangeListener(this);
 
-        confBtn = new JButton("Confirm Changes");
-        c.gridwidth = 2;
-        c.gridx = 0;
-        c.gridy++;
-        confBtn.addActionListener(this);
-        subCenter.add(confBtn, c);
-
-
         cont.add(subNorth, BorderLayout.NORTH);
         cont.add(subCenter, BorderLayout.CENTER);
         cont.add(subSouth, BorderLayout.SOUTH);
@@ -340,7 +337,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         Object c = e.getSource();
         if (c.equals(exitMenuItem)) {
             System.exit(0);
-        } else if(e.getSource().equals(saveMenuItem)) {
+        } else if(c.equals(saveMenuItem)) {
             File file = new File(getPathToGUI() + "mips.asm");
 
             byte[] data = exportNotesToMIPS().getBytes();
@@ -394,7 +391,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
             }
         } else if (c instanceof NoteButton) {
             NoteButton button = (NoteButton) e.getSource();
-
+            
             currentNote = button.getNote();
 
             // Disable this note button, enable the last one selected
@@ -412,18 +409,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
             instrumentValue.setText("" + currentNote.getInstrument());
 
             previous = button;
-
-        } else if (c.equals(confBtn)) {
-            currentNote.setPitch(pitch.getValue());
-            currentNote.setVolume(volume.getValue());
-            currentNote.setDuration(duration.getValue());
-            currentNote.setInstrument(instrument.getValue());
-            previous.setBackground(Color.green);
         } else if (c.equals(clearNote)) {
-            currentNote.setPitch(0);
-            currentNote.setVolume(127);
-            currentNote.setDuration(0);
-            currentNote.setInstrument(0);
+            currentNote = new Note(currentNote.getTrack());
             pitch.setValue(currentNote.getPitch());
             volume.setValue(currentNote.getVolume());
             duration.setValue(currentNote.getDuration());
@@ -437,23 +424,52 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
             try{
                 tempo = Integer.parseInt(e.getActionCommand());
             } catch(NumberFormatException ex){
-                if(e.getActionCommand().equals("")){
-
-                }
+                tempoError();
             }
+        } else if(c.equals(confirm)){
+        	if(notes.isModified()){
+        		confirm.setContentAreaFilled(false);
+        		reset.setContentAreaFilled(false);
+        		notes.commit();
+        	} else {
+        		JOptionPane.showMessageDialog(this, "No notes have changed.");
+        	}
+        } else if(c.equals(reset)){
+        	if(notes.isModified()){
+        		confirm.setContentAreaFilled(false);
+        		reset.setContentAreaFilled(false);
+        		notes.reset();
+        	} else {
+        		JOptionPane.showMessageDialog(this, "No notes have changed.");
+        	}
         }
     }
 
     @Override
     public void stateChanged(ChangeEvent e) {
-        if (pitch.getValueIsAdjusting())
-            pitchValue.setText("" + pitch.getValue());
-        else if (volume.getValueIsAdjusting())
-            volumeValue.setText("" + volume.getValue());
-        else if (duration.getValueIsAdjusting())
-            durationValue.setText("" + duration.getValue());
-        else if (instrument.getValueIsAdjusting())
-            instrumentValue.setText("" + instrument.getValue());
+        if (pitch.getValueIsAdjusting()){
+        	int p = pitch.getValue();
+            pitchValue.setText("" + p);
+            currentNote.setPitch(p);
+        } else if (volume.getValueIsAdjusting()){
+        	int v = volume.getValue();
+            volumeValue.setText("" + v);
+            currentNote.setVolume(v);
+		} else if (duration.getValueIsAdjusting()){
+			int d = duration.getValue();
+            durationValue.setText("" + d);
+            currentNote.setDuration(d);
+		} else if (instrument.getValueIsAdjusting()){
+			int i = instrument.getValue();
+            instrumentValue.setText("" + i);
+            for(Note n : notes.getRow(currentNote.getTrack()))
+            	n.setInstrument(i);
+		}
+        
+        if(!notes.isModified()){
+        	notes.setModified();
+        	confirm.setContentAreaFilled(true);
+        }
     }
 
     private String getPathToGUI(){

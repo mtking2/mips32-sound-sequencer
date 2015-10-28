@@ -5,12 +5,10 @@ import javax.swing.JButton;
 public class NoteButton extends JButton {
 	private Note note;
 	
-	public NoteButton(int track, int beat){
+	public NoteButton(Note note){
 		super();
 		
-		this.note = new Note(track, beat);
-		
-		setActionCommand(note.getTrack() + "/" + note.getBeat());
+		this.note = note;
 	}
 	
 	public Note getNote(){

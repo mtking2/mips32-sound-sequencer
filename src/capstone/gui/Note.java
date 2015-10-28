@@ -41,26 +41,18 @@ public class Note {
 		public boolean isRest(){ return rest; }
 	}
 	
-	private int track;
-	private int beat;
-	
 	private MidiInfo noteInfo;
+	private int track;
 	
-	public Note(int track, int beat){
+	public Note(int track){
 		this.track = track;
-		this.beat = beat;
 		
 		// New notes are rests
-		
 		noteInfo = REST;
 	}
 	
 	public int getTrack(){
 		return track;
-	}
-	
-	public int getBeat(){
-		return beat;
 	}
 	
 	public int getPitch(){ return noteInfo.getPitch(); }
