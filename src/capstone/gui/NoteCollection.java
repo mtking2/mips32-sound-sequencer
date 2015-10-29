@@ -91,4 +91,14 @@ public class NoteCollection {
 			   (orig[track][beat].getInstrument() == diff[track][beat].getInstrument()) &&
 			   (orig[track][beat].isRest() == diff[track][beat].isRest()));
 	}
+	
+	public boolean allRests(){
+		boolean ans = true;
+		
+		for(int i = 0; i < diff.length; i++)
+			for(int j = 0; j < diff[i].length; j++)
+				if(!diff[i][j].isRest()) ans = false;
+		
+		return ans;
+	}
 }

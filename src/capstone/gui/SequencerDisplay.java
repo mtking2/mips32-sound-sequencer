@@ -12,6 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
+import javafx.scene.layout.Border;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -27,6 +29,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.plaf.metal.MetalBorders;
 
 /**
  * A graphical interface that represents a music sequencer.
@@ -52,16 +55,17 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	private JLabel pitchLabel, volumeLabel, durationLabel, instrumentLabel, tempoLabel;
 	private JSlider volume, pitch, duration, instrument;
 	private Note currentNote;
-	
-	private boolean ignoreStateChange;
+
+	private boolean ignoreStateChange, playing;
 
 	public SequencerDisplay(String title, int width, int height){
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setTitle(title);
 		this.setResizable(false);
 		menuInit();
-		
+
 		ignoreStateChange = false;
+		playing = false;
 
 		tempoSelect = null;
 
@@ -81,7 +85,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		int tracks = 4;
 		int beats = 16;
 
-
 		notes = new NoteCollection(tracks, beats);
 
 		center = new JPanel(new GridLayout(tracks, beats));
@@ -100,8 +103,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				if(i == 0 && j == 0){
 					// Default note is first note
 					currentNote = note;
-					button.setEnabled(false);
 					previous = button;
+					button.setContentAreaFilled(false);
 				}
 
 				notes.setNote(i, j, note);
@@ -114,8 +117,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		play = new JButton("Play");
 		play.setContentAreaFilled(false);
+		play.addActionListener(this);
 		stop = new JButton("Stop");
 		stop.setContentAreaFilled(false);
+		stop.addActionListener(this);
 
 		confirm = new JButton("Commit Changes");
 		confirm.setContentAreaFilled(false);
@@ -303,7 +308,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 						else
 							previous.setBackground(null);
 					}
-				
+
 
 					if(!notes.isModified()){
 						notes.setModified();
@@ -447,8 +452,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			currentNote = button.getNote();
 
 			// Disable this note button, enable the last one selected
-			button.setEnabled(false);
-			previous.setEnabled(true);
+			previous.setContentAreaFilled(true);
+			button.setContentAreaFilled(false);
 
 			pitch.setValue(currentNote.getPitch());
 			volume.setValue(currentNote.getVolume());
@@ -519,6 +524,20 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			} else {
 				JOptionPane.showMessageDialog(this, "No notes have changed.");
 			}
+		} else if(c.equals(play)){
+			if(notes.allRests()){
+				JOptionPane.showMessageDialog(this, "All notes are rests; "
+						+ "there is nothing to play.");
+			} else if(playing){
+				JOptionPane.showMessageDialog(this, "The sequence is already playing.");
+			} else {
+				playing = true;
+			}
+		} else if(c.equals(stop)){
+			if(!playing)
+				JOptionPane.showMessageDialog(this, "The sequence is already stopped.");
+			else
+				playing = false;
 		}
 	}
 
