@@ -114,8 +114,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		play = new JButton("Play");
 		play.setContentAreaFilled(false);
+        play.addActionListener(this);
 		stop = new JButton("Stop");
 		stop.setContentAreaFilled(false);
+        stop.addActionListener(this);
 
 		confirm = new JButton("Commit Changes");
 		confirm.setContentAreaFilled(false);
@@ -384,46 +386,51 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		cont.add(subSouth, BorderLayout.SOUTH);
 	}
 
+    private void toFile() {
+        File file = new File(getPathToGUI() + "mips.asm");
+
+        byte[] data = exportNotesToMIPS().getBytes();
+        byte[] code = null;
+
+        try {
+            code = Files.readAllBytes(
+                    Paths.get(getPathToGUI() + "SequencerStem.asm"));
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error reading from file SequencerStem.asm:\n"
+                            + ex.getMessage());
+            return;
+        }
+
+        // Combine track data and template into one array
+
+        byte[] contents = new byte[data.length + code.length];
+
+        for (int i = 0; i < data.length; i++)
+            contents[i] = data[i];
+
+        for (int i = data.length; i < data.length + code.length; i++)
+            contents[i] = code[i - data.length];
+
+        try {
+            Files.write(Paths.get(file.getPath()),
+                    contents,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error saving to file:\n" + ex.getMessage());
+        }
+    }
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object c = e.getSource();
-		if (c.equals(exitMenuItem)) {
+        Runtime rt = Runtime.getRuntime();
+        if (c.equals(exitMenuItem)) {
 			System.exit(0);
 		} else if(c.equals(saveMenuItem)) {
-			File file = new File(getPathToGUI() + "mips.asm");
-
-			byte[] data = exportNotesToMIPS().getBytes();
-			byte[] code = null;
-
-			try {
-				code = Files.readAllBytes(
-						Paths.get(getPathToGUI() + "SequencerStem.asm"));
-			} catch (IOException ex) {
-				JOptionPane.showMessageDialog(this,
-						"Error reading from file SequencerStem.asm:\n"
-								+ ex.getMessage());
-				return;
-			}
-
-			// Combine track data and template into one array
-
-			byte[] contents = new byte[data.length + code.length];
-
-			for (int i = 0; i < data.length; i++)
-				contents[i] = data[i];
-
-			for (int i = data.length; i < data.length + code.length; i++)
-				contents[i] = code[i - data.length];
-
-			try {
-				Files.write(Paths.get(file.getPath()),
-						contents,
-						StandardOpenOption.CREATE,
-						StandardOpenOption.WRITE);
-			} catch (IOException ex) {
-				JOptionPane.showMessageDialog(this,
-						"Error saving to file:\n" + ex.getMessage());
-			}
+			toFile();
 		} else if (c.equals(tempoMenuItem)) {
 			String answer = JOptionPane.showInputDialog(this,
 					"Enter a new tempo:",
@@ -519,7 +526,18 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			} else {
 				JOptionPane.showMessageDialog(this, "No notes have changed.");
 			}
-		}
+		} else if (c.equals(play)) {
+            toFile();
+            try {
+                String playPath = "java -jar src/capstone/gui/Mars40_CGP2.jar src/capstone/gui/DrumBeatExample.asm";
+                //System.out.println(playPath);
+                rt.exec(playPath);
+            } catch (IOException ex) {
+                System.out.println(ex.getMessage());
+            }
+        } else if (c.equals(stop)) {
+
+        }
 	}
 
 	@Override
@@ -548,6 +566,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			confirm.setContentAreaFilled(true);
 			reset.setContentAreaFilled(true);
 		}
+		previous.setBackground(Color.GREEN);
 	}
 
 	private String getPathToGUI(){
