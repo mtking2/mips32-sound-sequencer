@@ -12,6 +12,12 @@ public class NoteCollection {
 		orig = new Note[tracks][beats];
 		diff = new Note[tracks][beats];
 		modified = false;
+		
+		for(int i = 0; i < tracks; i++){
+			for(int j = 0; j < beats; j++){
+				orig[i][j] = new Note(i, j);
+			}
+		}
 	}
 	
 	public Note getNote(int track, int beat){
@@ -31,11 +37,16 @@ public class NoteCollection {
 	public void commit(){
 		for(int i = 0; i < orig.length; i++){
 			for(int j = 0; j < orig[i].length; j++){
-				Note note = diff[i][j];
-				
-				orig[i][j] = new Note(note.getTrack(), note.getBeat(), 
-									  note.getPitch(), note.getVolume(),
-									  note.getDuration(), note.getInstrument());
+				// orig[i][j] = diff[i][j];
+				// Copy values over
+				orig[i][j].setPitch(diff[i][j].getPitch());
+				orig[i][j].setVolume(diff[i][j].getVolume());
+				orig[i][j].setDuration(diff[i][j].getDuration());
+				orig[i][j].setInstrument(diff[i][j].getInstrument());
+				if(diff[i][j].isRest())
+					orig[i][j].makeRest();
+				else
+					orig[i][j].unmakeRest();
 			}
 		}
 		
@@ -45,11 +56,16 @@ public class NoteCollection {
 	public void reset(){
 		for(int i = 0; i < orig.length; i++){
 			for(int j = 0; j < orig[i].length; j++){
-				Note note = orig[i][i];
-
-				diff[i][j] = new Note(note.getTrack(), note.getBeat(), 
-									  note.getPitch(), note.getVolume(),
-									  note.getDuration(), note.getInstrument());
+				// diff[i][j] = orig[i][j];
+				// Copy values over
+				diff[i][j].setPitch(orig[i][j].getPitch());
+				diff[i][j].setVolume(orig[i][j].getVolume());
+				diff[i][j].setDuration(orig[i][j].getDuration());
+				diff[i][j].setInstrument(orig[i][j].getInstrument());
+				if(orig[i][j].isRest())
+					diff[i][j].makeRest();
+				else
+					diff[i][j].unmakeRest();
 			}
 		}
 			
@@ -66,5 +82,13 @@ public class NoteCollection {
 	
 	public Note[] getRow(int track){
 		return diff[track];
+	}
+	
+	public boolean hasNoteBeenModified(int track, int beat){		
+		return !((orig[track][beat].getPitch() == diff[track][beat].getPitch()) &&
+			   (orig[track][beat].getVolume() == diff[track][beat].getVolume()) &&
+			   (orig[track][beat].getDuration() == diff[track][beat].getDuration()) &&
+			   (orig[track][beat].getInstrument() == diff[track][beat].getInstrument()) &&
+			   (orig[track][beat].isRest() == diff[track][beat].isRest()));
 	}
 }

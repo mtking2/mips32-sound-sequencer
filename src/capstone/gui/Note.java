@@ -19,6 +19,14 @@ public class Note {
 			this.rest = rest;
 		}
 		
+		public void makeRest(){
+			rest = true;
+		}
+		
+		public void unmakeRest(){
+			rest = false;
+		}
+		
 		public int getPitch(){ return pitch; }
 		
 		public int getVolume(){ return volume; }
@@ -29,7 +37,6 @@ public class Note {
 		
 		public void setPitch(int pitch){
 			this.pitch = pitch;
-			this.rest = false;
 		}
 		
 		public void setVolume(int volume){ this.volume = volume; }
@@ -58,7 +65,7 @@ public class Note {
 		this.track = track;
 		this.beat = beat;
 		
-		noteInfo = new MidiInfo(pitch, volume, duration, instrument, false);
+		noteInfo = new MidiInfo(pitch, volume, duration, instrument, true);
 	}
 	
 	public int getTrack(){
@@ -78,14 +85,17 @@ public class Note {
 	public int getInstrument(){ return noteInfo.getInstrument(); }
 	
 	public void makeRest(){
-		noteInfo = REST;
+		noteInfo.makeRest();
+	}
+	
+	public void unmakeRest(){
+		noteInfo.unmakeRest();
 	}
 
 	public boolean isRest() { return noteInfo.isRest();}
 	
 	public void setPitch(int pitch){
 		noteInfo.setPitch(pitch);
-		noteInfo.rest = false;
 	}
 	
 	public void setVolume(int volume){ 	noteInfo.setVolume(volume);	}
