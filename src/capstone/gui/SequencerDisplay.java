@@ -387,14 +387,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	}
 
     private void toFile() {
-        File file = new File(getPathToGUI() + "mips.asm");
+        File file = new File(getPathToMIPS() + "mips.asm");
 
         byte[] data = exportNotesToMIPS().getBytes();
         byte[] code = null;
 
         try {
             code = Files.readAllBytes(
-                    Paths.get(getPathToGUI() + "SequencerStem.asm"));
+                    Paths.get(getPathToMIPS() + "SequencerStem.asm"));
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
                     "Error reading from file SequencerStem.asm:\n"
@@ -536,7 +536,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				playing = true;
                 toFile();
                 try {
-                    String playPath = "java -jar src/capstone/gui/Mars40_CGP2.jar src/capstone/gui/DrumBeatExample.asm";
+                    String playPath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/DrumBeatExample.asm";
                     //System.out.println(playPath);
                     rt.exec(playPath);
                 } catch (IOException ex) {
@@ -549,6 +549,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			else
 				playing = false;
 		}
+
 	}
 
 	@Override
@@ -579,14 +580,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		}
 	}
 
-	private String getPathToGUI(){
+	private String getPathToMIPS(){
 		StringBuilder builder = new StringBuilder();
 
 		builder.append(System.getProperty("user.dir"));
 
 		builder.append(File.separator + "src");
 		builder.append(File.separator + "capstone");
-		builder.append(File.separator + "gui" + File.separator);
+		builder.append(File.separator + "mips" + File.separator);
 
 		return builder.toString();
 	}
