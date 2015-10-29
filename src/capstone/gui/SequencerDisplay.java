@@ -52,16 +52,17 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	private JLabel pitchLabel, volumeLabel, durationLabel, instrumentLabel, tempoLabel;
 	private JSlider volume, pitch, duration, instrument;
 	private Note currentNote;
-	
-	private boolean ignoreStateChange;
+
+	private boolean ignoreStateChange, playing;
 
 	public SequencerDisplay(String title, int width, int height){
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setTitle(title);
 		this.setResizable(false);
 		menuInit();
-		
+
 		ignoreStateChange = false;
+		playing = false;
 
 		tempoSelect = null;
 
@@ -81,7 +82,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		int tracks = 4;
 		int beats = 16;
 
-
 		notes = new NoteCollection(tracks, beats);
 
 		center = new JPanel(new GridLayout(tracks, beats));
@@ -100,8 +100,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				if(i == 0 && j == 0){
 					// Default note is first note
 					currentNote = note;
-					button.setEnabled(false);
 					previous = button;
+					button.setContentAreaFilled(false);
 				}
 
 				notes.setNote(i, j, note);
@@ -305,7 +305,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 						else
 							previous.setBackground(null);
 					}
-				
+
 
 					if(!notes.isModified()){
 						notes.setModified();
@@ -454,8 +454,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			currentNote = button.getNote();
 
 			// Disable this note button, enable the last one selected
-			button.setEnabled(false);
-			previous.setEnabled(true);
+			previous.setContentAreaFilled(true);
+			button.setContentAreaFilled(false);
 
 			pitch.setValue(currentNote.getPitch());
 			volume.setValue(currentNote.getVolume());
@@ -526,18 +526,29 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			} else {
 				JOptionPane.showMessageDialog(this, "No notes have changed.");
 			}
-		} else if (c.equals(play)) {
-            toFile();
-            try {
-                String playPath = "java -jar src/capstone/gui/Mars40_CGP2.jar src/capstone/gui/DrumBeatExample.asm";
-                //System.out.println(playPath);
-                rt.exec(playPath);
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
-            }
-        } else if (c.equals(stop)) {
-
-        }
+		} else if(c.equals(play)){
+			if(notes.allRests()){
+				JOptionPane.showMessageDialog(this, "All notes are rests; "
+						+ "there is nothing to play.");
+			} else if(playing){
+				JOptionPane.showMessageDialog(this, "The sequence is already playing.");
+			} else {
+				playing = true;
+                toFile();
+                try {
+                    String playPath = "java -jar src/capstone/gui/Mars40_CGP2.jar src/capstone/gui/DrumBeatExample.asm";
+                    //System.out.println(playPath);
+                    rt.exec(playPath);
+                } catch (IOException ex) {
+                    System.out.println(ex.getMessage());
+                }
+			}
+		} else if(c.equals(stop)){
+			if(!playing)
+				JOptionPane.showMessageDialog(this, "The sequence is already stopped.");
+			else
+				playing = false;
+		}
 	}
 
 	@Override
@@ -566,7 +577,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			confirm.setContentAreaFilled(true);
 			reset.setContentAreaFilled(true);
 		}
-		previous.setBackground(Color.GREEN);
 	}
 
 	private String getPathToGUI(){
