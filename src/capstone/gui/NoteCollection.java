@@ -6,12 +6,9 @@ public class NoteCollection {
 	/** The notes that are waiting to be committed **/
 	private Note[][] diff;
 	
-	private boolean modified;
-	
 	public NoteCollection(int tracks, int beats){
 		orig = new Note[tracks][beats];
 		diff = new Note[tracks][beats];
-		modified = false;
 		
 		for(int i = 0; i < tracks; i++){
 			for(int j = 0; j < beats; j++){
@@ -43,14 +40,9 @@ public class NoteCollection {
 				orig[i][j].setVolume(diff[i][j].getVolume());
 				orig[i][j].setDuration(diff[i][j].getDuration());
 				orig[i][j].setInstrument(diff[i][j].getInstrument());
-				if(diff[i][j].isRest())
-					orig[i][j].makeRest();
-				else
-					orig[i][j].unmakeRest();
+				orig[i][j].setIfRest(diff[i][j].isRest());
 			}
 		}
-		
-		modified = false;
 	}
 	
 	public void reset(){
@@ -62,19 +54,20 @@ public class NoteCollection {
 				diff[i][j].setVolume(orig[i][j].getVolume());
 				diff[i][j].setDuration(orig[i][j].getDuration());
 				diff[i][j].setInstrument(orig[i][j].getInstrument());
-				if(orig[i][j].isRest())
-					diff[i][j].makeRest();
-				else
-					diff[i][j].unmakeRest();
+				diff[i][j].setIfRest((orig[i][j].isRest()));
 			}
 		}
-			
-		modified = false;
 	}
 	
-	public void setModified(){	modified = true;	}
-	
-	public boolean isModified(){	return modified;	}
+	public boolean isModified(){	
+		for(int i = 0; i < diff.length; i++){
+			for(int j = 0; j < diff[i].length; j++){
+				if(hasNoteBeenModified(i, j)) return true;
+			}
+		}
+		
+		return false;
+	}
 	
 	public Note[][] getAll(){
 		return diff;

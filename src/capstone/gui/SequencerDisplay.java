@@ -197,7 +197,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		subNorth.add(clearNote);
 
 		GridBagConstraints c = new GridBagConstraints();
-
+		
 		Note currentNote = getCurrentNoteFromCollection();
 
 		pitch = new JSlider(0, 127, currentNote.getPitch());
@@ -222,35 +222,26 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if(!SequencerUtils.ignoreStateChange){
-					if(e.getStateChange() == ItemEvent.SELECTED){
-						currentNote.makeRest();
-						notes.getNote(currentNote.getTrack(), currentNote.getBeat()).makeRest();
-						if(notes.hasNoteBeenModified(currentNote.getTrack(), 
-								currentNote.getBeat()))
+					boolean selected = e.getStateChange() == ItemEvent.SELECTED;
+					
+					getCurrentNoteFromCollection().setIfRest(selected);
+					
+					if(selected){
+						if(notes.hasNoteBeenModified(SequencerUtils.track, 
+								SequencerUtils.beat))
 							previous.setBackground(Color.GREEN);
 						else
 							previous.setBackground(Color.RED);
-
-						getCurrentNoteFromCollection().makeRest();
 					} else {
-						currentNote.unmakeRest();
-						notes.getNote(currentNote.getTrack(), currentNote.getBeat()).unmakeRest();
-						if(notes.hasNoteBeenModified(currentNote.getTrack(), 
-								currentNote.getBeat()))
+						if(notes.hasNoteBeenModified(SequencerUtils.track, 
+								SequencerUtils.beat))
 							previous.setBackground(Color.GREEN);
 						else
 							previous.setBackground(null);
-
-						getCurrentNoteFromCollection().unmakeRest();
 					}
 
-
-					if(!notes.isModified()){
-						notes.setModified();
-						confirm.setContentAreaFilled(true);
-						reset.setContentAreaFilled(true);
-					}
-
+					confirm.setContentAreaFilled(notes.isModified());
+					reset.setContentAreaFilled(notes.isModified());
 				}
 			}
 		});
@@ -437,11 +428,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			getCurrentNoteFromCollection().setInstrument(i);
 		}
 
-		if(!notes.isModified()){
-			notes.setModified();
-			confirm.setContentAreaFilled(true);
-			reset.setContentAreaFilled(true);
-		}
+		confirm.setContentAreaFilled(notes.isModified());
+		reset.setContentAreaFilled(notes.isModified());
 	}
 
 	private Note getCurrentNoteFromCollection(){

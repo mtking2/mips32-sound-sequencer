@@ -1,7 +1,7 @@
 package capstone.gui;
 
 public class Note {
-	private final MidiInfo REST = new MidiInfo(0, 127, 0, 1, true);
+	private final MidiInfo REST = new MidiInfo(0, 127, 0, 0, true);
 	
 	private class MidiInfo {
 		private int pitch;
@@ -19,13 +19,7 @@ public class Note {
 			this.rest = rest;
 		}
 		
-		public void makeRest(){
-			rest = true;
-		}
-		
-		public void unmakeRest(){
-			rest = false;
-		}
+		public void setIfRest(boolean rest){	this.rest = rest; }
 		
 		public int getPitch(){ return pitch; }
 		
@@ -84,13 +78,7 @@ public class Note {
 	
 	public int getInstrument(){ return noteInfo.getInstrument(); }
 	
-	public void makeRest(){
-		noteInfo.makeRest();
-	}
-	
-	public void unmakeRest(){
-		noteInfo.unmakeRest();
-	}
+	public void setIfRest(boolean rest) {	noteInfo.setIfRest(rest); }
 
 	public boolean isRest() { return noteInfo.isRest();}
 	
