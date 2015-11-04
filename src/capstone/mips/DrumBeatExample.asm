@@ -1,12 +1,42 @@
+.data
+
+instruments:	.word 118, 119, 115, 11
+
+# TRACK 1 DATA #
+
+pitchArray1:	.word  45,  -1,  45,  45,  -1,  45,  45,  -1	# The pitch for each note
+durationArray1:	.word 200, 200, 200, 200, 200, 200, 200, 200 	# The duration of each note
+volumeArray1:	.word 127, 127, 127, 127, 127, 127, 127, 127	# The volume of each note
+
+# TRACK 2 DATA #
+
+pitchArray2:	.word  -1,  60,  -1,  60,  -1,  60,  -1,  60	# The pitch for each note
+durationArray2: .word 200, 200, 200, 200, 200, 200, 200, 200 	# The duration of each note
+volumeArray2:	.word 127, 127, 127, 127, 127, 127, 127, 127	# The volume of each note
+
+# TRACK 3 DATA #
+
+pitchArray3:	.word  -1,  70,  -1,  70,  70,  -1,  70,  70	# The pitch for each note
+durationArray3:	.word 400, 400, 400, 400, 400, 200, 200, 200 	# The duration of each note
+volumeArray3:	.word 127, 127, 127, 127, 127, 127, 127, 127	# The volume of each note
+
+# TRACK 4 DATA #
+
+pitchArray4:	.word  60,  62,  63,  70,  -1,  74,  75,  82	# The pitch for each note
+durationArray4: .word 600, 400, 400, 200, 200, 400, 400, 200 	# The duration of each note
+volumeArray4:	.word 100, 100, 100, 100, 100, 100, 100, 100	# The volume of each note
+
+
 .text
+
 
 setup:
 	li $t3, 0	# How many times loop has finished
 	li $t4, 8	# How many times the loop will run
-	li $t5, 0      	# Which note is being played
-	li $t6, 16	# How many notes to play
+	li $t5, 0   # Which note is being played
+	li $t6, 8	# How many notes to play
 
-	lw $t7, tempo	# Load tempo
+	li $t7, 250	# Load tempo
 	li $t8, 0	# Offset for array values
 
 main:
@@ -67,7 +97,7 @@ sleep:
 	jr $ra
 
 loadFirstTrack:
-	la $t0, pitchArray1	# $t0 = first track's pitch data
+	la $t0, pitchArray1		# $t0 = first track's pitch data
 	la $t1, durationArray1	# $t1 = first track's duration data
 	la $t2, volumeArray1	# $t3 = first track's volume data
 
@@ -81,16 +111,16 @@ loadFirstTrack:
 	li $a0, 0	# Load channel number
 
 	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lb $a1, 0($a1)		# Load second instrument from address (offset for instrument 1 == 0 bytes)
+	lw $a1, 0($a1)		# Load second instrument from address (offset for instrument 1 == 0 bytes)
 
 	syscall
 
-	li $a2, 0	# Set channel number to first channel
+	li $a2, 0
 
 	jr $ra			# Jump to return address
 
 loadSecondTrack:
-	la $t0, pitchArray2	# $t0 = second track's pitch data
+	la $t0, pitchArray2		# $t0 = second track's pitch data
 	la $t1, durationArray2	# $t1 = second track's duration data
 	la $t2, volumeArray2	# $t3 = second track's volume data
 
@@ -104,11 +134,11 @@ loadSecondTrack:
 	li $a0, 1	# Load channel number
 
 	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lb $a1, 1($a1)		# Load second instrument from address
+	lw $a1, 4($a1)		# Load second instrument from address
 
 	syscall
 
-	li $a2, 1	# Set channel to second channel
+	li $a2, 1
 
 	jr $ra			# Jump to return address
 
@@ -124,14 +154,14 @@ loadThirdTrack:
 
 	li $v0, 38 	# Load MIDI channel service
 
-	li $a0, 2	# Load channel number
+	li $a0, 3	# Load channel number
 
 	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lb $a1, 2($a1)		# Load third instrument from address
+	lw $a1, 8($a1)		# Load third instrument from address
 
 	syscall
 
-	li $a2, 2	# Set channel to third channel
+	li $a2, 3
 
 	jr $ra			# Jump to return address
 
@@ -147,22 +177,17 @@ loadFourthTrack:
 
 	li $v0, 38 	# Load MIDI channel service
 
-	li $a0, 3	# Load channel number
+	li $a0, 4	# Load channel number
 
 	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lb $a1, 3($a1)		# Load fourth instrument from address
+	lw $a1, 12($a1)		# Load fourth instrument from address
 
 	syscall
 
-	li $a2, 3	# Set channel to fourth channel
+	li $a2, 4
 
 	jr $ra			# Jump to return address
 
 exit:
 	li $v0, 10	# Load exit system call
 	syscall
-	# first track data
-	jal loadFirstTrack
-
-	beq $t3, $t4, exit
-	j main

@@ -109,16 +109,16 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		notes.commit();
 		
-		play.setContentAreaFilled(false);
+		play.setEnabled(false);
 		play.addActionListener(ActionListenerFactory.getPlayListener(
-				center.getComponents(), notes, this));
-		stop.setContentAreaFilled(false);
+				center.getComponents(), notes, play, stop, this));
+		stop.setEnabled(false);
 		stop.addActionListener(ActionListenerFactory.getStopListener(this));
 
 		confirm.setContentAreaFilled(false);
 		confirm.addActionListener(
 				ActionListenerFactory.getConfirmListener(center.getComponents(), 
-						notes, confirm, reset, this));
+						notes, confirm, reset, play, this));
 
 		reset.setContentAreaFilled(false);
 		reset.addActionListener(this);

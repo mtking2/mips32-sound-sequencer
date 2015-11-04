@@ -49,11 +49,12 @@ public class ActionListenerFactory {
 	}
 	
 	public static ActionListener getPlayListener(Component[] components, 
-			NoteCollection notes, Component parent){
+			NoteCollection notes, JButton self, JButton stop,Component parent){
 		return new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				notes.commit();
-
+                stop.setEnabled(true);
+                self.setEnabled(false);
 				SequencerUtils.resetNoteBackgrounds(components, notes);
 
 				if(notes.allRests()){
@@ -65,9 +66,19 @@ public class ActionListenerFactory {
 					SequencerUtils.playing = true;
 					SequencerUtils.toFile(parent, notes);
 					try {
-						String playPath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/DrumBeatExample.asm";
+						String playPath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/mips.asm";
 						//System.out.println(playPath);
-						Runtime.getRuntime().exec(playPath);
+						Process playProc = Runtime.getRuntime().exec(playPath);
+
+                        ActionListener doStop = new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                playProc.destroy();
+                                stop.setEnabled(false);
+                                self.setEnabled(true);
+                            }
+                        };
+						stop.addActionListener(doStop);
 					} catch (IOException ex) {
 						System.out.println(ex.getMessage());
 					}
@@ -89,13 +100,14 @@ public class ActionListenerFactory {
 	}
 	
 	public static ActionListener getConfirmListener(Component[] components, 
-			NoteCollection notes, JButton confirm, JButton reset, Component parent){
+			NoteCollection notes, JButton confirm, JButton reset, JButton play, Component parent){
 		return new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e){
 				if(notes.isModified()){
 					confirm.setContentAreaFilled(false);
 					reset.setContentAreaFilled(false);
+                    play.setEnabled(true);
 					notes.commit();
 					SequencerUtils.resetNoteBackgrounds(components, notes);
 				} else {
