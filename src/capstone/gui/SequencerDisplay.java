@@ -1,16 +1,19 @@
 package capstone.gui;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -23,10 +26,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import capstone.gui.utils.ActionListenerFactory;
+import capstone.gui.utils.SequencerUtils;
 
 /**
  * A graphical interface that represents a music sequencer.
@@ -37,43 +42,31 @@ import javax.swing.event.ChangeListener;
 public class SequencerDisplay extends JFrame implements ActionListener, ChangeListener {
 	private NoteCollection notes;
 
-	private int tempo;
-
-	private JOptionPane tempoSelect;
-
 	private JPanel panel, north, west, center;
 	private JMenuBar menuBar;
 	private JMenu fileMenu, editMenu;
-	private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem;
+	private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem, scaleMenuItem;
 	private JButton play, stop, confirm, reset, clearNote;
 	private NoteButton previous;
 	private JCheckBox restBox;
 
-	private JLabel pitchLabel, volumeLabel, durationLabel, instrumentLabel, tempoLabel;
+	private JLabel 	pitchLabel, volumeLabel, 
+	durationLabel, instrumentLabel, 
+	tempoLabel, scaleLabel;
 	private JSlider volume, pitch, duration, instrument;
-	
-	private int curTrack, curBeat;
-
-	private boolean ignoreStateChange, playing;
 
 	public SequencerDisplay(String title, int width, int height){
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setTitle(title);
 		this.setResizable(false);
-		menuInit();
 
-		ignoreStateChange = false;
-		playing = false;
-
-		// Default note is track 0 , beat 0 (first track, first beat)
-		curTrack = 0;
-		curBeat = 0;
+		tempoLabel = new JLabel("Tempo: " + SequencerUtils.tempo);
+		scaleLabel = new JLabel("Scale: None");
 		
-		tempoSelect = null;
-
-		tempo = 120;
-		tempoLabel = new JLabel("Tempo: " + tempo);
-		tempoLabel.setAlignmentX(SwingConstants.RIGHT);
+		play = new JButton("Play");
+		stop = new JButton("Stop");
+		confirm = new JButton("Commit Changes");
+		reset = new JButton("Reset Changes");
 
 		panel = new JPanel();
 		panel.setLayout(new BorderLayout());
@@ -95,12 +88,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		for(int i = 0; i < tracks; i++){
 			for(int j = 0; j < beats; j++){
 				Note note = new Note(i, j);
-				NoteButton button = new NoteButton(note);
+				NoteButton button = new NoteButton(i, j);
 				button.addActionListener(this);
 				// All notes start as rests, so start with red background
 				button.setBackground(Color.RED);
 				// Set button text field to pitch
-				button.setText(intToPitch(note.getPitch()));
+				button.setText(SequencerUtils.intToPitchWithOctave(note.getPitch()));
 
 				if(i == 0 && j == 0){
 					// Default note is first note
@@ -115,19 +108,18 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		}
 
 		notes.commit();
-
-		play = new JButton("Play");
+		
 		play.setContentAreaFilled(false);
-        play.addActionListener(this);
-		stop = new JButton("Stop");
+		play.addActionListener(ActionListenerFactory.getPlayListener(
+				center.getComponents(), notes, this));
 		stop.setContentAreaFilled(false);
-        stop.addActionListener(this);
+		stop.addActionListener(ActionListenerFactory.getStopListener(this));
 
-		confirm = new JButton("Commit Changes");
 		confirm.setContentAreaFilled(false);
-		confirm.addActionListener(this);
+		confirm.addActionListener(
+				ActionListenerFactory.getConfirmListener(center.getComponents(), 
+						notes, confirm, reset, this));
 
-		reset = new JButton("Reset Changes");
 		reset.setContentAreaFilled(false);
 		reset.addActionListener(this);
 
@@ -136,18 +128,20 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		north.add(confirm);
 		north.add(reset);
 		north.add(tempoLabel);
+		north.add(scaleLabel);
 
 		createTrackSelectionArea(west);
 
 		panel.add(north, BorderLayout.NORTH);
 		panel.add(center, BorderLayout.CENTER);
 		panel.add(west, BorderLayout.WEST);
+		
+		menuInit();
 
 		this.setContentPane(panel);
 		this.setJMenuBar(menuBar);
 		this.setSize(width, height);
 		this.setVisible(true);
-
 	}
 
 	private void menuInit() {
@@ -169,96 +163,28 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		// File -> Save, S - Mnemonic
 		saveMenuItem = new JMenuItem("Save", KeyEvent.VK_S);
-		saveMenuItem.addActionListener(this);
+		saveMenuItem.addActionListener(
+				ActionListenerFactory.getSaveListener(center.getComponents(), 
+						this, 
+						notes));
 		fileMenu.add(saveMenuItem);
 
 		// File->Exit, X - Mnemonic
 		exitMenuItem = new JMenuItem("Exit", KeyEvent.VK_X);
-		exitMenuItem.addActionListener(this);
+		exitMenuItem.addActionListener(ActionListenerFactory.getExitListener());
 		fileMenu.add(exitMenuItem);
 
 		// Edit -> Tempo..., T - Mnemonic
 		tempoMenuItem = new JMenuItem("Tempo...", KeyEvent.VK_T);
-		tempoMenuItem.addActionListener(this);
+		tempoMenuItem.addActionListener(
+				ActionListenerFactory.getTempoListener(this, tempoLabel));
 		editMenu.add(tempoMenuItem);
-	}
 
-	public String exportNotesToMIPS(){
-		StringBuilder builder = new StringBuilder();
-
-		// Begin with data section
-		builder.append(".data\n\n");
-
-		builder.append("instruments:    .word ");
-
-		for(int i = 0; i < notes.getAll().length; i++){
-			if(i > 0) builder.append(", ");
-
-			builder.append(notes.getNote(i, 0).getInstrument());
-		}
-
-		builder.append("\n\n");
-
-		for(int i = 0; i < notes.getAll().length; i++){
-			builder.append("# TRACK " + (i + 1) + " DATA #\n\n");
-
-			builder.append(notesDataToMIPS(i));
-
-			builder.append("\n");
-		}
-
-		builder.append("\n");
-
-		builder.append("tempo:        .word    "
-				+ tempo);
-		
-		builder.append("\n\n");
-
-		return builder.toString();
-	}
-
-	private String notesDataToMIPS(int track){
-		StringBuilder builder = new StringBuilder();
-
-		// Add pitch array
-		builder.append("pitchArray" + (track + 1) + ":    .word ");
-
-		for(int i = 0; i < notes.getRow(track).length; i++){
-			if(i > 0) builder.append(", ");
-
-			if(!notes.getNote(track, i).isRest()){
-				builder.append(notes.getNote(track, i).getPitch());
-			} else {
-				// -1 is value designating a rest
-				builder.append(-1);
-			}
-		}
-
-		builder.append("\n");
-
-		// Add volume array
-		builder.append("volumeArray" + (track + 1) + ":    .word ");
-
-		for(int i = 0; i < notes.getRow(track).length; i++){
-			if(i > 0) builder.append(", ");
-
-			builder.append(notes.getNote(track, i).getVolume());
-		}
-
-		builder.append("\n");
-
-		// Add duration array
-		builder.append("durationArray" + (track + 1) + ":    .word ");
-
-		for(int i = 0; i < notes.getRow(track).length; i++){
-			if(i > 0) builder.append(", ");
-
-			builder.append(notes.getNote(track, i).getDuration());
-		}
-
-		builder.append("\n");
-
-		return builder.toString();
+		// Edit -> Scale..., C - Mnemonic
+		scaleMenuItem = new JMenuItem("Scale...", KeyEvent.VK_C);
+		scaleMenuItem.addActionListener(
+				ActionListenerFactory.getScaleListener(this, scaleLabel));
+		editMenu.add(scaleMenuItem);
 	}
 
 	public void createTrackSelectionArea(Container cont){
@@ -271,7 +197,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		subNorth.add(clearNote);
 
 		GridBagConstraints c = new GridBagConstraints();
-		
+
 		Note currentNote = getCurrentNoteFromCollection();
 
 		pitch = new JSlider(0, 127, currentNote.getPitch());
@@ -284,7 +210,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		durationLabel = new JLabel();
 		instrumentLabel = new JLabel();
 
-		pitchLabel.setText(intToPitch(pitch.getValue()));
+		pitchLabel.setText(SequencerUtils.intToPitchWithOctave(pitch.getValue()));
 		volumeLabel.setText("" + volume.getValue());
 		durationLabel.setText("" + duration.getValue());
 		instrumentLabel.setText("" + instrument.getValue());
@@ -295,7 +221,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		restBox.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
-				if(!ignoreStateChange){
+				if(!SequencerUtils.ignoreStateChange){
 					if(e.getStateChange() == ItemEvent.SELECTED){
 						currentNote.makeRest();
 						notes.getNote(currentNote.getTrack(), currentNote.getBeat()).makeRest();
@@ -304,7 +230,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 							previous.setBackground(Color.GREEN);
 						else
 							previous.setBackground(Color.RED);
-						
+
 						getCurrentNoteFromCollection().makeRest();
 					} else {
 						currentNote.unmakeRest();
@@ -314,7 +240,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 							previous.setBackground(Color.GREEN);
 						else
 							previous.setBackground(null);
-						
+
 						getCurrentNoteFromCollection().unmakeRest();
 					}
 
@@ -324,7 +250,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 						confirm.setContentAreaFilled(true);
 						reset.setContentAreaFilled(true);
 					}
-					
+
 				}
 			}
 		});
@@ -399,185 +325,101 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		cont.add(subSouth, BorderLayout.SOUTH);
 	}
 
-    private void toFile() {
-        File file = new File(getPathToMIPS() + "mips.asm");
-
-        byte[] data = exportNotesToMIPS().getBytes();
-        byte[] code = null;
-
-        try {
-            code = Files.readAllBytes(
-                    Paths.get(getPathToMIPS() + "SequencerStem.asm"));
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Error reading from file SequencerStem.asm:\n"
-                            + ex.getMessage());
-            return;
-        }
-
-        // Combine track data and template into one array
-
-        byte[] contents = new byte[data.length + code.length];
-
-        for (int i = 0; i < data.length; i++)
-            contents[i] = data[i];
-
-        for (int i = data.length; i < data.length + code.length; i++)
-            contents[i] = code[i - data.length];
-
-        try {
-            Files.write(Paths.get(file.getPath()),
-                    contents,
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.WRITE);
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Error saving to file:\n" + ex.getMessage());
-        }
-        
-        JOptionPane.showMessageDialog(this, "File successfully saved.");
-    }
-
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object c = e.getSource();
-        Runtime rt = Runtime.getRuntime();
-        if (c.equals(exitMenuItem)) {
-			System.exit(0);
-		} else if(c.equals(saveMenuItem)) {
-			notes.commit();
-			resetNoteBackgrounds();
-			toFile();
-		} else if (c.equals(tempoMenuItem)) {
-			String answer = JOptionPane.showInputDialog(this,
-					"Enter a new tempo:",
-					tempo);
 
-			try {
-				tempo = Integer.parseInt(answer);
-			} catch (NumberFormatException ex){
-				tempoError();
-			}
-
-			if(tempo > 0 && tempo <= 300){
-				tempo = Integer.parseInt(answer);
-				tempoLabel.setText("Tempo: " + tempo);
-			} else {
-				tempoError();
-			}
-		} else if (c instanceof NoteButton) {
+		if (c instanceof NoteButton) {
 			NoteButton button = (NoteButton) c;
-
-			curTrack = button.getNote().getTrack();
-			curBeat = button.getNote().getBeat();
-			
-			Note currentNote = getCurrentNoteFromCollection();
 
 			// Disable this note button, enable the last one selected
 			previous.setContentAreaFilled(true);
 			button.setContentAreaFilled(false);
 
+			// Change background of previous button if
+			// it was a rest
+			if(notes.getNote(SequencerUtils.track, SequencerUtils.beat).isRest()){
+				previous.setBackground(Color.RED);
+			} else {
+				if(notes.hasNoteBeenModified(SequencerUtils.track, 
+						SequencerUtils.beat)){
+					previous.setBackground(Color.GREEN);
+				} else {
+					previous.setBackground(null);
+				}
+			}
+
+			SequencerUtils.track = button.getTrack();
+			SequencerUtils.beat = button.getBeat();
+
+			Note currentNote = getCurrentNoteFromCollection();
+
 			pitch.setValue(currentNote.getPitch());
 			volume.setValue(currentNote.getVolume());
 			duration.setValue(currentNote.getDuration());
 			instrument.setValue(currentNote.getInstrument());
 
-			pitchLabel.setText(intToPitch(currentNote.getPitch()));
+			pitchLabel.setText(SequencerUtils.intToPitchWithOctave(currentNote.getPitch()));
 			volumeLabel.setText("" + currentNote.getVolume());
 			durationLabel.setText("" + currentNote.getDuration());
 			instrumentLabel.setText("" + currentNote.getInstrument());
 
-			ignoreStateChange = true;
+			SequencerUtils.ignoreStateChange = true;
 			restBox.setSelected(currentNote.isRest());
-			ignoreStateChange = false;
+			SequencerUtils.ignoreStateChange = false;
 
 			previous = button;
 		} else if (c.equals(clearNote)) {
 			Note currentNote = getCurrentNoteFromCollection();
-			
+
 			currentNote = new Note(currentNote.getTrack(), currentNote.getBeat());
 			pitch.setValue(currentNote.getPitch());
 			volume.setValue(currentNote.getVolume());
 			duration.setValue(currentNote.getDuration());
 			instrument.setValue(currentNote.getInstrument());
-			pitchLabel.setText(intToPitch(currentNote.getPitch()));
+			pitchLabel.setText(SequencerUtils.intToPitchWithOctave(currentNote.getPitch()));
 			volumeLabel.setText("" + currentNote.getVolume());
 			durationLabel.setText("" + currentNote.getDuration());
 			instrumentLabel.setText("" + currentNote.getInstrument());
 			previous.setBackground(Color.RED);
-		} else if (c.equals(tempoSelect)){
-			try{
-				tempo = Integer.parseInt(e.getActionCommand());
-			} catch(NumberFormatException ex){
-				tempoError();
-			}
-		} else if(c.equals(confirm)){
-			if(notes.isModified()){
-				confirm.setContentAreaFilled(false);
-				reset.setContentAreaFilled(false);
-				notes.commit();
-				resetNoteBackgrounds();
-			} else {
-				JOptionPane.showMessageDialog(this, "No notes have changed.");
-			}
 		} else if(c.equals(reset)){
 			if(notes.isModified()){
 				confirm.setContentAreaFilled(false);
 				reset.setContentAreaFilled(false);
 
-				Note original = notes.getOriginalNote(curTrack, curBeat);
+				Note original = notes.getOriginalNote(SequencerUtils.track, SequencerUtils.beat);
 
 				pitch.setValue(original.getPitch());
 				volume.setValue(original.getVolume());
 				duration.setValue(original.getDuration());
 				instrument.setValue(original.getInstrument());
 
-				pitchLabel.setText(intToPitch(original.getPitch()));
-				previous.setText(intToPitch(original.getPitch()));
+				pitchLabel.setText(SequencerUtils.intToPitchWithOctave(original.getPitch()));
+				previous.setText(SequencerUtils.intToPitchWithOctave(original.getPitch()));
 				volumeLabel.setText("" + original.getVolume());
 				durationLabel.setText("" + original.getDuration());
 				instrumentLabel.setText("" + original.getInstrument());
 
 				notes.reset();
 
-				resetNoteBackgrounds();
+				SequencerUtils.resetNoteBackgrounds(center.getComponents(), notes);
 			} else {
 				JOptionPane.showMessageDialog(this, "No notes have changed.");
 			}
-		} else if(c.equals(play)){
-			notes.commit();
-			resetNoteBackgrounds();
-			
-			if(notes.allRests()){
-				JOptionPane.showMessageDialog(this, "All notes are rests; "
-						+ "there is nothing to play.");
-			} else if(playing){
-				JOptionPane.showMessageDialog(this, "The sequence is already playing.");
-			} else {
-				playing = true;
-                toFile();
-                try {
-                    String playPath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/DrumBeatExample.asm";
-                    //System.out.println(playPath);
-                    rt.exec(playPath);
-                } catch (IOException ex) {
-                    System.out.println(ex.getMessage());
-                }
-			}
-		} else if(c.equals(stop)){
-			if(!playing)
-				JOptionPane.showMessageDialog(this, "The sequence is already stopped.");
-			else
-				playing = false;
-		}
-
+		} 
 	}
 
 	@Override
 	public void stateChanged(ChangeEvent e) {
 		if (pitch.getValueIsAdjusting()){
 			int p = pitch.getValue();
-			pitchLabel.setText(intToPitch(p));
+			if(SequencerUtils.scale != null &&
+					!SequencerUtils.scale.inScale(SequencerUtils.intToPitch(p))){
+				// If not in the scale, the next pitch up will be, so
+				// skip this pitch
+				pitch.setValue(++p);
+			}
+			pitchLabel.setText(SequencerUtils.intToPitchWithOctave(p));
 			getCurrentNoteFromCollection().setPitch(p);
 		} else if (volume.getValueIsAdjusting()){
 			int v = volume.getValue();
@@ -590,7 +432,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		} else if (instrument.getValueIsAdjusting()){
 			int i = instrument.getValue();
 			instrumentLabel.setText("" + i);
-			for(Note n : notes.getRow(curTrack))
+			for(Note n : notes.getRow(SequencerUtils.track))
 				n.setInstrument(i);
 			getCurrentNoteFromCollection().setInstrument(i);
 		}
@@ -601,78 +443,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			reset.setContentAreaFilled(true);
 		}
 	}
-	
-	public Note getCurrentNoteFromCollection(){
-		return notes.getNote(curTrack, curBeat);
-	}
 
-	private String getPathToMIPS(){
-		StringBuilder builder = new StringBuilder();
-
-		builder.append(System.getProperty("user.dir"));
-
-		builder.append(File.separator + "src");
-		builder.append(File.separator + "capstone");
-		builder.append(File.separator + "mips" + File.separator);
-
-		return builder.toString();
-	}
-
-	private void tempoError(){
-		JOptionPane.showMessageDialog(this, "Please enter a valid tempo value from 1 - 300.");
-	}
-
-	private String intToPitch(int pitch){
-		// 12 half-notes are in an octave
-		int octave = (pitch - (pitch % 12)) / 12;
-		int note = pitch % 12;
-
-		String letter = null;
-
-		switch(note){
-		case 0:	letter = "C";
-		break;
-		case 1:	letter = "C#";
-		break;
-		case 2:	letter = "D";
-		break;
-		case 3:	letter = "D#";
-		break;
-		case 4:	letter = "E";
-		break;
-		case 5:	letter = "F";
-		break;
-		case 6:	letter = "F#";
-		break;
-		case 7:	letter = "G";
-		break;
-		case 8:	letter = "G#";
-		break;
-		case 9:	letter = "A";
-		break;
-		case 10:	letter = "A#";
-		break;
-		case 11:	letter = "B";
-		break;
-		default:	letter = "C";
-		}
-
-		return letter + octave;
-	}
-
-	private void resetNoteBackgrounds(){
-		for(Component c : center.getComponents()){
-			if(c instanceof NoteButton){
-				NoteButton button = (NoteButton) c;
-
-				if(button.getNote().isRest())
-					c.setBackground(Color.RED);
-				else
-					c.setBackground(null);
-
-				button.setText(intToPitch(button.getNote().getPitch()));
-			}
-		}
-
+	private Note getCurrentNoteFromCollection(){
+		return notes.getNote(SequencerUtils.track, SequencerUtils.beat);
 	}
 }

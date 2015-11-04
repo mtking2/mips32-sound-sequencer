@@ -3,15 +3,21 @@ package capstone.gui;
 import javax.swing.JButton;
 
 public class NoteButton extends JButton {
-	private Note note;
+	private int track;
+	private int beat;
 	
-	public NoteButton(Note note){
+	public NoteButton(int track, int beat){
 		super();
 		
-		this.note = note;
+		this.track = track;
+		this.beat = beat;
 	}
 	
-	public Note getNote(){
-		return note;
+	public int getTrack(){
+		return track;
+	}
+	
+	public int getBeat(){
+		return beat;
 	}
 }
