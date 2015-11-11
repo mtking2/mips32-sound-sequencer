@@ -11,16 +11,21 @@ import java.nio.file.StandardOpenOption;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JSlider;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
 
 import capstone.gui.Note;
 import capstone.gui.NoteButton;
-import capstone.gui.NoteCollection;
 import capstone.gui.Scale;
+import capstone.gui.containers.NoteCollection;
 import capstone.gui.enums.Pitch;
 import capstone.gui.enums.ScaleType;
 
 public class SequencerUtils {
-	// Scales //
+	// Static final fields //
 	
 	public static final Pitch[] AEOLIAN = { Pitch.C, Pitch.D, Pitch.D_SHARP, 
 		Pitch.F, Pitch.G, Pitch.G_SHARP, Pitch.A_SHARP };
@@ -43,7 +48,13 @@ public class SequencerUtils {
 	public static final Pitch[] LOCRIAN = { Pitch.C, Pitch.C_SHARP, Pitch.D_SHARP, 
 		Pitch.F, Pitch.F_SHARP, Pitch.G_SHARP, Pitch.A_SHARP };
 	
-	////////////
+	public static final Border BUTTON_SELECTED_BORDER = 
+			new MatteBorder(2, 2, 2, 2, Color.YELLOW);
+	
+	public static final Border BUTTON_DEFAULT_BORDER = 
+			new MatteBorder(1, 1, 1, 1, Color.BLACK);
+	
+	// Static fields //
 	
 	public static Scale scale = null;
 	public static int tempo = 120;
@@ -76,7 +87,7 @@ public class SequencerUtils {
 		}
 	}
 	
-	public static String intToPitchWithOctave(int pitch){
+	public static String intPitchToString(int pitch){
 		return intToPitch(pitch).toString() 
 				+ ((pitch - (pitch % 12)) / 12);
 	}
@@ -112,7 +123,7 @@ public class SequencerUtils {
 			button.setBackground(null);
 
 		button.setText(
-				SequencerUtils.intToPitchWithOctave(n.getPitch()).toString());
+				SequencerUtils.intPitchToString(n.getPitch()).toString());
 	}
 	
 	public static String exportNotesToMIPS(NoteCollection notes){

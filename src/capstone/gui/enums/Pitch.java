@@ -1,25 +1,29 @@
 package capstone.gui.enums;
 
 public enum Pitch {
-	C, C_SHARP, D, D_SHARP, E, F, F_SHARP, G, G_SHARP, A, A_SHARP, B, SPECIAL;
+	C("C"), 
+	C_SHARP("C#"), 
+	D("D"), 
+	D_SHARP("D#"), 
+	E("E"), 
+	F("F"), 
+	F_SHARP("F#"), 
+	G("G"), 
+	G_SHARP("G#"), 
+	A("A"), 
+	A_SHARP("A#"), 
+	B("B"), 
+	SPECIAL("None");
 	
+	private String name;
+	
+	private Pitch(String name){
+		this.name = name;
+	}
+	
+	@Override
 	public String toString(){
-		switch(this){
-		case A:			return "A";
-		case A_SHARP:	return "A#";
-		case B:			return "B";
-		case C:			return "C";
-		case C_SHARP:	return "C#";
-		case D:			return "D";
-		case D_SHARP:	return "D#";
-		case E:			return "E";
-		case F:			return "F";
-		case F_SHARP:	return "F#";
-		case G:			return "G";
-		case G_SHARP:	return "G#";
-		case SPECIAL:	return "None";
-		default:		return "C";
-		}
+		return name;
 	}
 	
 	public Pitch toPitch(String s){
@@ -46,5 +50,14 @@ public enum Pitch {
 		case SPECIAL:	return SPECIAL;
 		default:		return null;
 		}
+	}
+	
+	public String asFlat(Pitch p){
+		if(!p.equals(A_SHARP) || !p.equals(C_SHARP) || p.equals(F_SHARP)
+				|| !p.equals(D_SHARP) || !p.equals(G_SHARP)){
+			return p.toString();
+		}
+		
+		return p.next() + "b";
 	}
 }

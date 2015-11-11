@@ -10,8 +10,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JSlider;
 
-import capstone.gui.NoteCollection;
 import capstone.gui.Scale;
+import capstone.gui.containers.NoteCollection;
 
 public class ActionListenerFactory {
 	public static ActionListener getTempoSelectListener(Component parent){

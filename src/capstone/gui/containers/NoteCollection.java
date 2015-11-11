@@ -1,4 +1,6 @@
-package capstone.gui;
+package capstone.gui.containers;
+
+import capstone.gui.Note;
 
 public class NoteCollection {
 	/** The notes that were previously committed **/

@@ -2,12 +2,15 @@ package capstone.gui;
 
 import javax.swing.JButton;
 
+import capstone.gui.utils.SequencerUtils;
+
 public class NoteButton extends JButton {
 	private int track;
 	private int beat;
 	
 	public NoteButton(int track, int beat){
 		super();
+		setBorder(SequencerUtils.BUTTON_DEFAULT_BORDER);
 		
 		this.track = track;
 		this.beat = beat;
