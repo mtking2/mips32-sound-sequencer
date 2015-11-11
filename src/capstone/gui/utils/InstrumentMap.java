@@ -52,7 +52,4 @@ public class InstrumentMap extends HashMap {
         return reverseMap;
     }
 
-    public static void main(String[] args) {
-        new InstrumentMap();
-    }
 }

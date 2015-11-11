@@ -29,6 +29,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -82,7 +83,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		west = new JPanel(new BorderLayout());
 		north.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-		west.setPreferredSize(new Dimension(315, 200));
+		west.setPreferredSize(new Dimension(350, 200));
 
 		// 4 tracks, 16 beats
 		int tracks = 4;
@@ -311,14 +312,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         c.weightx = 0.2;
 		subCenter.add(labels.getDurationLabel(), c);
 
-		// Add instrument slider to panel
 		c.gridx = 0;
 		c.gridy++;
-		subCenter.add(new JLabel("Instrument "), c);
-
-		// Add instrument label to panel
-		c.gridx++;
-		subCenter.add(labels.getInstrumentLabel(), c);
         subCenter.add(new JLabel("Instrument "), c);
         c.gridx++;
 		c.weightx = 0.5;
@@ -376,13 +371,16 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 			Note currentNote = getCurrentNoteFromCollection();
 
-			if (currentNote.getTreePath()!=null) {
-				instrumentMenu.getTree().makeVisible(currentNote.getTreePath());
-				instrumentMenu.getTree().scrollPathToVisible(currentNote.getTreePath());
+			sliders.setToNote(currentNote);
+
+			labels.modifyNoteLabels(currentNote);
+            if (currentNote.getTreePath()!=null) {
+                instrumentMenu.getTree().makeVisible(currentNote.getTreePath());
+                instrumentMenu.getTree().scrollPathToVisible(currentNote.getTreePath());
 				instrumentMenu.getTree().setSelectionPath(currentNote.getTreePath());
-			} else {
-				instrumentMenu.collapseTree();
-			}
+            } else {
+                instrumentMenu.collapseTree();
+            }
 
 			sliders.setToNote(currentNote);
 
