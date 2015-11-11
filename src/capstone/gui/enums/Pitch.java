@@ -7,7 +7,7 @@ package capstone.gui.enums;
   *	@author Brad Westley
   *	@author Michael King
   *	@version 11.20.15
- **/
+  */
 public enum Pitch {
 	C("C"), 
 	C_SHARP("C#"), 
@@ -30,7 +30,7 @@ public enum Pitch {
 	  *	Constructs a new pitch enumeration with the given name.
 	  *
 	  * @param name the name of the pitch
-	 **/
+	  */
 	private Pitch(String name){
 		this.name = name;
 	}
@@ -39,7 +39,7 @@ public enum Pitch {
 	  *	Converts this pitch object to a string.
 	  *
 	  * @return this pitch as a string
-	 **/
+	  */
 	@Override
 	public String toString(){
 		return name;
@@ -50,7 +50,7 @@ public enum Pitch {
 	  *
 	  * @param s the name of the pitch
 	  * @return the pitch object whose name is the given string
-	 **/
+	  */
 	public Pitch toPitch(String s){
 		for(Pitch p : values())
 			if(p.toString().equals(s)) return p;
@@ -62,7 +62,7 @@ public enum Pitch {
 	  *	Finds the next pitch one half-step up from this pitch.
 	  *
 	  * @return the pitch one half-step higher than this pitch
-	 **/
+	  */
 	public Pitch next(){
 		switch(this){
 		case A:			return A_SHARP;
