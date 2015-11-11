@@ -5,18 +5,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JSlider;
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
+import capstone.gui.Note;
 import capstone.gui.Scale;
 import capstone.gui.containers.NoteCollection;
 
 /**
   *	A factory object that creates {@link java.awt.event.ActionListener} objects for the various components of
   * the graphical user interface.
-  *	
+  *
   * @see java.awt.event.ActionListener
   *	@author Brad Westley
   *	@author Michael King
@@ -67,7 +71,7 @@ public class ActionListenerFactory {
 	  * @param notes the collection of data for each track
 	  * @return the created save ActionListener
 	  */
-	public static ActionListener getSaveListener(Component[] components, 
+	public static ActionListener getSaveListener(Component[] components,
 			Component parent, NoteCollection notes){
 		return new ActionListener(){
 			@Override
@@ -90,7 +94,7 @@ public class ActionListenerFactory {
 	  * @param parent the parent component this listener's object is contained in
 	  * @return the created play ActionListener
 	  */
-	public static ActionListener getPlayListener(Component[] components, 
+	public static ActionListener getPlayListener(Component[] components,
 			NoteCollection notes, JButton self, JButton stop,Component parent){
 		return new ActionListener(){
 			public void actionPerformed(ActionEvent e){
@@ -160,7 +164,7 @@ public class ActionListenerFactory {
 	  * @param parent the parent component this listener's object is contained in
 	  * @return the created commit ActionListener
 	  */
-	public static ActionListener getConfirmListener(Component[] components, 
+	public static ActionListener getConfirmListener(Component[] components,
 			NoteCollection notes, JButton confirm, JButton reset, JButton play, Component parent){
 		return new ActionListener(){
 			@Override
@@ -178,14 +182,57 @@ public class ActionListenerFactory {
 		};
 	}
 
+
+	public static ActionListener getDurationListener(NoteCollection notes, JTextField self, JSlider duration) {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int d = Integer.parseInt(self.getText());
+				if (d>=0) {
+					notes.getNote(SequencerUtils.track, SequencerUtils.beat).setDuration(d);
+					duration.setValue(d);
+				} else {
+
+				}
+			}
+		};
+	}
+
+	public static TreeSelectionListener getInstrumentListener(JTree tree, NoteCollection notes) {
+		return new TreeSelectionListener() {
+			@Override
+			public void valueChanged(TreeSelectionEvent e) {
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode)
+						tree.getLastSelectedPathComponent();
+
+
+                if (node != null) {
+                    Object selection = node.getUserObject();
+                    //System.out.println(selection);
+                    Object value = SequencerUtils.instrumentMap.getReverseMap().get(selection);
+                    if (value!=null) {
+                        int i = (int) value;
+                        //System.out.println(i);
+                        SequencerUtils.selectedInstrument = i;
+                        for(Note n : notes.getRow(SequencerUtils.track)) {
+                            n.setInstrument(i);
+                            n.setTreePath(new TreePath(node.getPath()));
+                        }
+                        notes.getNote(SequencerUtils.track, SequencerUtils.beat).setInstrument(i);
+                    }
+                }
+			}
+		};
+	}
+
 	/**
-	  *	Creates the action listener that brings up the window to select a new tempo.
-	  *
-	  * @see java.awt.event.ActionListener
-	  * @param parent the parent component this listener's object is contained in
-	  * @param tempoLabel the label that displays the tempo
-	  * @return the created tempo selection ActionListener
-	  */
+	 *	Creates the action listener that brings up the window to select a new tempo.
+	 *
+	 * @see java.awt.event.ActionListener
+	 * @param parent the parent component this listener's object is contained in
+	 * @param tempoLabel the label that displays the tempo
+	 * @return the created tempo selection ActionListener
+	 */
 	public static ActionListener getTempoListener(Component parent, JLabel tempoLabel){
 		return new ActionListener(){
 			@Override
@@ -218,7 +265,7 @@ public class ActionListenerFactory {
 	  * @param tempoLabel the label that displays the current scale
 	  * @return the created scale selection ActionListener
 	  */
-	public static ActionListener getScaleListener(Component parent, 
+	public static ActionListener getScaleListener(Component parent,
 			JLabel scaleLabel){
 		return new ActionListener(){
 			public void actionPerformed(ActionEvent e){

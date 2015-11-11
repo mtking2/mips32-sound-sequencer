@@ -11,11 +11,7 @@ import java.nio.file.StandardOpenOption;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JSlider;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.border.MatteBorder;
+import javax.imageio.ImageIO;
 
 import capstone.gui.Note;
 import capstone.gui.NoteButton;
@@ -48,14 +44,9 @@ public class SequencerUtils {
 	public static final Pitch[] LOCRIAN = { Pitch.C, Pitch.C_SHARP, Pitch.D_SHARP, 
 		Pitch.F, Pitch.F_SHARP, Pitch.G_SHARP, Pitch.A_SHARP };
 	
-	public static final Border BUTTON_SELECTED_BORDER = 
-			new MatteBorder(2, 2, 2, 2, Color.YELLOW);
-	
-	public static final Border BUTTON_DEFAULT_BORDER = 
-			new MatteBorder(1, 1, 1, 1, Color.BLACK);
-	
-	// Static fields //
-	
+	////////////
+	public static InstrumentMap instrumentMap = new InstrumentMap();
+	public static int selectedInstrument;
 	public static Scale scale = null;
 	public static int tempo = 120;
 	public static int track = 0;
@@ -103,7 +94,20 @@ public class SequencerUtils {
 
 		return builder.toString();
 	}
-	
+
+	public static String getPathToUtils(){
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(System.getProperty("user.dir"));
+
+		builder.append(File.separator + "src");
+		builder.append(File.separator + "capstone");
+		builder.append(File.separator + "gui");
+		builder.append(File.separator + "utils" + File.separator);
+
+		return builder.toString();
+	}
+
 	public static void resetNoteBackgrounds(Component[] components, 
 			NoteCollection notes){
 		for(Component c : components){
@@ -117,13 +121,28 @@ public class SequencerUtils {
 		Note n = notes.getNote(button.getTrack(), 
 				button.getBeat());
 
-		if(n.isRest())
-			button.setBackground(Color.RED);
-		else
-			button.setBackground(null);
+		if(n.isRest()) {
+			button.setBackground(Color.GRAY);
+            button.setText(null);
+			setRestIcon(button);
+		} else {
+            button.setBackground(null);
+            button.setIcon(null);
+            button.setText(SequencerUtils.intToPitchWithOctave(n.getPitch()));
+        }
 
 		button.setText(
 				SequencerUtils.intPitchToString(n.getPitch()).toString());
+
+	}
+
+	public static void setRestIcon(JButton button) {
+		try {
+            Image img = ImageIO.read(new File(getPathToUtils()+"quarter-rest.png"));
+			button.setIcon(new ImageIcon(img));
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
 	}
 	
 	public static String exportNotesToMIPS(NoteCollection notes){
@@ -152,8 +171,11 @@ public class SequencerUtils {
 
 		builder.append("\n");
 
+        // converts the tempo (in BPMs) to delay time (in milliseconds).
+		int bpmToMs = 60000/SequencerUtils.tempo;
+
 		builder.append("tempo:        .word    "
-				+ SequencerUtils.tempo);
+				+ bpmToMs);
 
 		builder.append("\n\n");
 
@@ -185,7 +207,9 @@ public class SequencerUtils {
 		for(int i = 0; i < notes.getRow(track).length; i++){
 			if(i > 0) builder.append(", ");
 
-			builder.append(notes.getNote(track, i).getVolume());
+            // convert the volume percentage into an integer value between 1 and 127
+			int d = (int)(notes.getNote(track, i).getVolume()/0.7874);
+			builder.append(d);
 		}
 
 		builder.append("\n");

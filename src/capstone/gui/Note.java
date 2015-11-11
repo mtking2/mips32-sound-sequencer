@@ -1,7 +1,10 @@
 package capstone.gui;
 
+import javax.swing.tree.TreePath;
+
 public class Note {
-	private final MidiInfo REST = new MidiInfo(0, 127, 0, 0, true);
+	private final MidiInfo REST = new MidiInfo(0, 100, 0, 0, true);
+    private TreePath path;
 	
 	private class MidiInfo {
 		private int pitch;
@@ -77,7 +80,9 @@ public class Note {
 	public int getDuration(){ return noteInfo.getDuration(); }
 	
 	public int getInstrument(){ return noteInfo.getInstrument(); }
-	
+
+    public TreePath getTreePath() { return path; }
+
 	public void setIfRest(boolean rest) {	noteInfo.setIfRest(rest); }
 
 	public boolean isRest() { return noteInfo.isRest();}
@@ -91,4 +96,6 @@ public class Note {
 	public void setDuration(int duration){ 	noteInfo.setDuration(duration);	}
 	
 	public void setInstrument(int instrument){ 	noteInfo.setInstrument(instrument);	}
+
+    public void setTreePath(TreePath path) { this.path = path; }
 }
