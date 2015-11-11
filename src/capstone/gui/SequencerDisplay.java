@@ -15,27 +15,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
-import java.text.NumberFormat;
-import java.util.Set;
-import java.util.Vector;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
+import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.text.NumberFormatter;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
 
 import capstone.gui.containers.Buttons;
 import capstone.gui.containers.Labels;
@@ -65,7 +49,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	private NoteButton currentButton;
 	private JCheckBox restBox;
 
-	private JFormattedTextField durationLabel;
+	//private JFormattedTextField durationLabel;
 	private InstrumentMenu instrumentMenu;
 
 	public SequencerDisplay(String title, int width, int height){
@@ -103,12 +87,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				button.setBackground(Color.GRAY);
                 SequencerUtils.setRestIcon(button);
 				// Set button text field to pitch
-				button.setText(SequencerUtils.intPitchToString(note.getPitch()));
+				//button.setText(SequencerUtils.intPitchToString(note.getPitch()));
 
 				if(i == 0 && j == 0){
 					// Default note is first note
 					currentButton = button;
-					button.setBorder(SequencerUtils.BUTTON_SELECTED_BORDER);
+					//button.setBorder(SequencerUtils.BUTTON_SELECTED_BORDER);
 				}
 
 				notes.setNote(i, j, note);
@@ -209,7 +193,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		JPanel subSouth = new JPanel(new FlowLayout());
 		clearNote.addActionListener(this);
 		subNorth.add(clearNote);
-
+        JFormattedTextField duration = labels.getDurationLabel();
 		GridBagConstraints c = new GridBagConstraints();
 		
 		Note currentNote = getCurrentNoteFromCollection();
@@ -218,19 +202,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		labels.modifyNoteLabels(
 				SequencerUtils.intPitchToString(sliders.getPitchValue()),
-				String.valueOf(sliders.getVolumeValue()), String.valueOf(sliders.getDurationValue()),
-				String.valueOf(sliders.getInstrumentValue()));
-        NumberFormat format = NumberFormat.getInstance();
-        NumberFormatter formatter = new NumberFormatter(format);
-        formatter.setValueClass(Integer.class);
-        formatter.setMinimum(0);
-        formatter.setMaximum(Integer.MAX_VALUE);
-        //formatter.setCommitsOnValidEdit(true);
-		durationLabel = new JFormattedTextField(formatter);
+				String.valueOf(sliders.getVolumeValue()), String.valueOf(sliders.getDurationValue()));
 
-		pitchLabel.setText(SequencerUtils.intToPitchWithOctave(pitch.getValue()));
-		volumeLabel.setText("" + volume.getValue());
-		durationLabel.setText("" + duration.getValue());
+
+		labels.getPitchLabel().setText(SequencerUtils.intPitchToString(sliders.getPitchValue()));
+		labels.getVolumeLabel().setText("" + sliders.getVolumeValue());
+		duration.setText("" + sliders.getDurationValue());
 
 		restBox = new JCheckBox("Rest");
 		restBox.setSelected(true);
@@ -269,8 +246,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		c.insets = new Insets(5,2,5,0);
 		c.ipady = 10;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		//c.ipadx = 2;
-		c.weightx = 0.5;
 
 		c.gridx = 1;
 		c.gridy = 0;
@@ -310,7 +285,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		// Add duration label to panel
 		c.gridx++;
         c.weightx = 0.2;
-		subCenter.add(labels.getDurationLabel(), c);
+		subCenter.add(duration, c);
 
 		c.gridx = 0;
 		c.gridy++;
@@ -331,8 +306,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		sliders.addListener(this);
 
-		durationLabel.addActionListener(ActionListenerFactory.getDurationListener(
-				notes, durationLabel,duration));
+		duration.addActionListener(ActionListenerFactory.getDurationListener(
+				notes, duration,sliders.getDurationSlider()));
 
 		cont.add(subNorth, BorderLayout.NORTH);
 		cont.add(subCenter, BorderLayout.CENTER);
@@ -350,8 +325,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			// currentButton.setContentAreaFilled(true);
 			// nextButton.setContentAreaFilled(false);
 
-			currentButton.setBorder(SequencerUtils.BUTTON_DEFAULT_BORDER);
-			nextButton.setBorder(SequencerUtils.BUTTON_SELECTED_BORDER);
+			//currentButton.setBorder(SequencerUtils.BUTTON_DEFAULT_BORDER);
+			//nextButton.setBorder(SequencerUtils.BUTTON_SELECTED_BORDER);
 
 			// Change background of previous button if
 			// it was a rest
@@ -371,9 +346,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 			Note currentNote = getCurrentNoteFromCollection();
 
-			sliders.setToNote(currentNote);
 
-			labels.modifyNoteLabels(currentNote);
             if (currentNote.getTreePath()!=null) {
                 instrumentMenu.getTree().makeVisible(currentNote.getTreePath());
                 instrumentMenu.getTree().scrollPathToVisible(currentNote.getTreePath());
@@ -398,7 +371,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			currentNote = new Note(currentNote.getTrack(), currentNote.getBeat());
 			sliders.setToNote(currentNote);
 			labels.modifyNoteLabels(currentNote);
-			currentButton.setBackground(Color.RED);
+			currentButton.setBackground(Color.GRAY);
+            notes.setNote(currentNote.getTrack(), currentNote.getBeat(), currentNote);
+            SequencerUtils.resetNoteBackgrounds(center.getComponents(),notes);
 		} else if(src.equals(buttons.getResetButton())){
 			if(notes.isModified()){
 				buttons.getConfirmButton().setContentAreaFilled(false);
@@ -443,7 +418,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			getCurrentNoteFromCollection().setVolume(v);
 		} else if (sliders.isDurationAdjusting()){
 			int d = sliders.getDurationValue();
-			labels.modifyDurationLabel("" + d);
+			//labels.modifyDurationLabel("" + d);
+            labels.modifyDurationLabel("" + d);
 			getCurrentNoteFromCollection().setDuration(d);
 		}
 

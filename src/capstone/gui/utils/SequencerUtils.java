@@ -1,16 +1,13 @@
 package capstone.gui.utils;
 
-import java.awt.Color;
-import java.awt.Component;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JSlider;
+import javax.swing.*;
 import javax.imageio.ImageIO;
 
 import capstone.gui.Note;
@@ -128,11 +125,11 @@ public class SequencerUtils {
 		} else {
             button.setBackground(null);
             button.setIcon(null);
-            button.setText(SequencerUtils.intToPitchWithOctave(n.getPitch()));
+            button.setText(SequencerUtils.intPitchToString(n.getPitch()));
         }
 
-		button.setText(
-				SequencerUtils.intPitchToString(n.getPitch()).toString());
+		//button.setText(
+		//		SequencerUtils.intPitchToString(n.getPitch()).toString());
 
 	}
 
