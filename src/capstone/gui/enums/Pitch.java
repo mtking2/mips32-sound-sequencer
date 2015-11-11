@@ -1,5 +1,13 @@
 package capstone.gui.enums;
 
+/**
+  *	Enumerator designating the different musical
+  * pitches and their names.
+  *	
+  *	@author Brad Westley
+  *	@author Michael King
+  *	@version 11.20.15
+  */
 public enum Pitch {
 	C("C"), 
 	C_SHARP("C#"), 
@@ -15,17 +23,34 @@ public enum Pitch {
 	B("B"), 
 	SPECIAL("None");
 	
+	/** The name of the pitch **/
 	private String name;
 	
+	/**
+	  *	Constructs a new pitch enumeration with the given name.
+	  *
+	  * @param name the name of the pitch
+	  */
 	private Pitch(String name){
 		this.name = name;
 	}
 	
+	/**
+	  *	Converts this pitch object to a string.
+	  *
+	  * @return this pitch as a string
+	  */
 	@Override
 	public String toString(){
 		return name;
 	}
 	
+	/**
+	  *	Find the pitch that this string designates, and return it.
+	  *
+	  * @param s the name of the pitch
+	  * @return the pitch object whose name is the given string
+	  */
 	public Pitch toPitch(String s){
 		for(Pitch p : values())
 			if(p.toString().equals(s)) return p;
@@ -33,6 +58,11 @@ public enum Pitch {
 		return null;
 	}
 	
+	/**
+	  *	Finds the next pitch one half-step up from this pitch.
+	  *
+	  * @return the pitch one half-step higher than this pitch
+	  */
 	public Pitch next(){
 		switch(this){
 		case A:			return A_SHARP;
@@ -52,6 +82,13 @@ public enum Pitch {
 		}
 	}
 	
+	/**
+	  *	Converts a sharp pitch to its flat counterpart.  If
+	  * the given note is not a sharp, nothing is changed.
+	  *
+	  * @param p the pitch to convert
+	  * @return the pitch as a flat
+	  */
 	public String asFlat(Pitch p){
 		if(!p.equals(A_SHARP) || !p.equals(C_SHARP) || p.equals(F_SHARP)
 				|| !p.equals(D_SHARP) || !p.equals(G_SHARP)){
