@@ -8,7 +8,7 @@ import capstone.gui.utils.SequencerUtils;
   *	@author Brad Westley
   *	@author Michael King
   *	@version 11.20.15
- **/
+  */
 public enum ScaleType {
 	IONIAN("Ionian", SequencerUtils.IONIAN), 
 	DORIAN("Dorian", SequencerUtils.DORIAN), 
@@ -29,7 +29,7 @@ public enum ScaleType {
 	  *
 	  * @param name the name of the scale type
 	  * @param pitches the pitches included in the scale with root note of C
-	 **/
+	  */
 	private ScaleType(String name, Pitch[] pitches){
 		this.name = name;
 		this.pitches = pitches;
@@ -39,7 +39,7 @@ public enum ScaleType {
 	  *	Returns this scale type as a string.
 	  *
 	  * @return this scale as a string
-	 **/
+	  */
 	@Override
 	public String toString(){
 		return name;
@@ -52,7 +52,7 @@ public enum ScaleType {
 	  * @param rootNote the note that the scale starts at
 	  * @param p the pitch to check is in scale
 	  * @return if the given pitch is in the scale
-	 **/
+	  */
 	public boolean includes(Pitch rootNote, Pitch p){
 		// Since we stored scale data as in the key of C,
 		// transpose the notes until they match the right key
