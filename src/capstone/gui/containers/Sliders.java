@@ -6,20 +6,18 @@ import javax.swing.event.ChangeListener;
 import capstone.gui.Note;
 
 public class Sliders {
-	private JSlider pitch, volume, duration, instrument;
+	private JSlider pitch, volume, duration;
 	
 	public Sliders(Note initialNote){
 		pitch = new JSlider(0, 127, initialNote.getPitch());
-		volume = new JSlider(0, 127, initialNote.getVolume());
+		volume = new JSlider(0, 100, initialNote.getVolume());
 		duration = new JSlider(0, 2000, initialNote.getDuration());
-		instrument = new JSlider(0, 127, initialNote.getInstrument());
 	}
 	
 	public void setToNote(Note n){
 		pitch.setValue(n.getPitch());
 		volume.setValue(n.getVolume());
 		duration.setValue(n.getDuration());
-		instrument.setValue(n.getInstrument());
 	}
 	
 	public boolean isPitchAdjusting(){
@@ -34,10 +32,6 @@ public class Sliders {
 		return duration.getValueIsAdjusting();
 	}
 	
-	public boolean isInstrumentAdjusting(){
-		return instrument.getValueIsAdjusting();
-	}
-	
 	public int getPitchValue(){
 		return pitch.getValue();
 	}
@@ -48,10 +42,6 @@ public class Sliders {
 	
 	public int getDurationValue(){
 		return duration.getValue();
-	}
-	
-	public int getInstrumentValue(){
-		return instrument.getValue();
 	}
 	
 	public void setPitchValue(int value){
@@ -66,10 +56,6 @@ public class Sliders {
 		duration.setValue(value);
 	}
 	
-	public void setInstrumentValue(int value){
-		instrument.setValue(value);
-	}
-	
 	public JSlider getPitchSlider(){
 		return pitch;
 	}
@@ -81,15 +67,11 @@ public class Sliders {
 	public JSlider getDurationSlider(){
 		return duration;
 	}
-	
-	public JSlider getInstrumentSlider(){
-		return instrument;
-	}
+
 	
 	public void addListener(ChangeListener listener){
 		pitch.addChangeListener(listener);
 		volume.addChangeListener(listener);
 		duration.addChangeListener(listener);
-		instrument.addChangeListener(listener);
 	}
 }

@@ -1,56 +1,27 @@
 package capstone.gui.enums;
 
-/**
-  *	Enumerator designating the different musical
-  * pitches and their names.
-  *	
-  *	@author Brad Westley
-  *	@author Michael King
-  *	@version 11.20.15
-  */
 public enum Pitch {
-	C("C"), 
-	C_SHARP("C#"), 
-	D("D"), 
-	D_SHARP("D#"), 
-	E("E"), 
-	F("F"), 
-	F_SHARP("F#"), 
-	G("G"), 
-	G_SHARP("G#"), 
-	A("A"), 
-	A_SHARP("A#"), 
-	B("B"), 
-	SPECIAL("None");
+	C, C_SHARP, D, D_SHARP, E, F, F_SHARP, G, G_SHARP, A, A_SHARP, B, SPECIAL;
 	
-	/** The name of the pitch **/
-	private String name;
-	
-	/**
-	  *	Constructs a new pitch enumeration with the given name.
-	  *
-	  * @param name the name of the pitch
-	  */
-	private Pitch(String name){
-		this.name = name;
-	}
-	
-	/**
-	  *	Converts this pitch object to a string.
-	  *
-	  * @return this pitch as a string
-	  */
-	@Override
 	public String toString(){
-		return name;
+		switch(this){
+		case A:			return "A";
+		case A_SHARP:	return "A#";
+		case B:			return "B";
+		case C:			return "C";
+		case C_SHARP:	return "C#";
+		case D:			return "D";
+		case D_SHARP:	return "D#";
+		case E:			return "E";
+		case F:			return "F";
+		case F_SHARP:	return "F#";
+		case G:			return "G";
+		case G_SHARP:	return "G#";
+		case SPECIAL:	return "None";
+		default:		return "C";
+		}
 	}
 	
-	/**
-	  *	Find the pitch that this string designates, and return it.
-	  *
-	  * @param s the name of the pitch
-	  * @return the pitch object whose name is the given string
-	  */
 	public Pitch toPitch(String s){
 		for(Pitch p : values())
 			if(p.toString().equals(s)) return p;
@@ -58,11 +29,6 @@ public enum Pitch {
 		return null;
 	}
 	
-	/**
-	  *	Finds the next pitch one half-step up from this pitch.
-	  *
-	  * @return the pitch one half-step higher than this pitch
-	  */
 	public Pitch next(){
 		switch(this){
 		case A:			return A_SHARP;
@@ -80,21 +46,5 @@ public enum Pitch {
 		case SPECIAL:	return SPECIAL;
 		default:		return null;
 		}
-	}
-	
-	/**
-	  *	Converts a sharp pitch to its flat counterpart.  If
-	  * the given note is not a sharp, nothing is changed.
-	  *
-	  * @param p the pitch to convert
-	  * @return the pitch as a flat
-	  */
-	public String asFlat(Pitch p){
-		if(!p.equals(A_SHARP) || !p.equals(C_SHARP) || p.equals(F_SHARP)
-				|| !p.equals(D_SHARP) || !p.equals(G_SHARP)){
-			return p.toString();
-		}
-		
-		return p.next() + "b";
 	}
 }

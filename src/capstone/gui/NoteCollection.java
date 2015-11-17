@@ -1,6 +1,4 @@
-package capstone.gui.containers;
-
-import capstone.gui.Note;
+package capstone.gui;
 
 public class NoteCollection {
 	/** The notes that were previously committed **/
@@ -9,10 +7,6 @@ public class NoteCollection {
 	private Note[][] diff;
 	
 	public NoteCollection(int tracks, int beats){
-		reset(tracks, beats);
-	}
-	
-	public void reset(int tracks, int beats){
 		orig = new Note[tracks][beats];
 		diff = new Note[tracks][beats];
 		

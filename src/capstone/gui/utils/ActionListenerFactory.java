@@ -9,7 +9,15 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
+import javax.swing.JTree;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
+import capstone.gui.Note;
 import capstone.gui.SequencerDisplay;
 import capstone.gui.TimeSignature;
 import capstone.gui.containers.Labels;
@@ -84,7 +92,7 @@ public class ActionListenerFactory {
 	  * @param notes the collection of data for each track
 	  * @return the created save ActionListener
 	  */
-	public static ActionListener getSaveListener(Component[] components, 
+	public static ActionListener getSaveListener(Component[] components,
 			Component parent, NoteCollection notes){
 		return new ActionListener(){
 			@Override
@@ -107,7 +115,7 @@ public class ActionListenerFactory {
 	  * @param parent the parent component this listener's object is contained in
 	  * @return the created play ActionListener
 	  */
-	public static ActionListener getPlayListener(Component[] components, 
+	public static ActionListener getPlayListener(Component[] components,
 			NoteCollection notes, JButton self, JButton stop,Component parent){
 		return new ActionListener(){
 			public void actionPerformed(ActionEvent e){
@@ -191,6 +199,49 @@ public class ActionListenerFactory {
 				} else {
 					JOptionPane.showMessageDialog(parent, "No notes have changed.");
 				}
+			}
+		};
+	}
+
+
+	public static ActionListener getDurationListener(NoteCollection notes, JTextField self, JSlider duration) {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int d = Integer.parseInt(self.getText());
+				if (d>=0) {
+					notes.getNote(SequencerUtils.track, SequencerUtils.beat).setDuration(d);
+					duration.setValue(d);
+				} else {
+
+				}
+			}
+		};
+	}
+
+	public static TreeSelectionListener getInstrumentListener(JTree tree, NoteCollection notes) {
+		return new TreeSelectionListener() {
+			@Override
+			public void valueChanged(TreeSelectionEvent e) {
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode)
+						tree.getLastSelectedPathComponent();
+
+
+                if (node != null) {
+                    Object selection = node.getUserObject();
+                    //System.out.println(selection);
+                    Object value = SequencerUtils.instrumentMap.getReverseMap().get(selection);
+                    if (value!=null) {
+                        int i = (int) value;
+                        //System.out.println(i);
+                        SequencerUtils.selectedInstrument = i;
+                        for(Note n : notes.getRow(SequencerUtils.track)) {
+                            n.setInstrument(i);
+                            n.setTreePath(new TreePath(node.getPath()));
+                        }
+                        notes.getNote(SequencerUtils.track, SequencerUtils.beat).setInstrument(i);
+                    }
+                }
 			}
 		};
 	}

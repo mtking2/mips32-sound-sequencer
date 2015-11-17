@@ -2,8 +2,6 @@ package capstone.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -19,6 +17,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -26,6 +25,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -35,6 +35,7 @@ import capstone.gui.containers.Labels;
 import capstone.gui.containers.NoteCollection;
 import capstone.gui.containers.Sliders;
 import capstone.gui.utils.ActionListenerFactory;
+import capstone.gui.utils.InstrumentMenu;
 import capstone.gui.utils.SequencerUtils;
 
 /**
@@ -62,9 +63,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	private JMenu fileMenu, editMenu;
 	private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem, 
 		scaleMenuItem, timeSigMenuItem;
-	
+
 	private NoteButton currentButton;
 	private JCheckBox restBox;
+
+	//private JFormattedTextField durationLabel;
+	private InstrumentMenu instrumentMenu;
 
 	public SequencerDisplay(String title, int width, int height){
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -94,8 +98,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		setupButtons();
 		
 		west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-		west.setPreferredSize(new Dimension(315, 200));
-		
+		west.setPreferredSize(new Dimension(350, 200));
+
 		JButton play = buttons.getPlayButton();
 		JButton stop = buttons.getStopButton();
 		JButton confirm = buttons.getConfirmButton();
@@ -117,9 +121,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		north.add(stop);
 		north.add(confirm);
 		north.add(reset);
-
-		for(Component c : labels.getNorthComponents())
-			north.add(c);
 
 		panel.add(north, BorderLayout.NORTH);
 		panel.add(center, BorderLayout.CENTER);
@@ -165,14 +166,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		// Edit -> Tempo..., T - Mnemonic
 		tempoMenuItem = new JMenuItem("Tempo...", KeyEvent.VK_T);
 		tempoMenuItem.addActionListener(
-				ActionListenerFactory.getTempoListener(this, 
+				ActionListenerFactory.getTempoListener(this,
 						labels.getTempoLabel()));
 		editMenu.add(tempoMenuItem);
 
 		// Edit -> Scale..., S - Mnemonic
 		scaleMenuItem = new JMenuItem("Scale...", KeyEvent.VK_S);
 		scaleMenuItem.addActionListener(
-				ActionListenerFactory.getScaleListener(this, 
+				ActionListenerFactory.getScaleListener(this,
 						labels.getScaleLabel()));
 		editMenu.add(scaleMenuItem);
 		
@@ -193,19 +194,21 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		subNorth.add(clearNote);
 		
 		west.removeAll();
-
+        JFormattedTextField duration = labels.getDurationLabel();
 		GridBagConstraints c = new GridBagConstraints();
 		
 		Note currentNote = getCurrentNoteFromCollection();
 
 		sliders = new Sliders(currentNote);
 		
-		labels.resetNoteLabels();
-
 		labels.modifyNoteLabels(
-				SequencerUtils.intPitchToString(sliders.getPitchValue()), 
-				String.valueOf(sliders.getVolumeValue()), String.valueOf(sliders.getDurationValue()), 
-				String.valueOf(sliders.getInstrumentValue()));
+				SequencerUtils.intPitchToString(sliders.getPitchValue()),
+				String.valueOf(sliders.getVolumeValue()), String.valueOf(sliders.getDurationValue()));
+
+
+		labels.getPitchLabel().setText(SequencerUtils.intPitchToString(sliders.getPitchValue()));
+		labels.getVolumeLabel().setText("" + sliders.getVolumeValue());
+		duration.setText("" + sliders.getDurationValue());
 
 		restBox = new JCheckBox("Rest");
 		restBox.setSelected(true);
@@ -223,7 +226,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 								SequencerUtils.beat))
 							currentButton.setBackground(Color.GREEN);
 						else
-							currentButton.setBackground(Color.RED);
+							currentButton.setBackground(Color.GRAY);
 					} else {
 						if(notes.hasNoteBeenModified(SequencerUtils.track, 
 								SequencerUtils.beat))
@@ -244,13 +247,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		c.insets = new Insets(5,2,5,0);
 		c.ipady = 10;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		//c.ipadx = 2;
-		c.weightx = 0.5;
 
-		c.gridx = 0;
+		c.gridx = 1;
 		c.gridy = 0;
-		subCenter.add(restBox);
-
+		subCenter.add(restBox,c);
 
 		// Add pitch slider to panel
 		c.gridx = 0;
@@ -280,27 +280,35 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		c.gridy++;
 		subCenter.add(new JLabel("Duration "), c);
 		c.gridx++;
+        c.weightx = 0.8;
 		subCenter.add(sliders.getDurationSlider(), c);
 
 		// Add duration label to panel
 		c.gridx++;
-		subCenter.add(labels.getDurationLabel(), c);
+        c.weightx = 0.2;
+		subCenter.add(duration, c);
 
-		// Add instrument slider to panel
 		c.gridx = 0;
 		c.gridy++;
-		subCenter.add(new JLabel("Instrument "), c);
-		c.gridx++;
-		subCenter.add(sliders.getInstrumentSlider(), c);
+        subCenter.add(new JLabel("Instrument "), c);
+        c.gridx++;
+		c.weightx = 0.5;
+        c.gridheight = 3;
+        c.gridwidth = 2;
+        c.ipady = 130;
+        instrumentMenu = new InstrumentMenu();
+        instrumentMenu.getTree().addTreeSelectionListener(ActionListenerFactory.getInstrumentListener(
+                                                    instrumentMenu.getTree(), notes));
+        JScrollPane instPane = new JScrollPane(instrumentMenu.getTree());
+        subCenter.add(instPane,c);
 
-		// Add instrument label to panel
-		c.gridx++;
-		subCenter.add(labels.getInstrumentLabel(), c);
-
-		// Add listener to sliders so that when they scroll, the value in the 
+		// Add listener to sliders so that when they scroll, the value in the
 		// JLabel is updated.
 
 		sliders.addListener(this);
+
+		duration.addActionListener(ActionListenerFactory.getDurationListener(
+				notes, duration,sliders.getDurationSlider()));
 
 		west.add(subNorth, BorderLayout.NORTH);
 		west.add(subCenter, BorderLayout.CENTER);
@@ -314,17 +322,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		if (src instanceof NoteButton) {
 			NoteButton nextButton = (NoteButton) src;
 
-			// Disable this note button, enable the last one selected
-			// currentButton.setContentAreaFilled(true);
-			// nextButton.setContentAreaFilled(false);
-			
-			currentButton.setBorder(SequencerUtils.BUTTON_DEFAULT_BORDER);
-			nextButton.setBorder(SequencerUtils.BUTTON_SELECTED_BORDER);
-
 			// Change background of previous button if
 			// it was a rest
 			if(notes.getNote(SequencerUtils.track, SequencerUtils.beat).isRest()){
-				currentButton.setBackground(Color.RED);
+				currentButton.setBackground(Color.GRAY);
 			} else {
 				if(notes.hasNoteBeenModified(SequencerUtils.track, 
 						SequencerUtils.beat)){
@@ -339,6 +340,15 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 			Note currentNote = getCurrentNoteFromCollection();
 
+
+            if (currentNote.getTreePath()!=null) {
+                instrumentMenu.getTree().makeVisible(currentNote.getTreePath());
+                instrumentMenu.getTree().scrollPathToVisible(currentNote.getTreePath());
+				instrumentMenu.getTree().setSelectionPath(currentNote.getTreePath());
+            } else {
+                instrumentMenu.collapseTree();
+            }
+
 			sliders.setToNote(currentNote);
 			
 			labels.modifyNoteLabels(currentNote);
@@ -350,17 +360,20 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			currentButton = nextButton;
 		} else if (src.equals(buttons.getClearButton())) {
 			Note currentNote = getCurrentNoteFromCollection();
-
+            instrumentMenu.collapseTree();
+            currentNote.setTreePath(null);
 			currentNote = new Note(currentNote.getTrack(), currentNote.getBeat());
 			sliders.setToNote(currentNote);
 			labels.modifyNoteLabels(currentNote);
-			currentButton.setBackground(Color.RED);
+			currentButton.setBackground(Color.GRAY);
+            notes.setNote(currentNote.getTrack(), currentNote.getBeat(), currentNote);
+            SequencerUtils.resetNoteBackgrounds(center.getComponents(),notes);
 		} else if(src.equals(buttons.getResetButton())){
 			if(notes.isModified()){
 				buttons.getConfirmButton().setContentAreaFilled(false);
 				buttons.getResetButton().setContentAreaFilled(false);
 
-				Note original = notes.getOriginalNote(SequencerUtils.track, 
+				Note original = notes.getOriginalNote(SequencerUtils.track,
 													  SequencerUtils.beat);
 
 				sliders.setToNote(original);
@@ -399,14 +412,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			getCurrentNoteFromCollection().setVolume(v);
 		} else if (sliders.isDurationAdjusting()){
 			int d = sliders.getDurationValue();
-			labels.modifyDurationLabel("" + d);
+			//labels.modifyDurationLabel("" + d);
+            labels.modifyDurationLabel("" + d);
 			getCurrentNoteFromCollection().setDuration(d);
-		} else if (sliders.isInstrumentAdjusting()){
-			int i = sliders.getInstrumentValue();
-			labels.modifyInstrumentLabel("" + i);
-			for(Note n : notes.getRow(SequencerUtils.track))
-				n.setInstrument(i);
-			getCurrentNoteFromCollection().setInstrument(i);
 		}
 
 		buttons.getConfirmButton().setContentAreaFilled(notes.isModified());
@@ -442,7 +450,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				if(i == 0 && j == 0){
 					// Default note is first note
 					currentButton = button;
-					button.setBorder(SequencerUtils.BUTTON_SELECTED_BORDER);
 				}
 
 				notes.setNote(i, j, note);

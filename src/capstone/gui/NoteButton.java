@@ -2,8 +2,6 @@ package capstone.gui;
 
 import javax.swing.JButton;
 
-import capstone.gui.utils.SequencerUtils;
-
 /**
  * A button that represents a musical note, and allows 
  * the note it contains to be modified when clicked.
@@ -31,7 +29,6 @@ public class NoteButton extends JButton {
 	 */
 	public NoteButton(int track, int beat){
 		super();
-		setBorder(SequencerUtils.BUTTON_DEFAULT_BORDER);
 		
 		this.track = track;
 		this.beat = beat;

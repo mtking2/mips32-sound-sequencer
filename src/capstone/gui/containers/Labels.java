@@ -1,32 +1,33 @@
 package capstone.gui.containers;
 
 import java.awt.Component;
+import java.text.NumberFormat;
 
-import javax.swing.JLabel;
+import javax.swing.*;
+import javax.swing.text.NumberFormatter;
 
 import capstone.gui.Note;
 import capstone.gui.utils.SequencerUtils;
 
 public class Labels {
-	private JLabel 	pitch, volume, duration, instrument, tempo, scale, tSig;
+	private JLabel 	pitch, volume, tempo, scale, tSig;
+	private JFormattedTextField duration;
 	
 	public Labels(){
 		tempo = new JLabel();
 		modifyTempoLabel();
-		tSig = new JLabel();
-		modifyTimeSignatureLabel();
 		scale = new JLabel("Scale: None");
 		pitch = new JLabel();
 		volume = new JLabel();
-		duration = new JLabel();
-		instrument = new JLabel();
-	}
-	
-	public void resetNoteLabels(){
-		pitch = new JLabel();
-		volume = new JLabel();
-		duration = new JLabel();
-		instrument = new JLabel();
+		tSig = new JLabel();
+		modifyTimeSignatureLabel();
+		NumberFormat format = NumberFormat.getInstance();
+		NumberFormatter formatter = new NumberFormatter(format);
+		formatter.setValueClass(Integer.class);
+		formatter.setMinimum(0);
+		formatter.setMaximum(Integer.MAX_VALUE);
+		//formatter.setCommitsOnValidEdit(true);
+		duration = new JFormattedTextField(formatter);
 	}
 	
 	public void modifyPitchLabel(String s){
@@ -41,20 +42,18 @@ public class Labels {
 		duration.setText(s);
 	}
 	
-	public void modifyInstrumentLabel(String s){
-		instrument.setText(s);
-	}
-	
-	public void modifyNoteLabels(String pitch, String volume
-			, String duration, String instrument){
+	public void modifyNoteLabels(String pitch, String volume, String duration){
 		this.pitch.setText(pitch);
 		this.volume.setText(volume);
 		this.duration.setText(duration);
-		this.instrument.setText(instrument);
 	}
 	
 	public void modifyTempoLabel(){
-		tempo.setText("Tempo: " + SequencerUtils.tempo);
+		tempo.setText("Tempo: " + SequencerUtils.tempo +" bmp");
+	}
+	
+	public void modifyTimeSignatureLabel(){
+		tSig.setText("Time Signature: " + SequencerUtils.tSig.getName());
 	}
 	
 	public JLabel getTempoLabel(){
@@ -73,27 +72,18 @@ public class Labels {
 		return volume;
 	}
 	
-	public JLabel getDurationLabel(){
+	public JFormattedTextField getDurationLabel(){
 		return duration;
-	}
-	
-	public JLabel getInstrumentLabel(){
-		return instrument;
 	}
 	
 	public void modifyNoteLabels(Note n){
 		modifyNoteLabels(SequencerUtils.intPitchToString(n.getPitch()), 
-				"" + n.getVolume(), "" + n.getDuration(), 
-				"" + n.getInstrument());
+				"" + n.getVolume(), "" + n.getDuration());
 	}
 	
-	public Component[] getNorthComponents(){
-		Component[] all = { tempo, scale, tSig };
+	public Component[] getComponents(){
+		Component[] all = { pitch, volume, duration, tempo, scale };
 		
 		return all;
-	}
-	
-	public void modifyTimeSignatureLabel(){
-		tSig.setText("Time Signature: " + SequencerUtils.tSig.getName());
 	}
 }
