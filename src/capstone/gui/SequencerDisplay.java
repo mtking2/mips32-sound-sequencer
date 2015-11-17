@@ -40,19 +40,28 @@ import capstone.gui.utils.SequencerUtils;
 /**
  * A graphical interface that represents a music sequencer.
  *
- * @author Brad Westley and Michael King
- * @version 9/17/15
+ * @author Brad Westley
+ * @author Michael King
+ * @version 11.20.2015
  */
 public class SequencerDisplay extends JFrame implements ActionListener, ChangeListener {
+	/** Generated serialization UID **/
+	private static final long serialVersionUID = -8195923281306103591L;
+	
+	/** Collection of the notes stored in the sequencer **/
 	private NoteCollection notes;
+	/** Collection of the labels used to display information to the user **/
 	private Labels labels;
+	/** Collection of the sliders used to modify note values **/
 	private Sliders sliders;
+	/** Collection of the buttons contained in the sequencer **/
 	private Buttons buttons;
 
 	private JPanel panel, north, west, center;
 	private JMenuBar menuBar;
 	private JMenu fileMenu, editMenu;
-	private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem, scaleMenuItem;
+	private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem, 
+		scaleMenuItem, timeSigMenuItem;
 	
 	private NoteButton currentButton;
 	private JCheckBox restBox;
@@ -65,47 +74,27 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		labels = new Labels();
 		
 		buttons = new Buttons();
+		
+		int tracks = SequencerUtils.NUMBER_OF_TRACKS;
+		
+		// Multiply number of beats in time signature by two so there are 
+		// two measures
+		int beats = SequencerUtils.tSig.getBeats() * 2;
+		
+		center = new JPanel(new GridLayout(tracks, beats));
+		west = new JPanel(new BorderLayout());
 
 		panel = new JPanel();
 		panel.setLayout(new BorderLayout());
 		north = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		west = new JPanel(new BorderLayout());
 		north.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+		
+		notes = new NoteCollection(tracks, beats);
+		
+		setupButtons();
+		
 		west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		west.setPreferredSize(new Dimension(315, 200));
-		
-		// 4 tracks, 16 beats
-		int tracks = 4;
-		int beats = 16;
-
-		notes = new NoteCollection(tracks, beats);
-
-		center = new JPanel(new GridLayout(tracks, beats));
-		center.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-
-		for(int i = 0; i < tracks; i++){
-			for(int j = 0; j < beats; j++){
-				Note note = new Note(i, j);
-				NoteButton button = new NoteButton(i, j);
-				button.addActionListener(this);
-				// All notes start as rests, so start with red background
-				button.setBackground(Color.RED);
-				// Set button text field to pitch
-				button.setText(SequencerUtils.intPitchToString(note.getPitch()));
-
-				if(i == 0 && j == 0){
-					// Default note is first note
-					currentButton = button;
-					button.setBorder(SequencerUtils.BUTTON_SELECTED_BORDER);
-				}
-
-				notes.setNote(i, j, note);
-
-				center.add(button);
-			}
-		}
-
-		notes.commit();
 		
 		JButton play = buttons.getPlayButton();
 		JButton stop = buttons.getStopButton();
@@ -129,10 +118,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		north.add(confirm);
 		north.add(reset);
 
-		for(Component c : labels.getComponents())
+		for(Component c : labels.getNorthComponents())
 			north.add(c);
-
-		createTrackSelectionArea(west);
 
 		panel.add(north, BorderLayout.NORTH);
 		panel.add(center, BorderLayout.CENTER);
@@ -182,27 +169,38 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 						labels.getTempoLabel()));
 		editMenu.add(tempoMenuItem);
 
-		// Edit -> Scale..., C - Mnemonic
-		scaleMenuItem = new JMenuItem("Scale...", KeyEvent.VK_C);
+		// Edit -> Scale..., S - Mnemonic
+		scaleMenuItem = new JMenuItem("Scale...", KeyEvent.VK_S);
 		scaleMenuItem.addActionListener(
 				ActionListenerFactory.getScaleListener(this, 
 						labels.getScaleLabel()));
 		editMenu.add(scaleMenuItem);
+		
+		// Edit -> Time Signature..., I - Mnemonic
+		timeSigMenuItem = new JMenuItem("Time Signature...", KeyEvent.VK_I);
+		timeSigMenuItem.addActionListener(
+				ActionListenerFactory.getTimeSignatureSelectListener(
+						this, labels, notes, currentButton, center));
+		editMenu.add(timeSigMenuItem);
 	}
 
-	public void createTrackSelectionArea(Container cont){
+	public void createTrackSelectionArea(){
 		JButton clearNote = buttons.getClearButton();
 		JPanel subNorth = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		JPanel subCenter = new JPanel(new GridBagLayout());
 		JPanel subSouth = new JPanel(new FlowLayout());
 		clearNote.addActionListener(this);
 		subNorth.add(clearNote);
+		
+		west.removeAll();
 
 		GridBagConstraints c = new GridBagConstraints();
 		
 		Note currentNote = getCurrentNoteFromCollection();
 
 		sliders = new Sliders(currentNote);
+		
+		labels.resetNoteLabels();
 
 		labels.modifyNoteLabels(
 				SequencerUtils.intPitchToString(sliders.getPitchValue()), 
@@ -304,9 +302,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		sliders.addListener(this);
 
-		cont.add(subNorth, BorderLayout.NORTH);
-		cont.add(subCenter, BorderLayout.CENTER);
-		cont.add(subSouth, BorderLayout.SOUTH);
+		west.add(subNorth, BorderLayout.NORTH);
+		west.add(subCenter, BorderLayout.CENTER);
+		west.add(subSouth, BorderLayout.SOUTH);
 	}
 
 	@Override
@@ -417,5 +415,64 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 	private Note getCurrentNoteFromCollection(){
 		return notes.getNote(SequencerUtils.track, SequencerUtils.beat);
+	}
+	
+	public void setupButtons(){
+		int tracks = SequencerUtils.NUMBER_OF_TRACKS;
+		
+		// Multiply number of beats in time signature by two so there are 
+		// two measures
+		int beats = SequencerUtils.tSig.getBeats() * 2;
+
+		notes.reset(tracks, beats);
+		
+		center.removeAll();
+		center.setLayout(new GridLayout(tracks, beats));
+
+		for(int i = 0; i < tracks; i++){
+			for(int j = 0; j < beats; j++){
+				Note note = new Note(i, j);
+				NoteButton button = new NoteButton(i, j);
+				button.addActionListener(this);
+				// All notes start as rests, so start with red background
+				button.setBackground(Color.RED);
+				// Set button text field to pitch
+				button.setText(SequencerUtils.intPitchToString(note.getPitch()));
+
+				if(i == 0 && j == 0){
+					// Default note is first note
+					currentButton = button;
+					button.setBorder(SequencerUtils.BUTTON_SELECTED_BORDER);
+				}
+
+				notes.setNote(i, j, note);
+
+				center.add(button);
+			}
+		}
+		
+		notes.commit();
+
+		JButton confirm = buttons.getConfirmButton();
+		JButton reset = buttons.getResetButton();
+		JButton play = buttons.getPlayButton();
+
+		// Reset ActionListeners on buttons
+		for(ActionListener l : confirm.getActionListeners())
+			confirm.removeActionListener(l);
+		
+		for(ActionListener l : confirm.getActionListeners())
+			reset.removeActionListener(l);
+		
+		confirm.addActionListener(
+				ActionListenerFactory.getConfirmListener(center.getComponents(), 
+						notes, confirm, reset, play, this));
+		
+		reset.addActionListener(this);
+		
+		confirm.setContentAreaFilled(false);
+		reset.setContentAreaFilled(false);
+		
+		createTrackSelectionArea();
 	}
 }

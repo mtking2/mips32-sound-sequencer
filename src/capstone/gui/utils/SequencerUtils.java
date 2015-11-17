@@ -10,16 +10,13 @@ import java.nio.file.StandardOpenOption;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JSlider;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 
 import capstone.gui.Note;
 import capstone.gui.NoteButton;
 import capstone.gui.Scale;
+import capstone.gui.TimeSignature;
 import capstone.gui.containers.NoteCollection;
 import capstone.gui.enums.Pitch;
 import capstone.gui.enums.ScaleType;
@@ -54,9 +51,13 @@ public class SequencerUtils {
 	public static final Border BUTTON_DEFAULT_BORDER = 
 			new MatteBorder(1, 1, 1, 1, Color.BLACK);
 	
+	public static final int NUMBER_OF_TRACKS = 4;
+	
 	// Static fields //
 	
 	public static Scale scale = null;
+	public static TimeSignature tSig = TimeSignature.FOUR_FOUR;
+	
 	public static int tempo = 120;
 	public static int track = 0;
 	public static int beat = 0;
@@ -164,7 +165,7 @@ public class SequencerUtils {
 		StringBuilder builder = new StringBuilder();
 
 		// Add pitch array
-		builder.append("pitchArray" + (track + 1) + ":    .word ");
+		builder.append("pitchArray" + (track + 1) + ":\t.word ");
 
 		for(int i = 0; i < notes.getRow(track).length; i++){
 			if(i > 0) builder.append(", ");
@@ -180,7 +181,7 @@ public class SequencerUtils {
 		builder.append("\n");
 
 		// Add volume array
-		builder.append("volumeArray" + (track + 1) + ":    .word ");
+		builder.append("volumeArray" + (track + 1) + ":\t.word ");
 
 		for(int i = 0; i < notes.getRow(track).length; i++){
 			if(i > 0) builder.append(", ");
@@ -188,10 +189,10 @@ public class SequencerUtils {
 			builder.append(notes.getNote(track, i).getVolume());
 		}
 
-		builder.append("\n");
+		builder.append('\n');
 
 		// Add duration array
-		builder.append("durationArray" + (track + 1) + ":    .word ");
+		builder.append("durationArray" + (track + 1) + ":\t.word ");
 
 		for(int i = 0; i < notes.getRow(track).length; i++){
 			if(i > 0) builder.append(", ");
@@ -199,7 +200,13 @@ public class SequencerUtils {
 			builder.append(notes.getNote(track, i).getDuration());
 		}
 
-		builder.append("\n");
+		builder.append('\n');
+		
+		int beats = SequencerUtils.tSig.getBeats() * 2;
+		
+		builder.append("beats:\t.word\t" + beats + '\n');
+		
+		builder.append('\n');
 
 		return builder.toString();
 	}
@@ -260,14 +267,16 @@ public class SequencerUtils {
 		Object pitch = JOptionPane.showInputDialog(parent, "Select the pitch of the scale:"
 				, "Scale Pitch Select", JOptionPane.QUESTION_MESSAGE, null
 				, Pitch.values(), "C");
-		
-		Object scaleType = JOptionPane.showInputDialog(parent, "Select the type of the scale:"
-				, "Scale Type Select", JOptionPane.QUESTION_MESSAGE, null
-				, ScaleType.values(), "C");
-		
-		if(pitch instanceof Pitch && scaleType instanceof ScaleType){
-			scale = new Scale((Pitch) pitch, (ScaleType) scaleType);
-			scaleLabel.setText("Scale: " + scale);
+
+		if(pitch instanceof Pitch){
+			Object scaleType = JOptionPane.showInputDialog(parent, "Select the type of the scale:"
+					, "Scale Type Select", JOptionPane.QUESTION_MESSAGE, null
+					, ScaleType.values(), "C");
+
+			if(scaleType instanceof ScaleType){
+				scale = new Scale((Pitch) pitch, (ScaleType) scaleType);
+				scaleLabel.setText("Scale: " + scale);
+			}
 		}
 	}
 }

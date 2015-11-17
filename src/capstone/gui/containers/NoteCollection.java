@@ -9,6 +9,10 @@ public class NoteCollection {
 	private Note[][] diff;
 	
 	public NoteCollection(int tracks, int beats){
+		reset(tracks, beats);
+	}
+	
+	public void reset(int tracks, int beats){
 		orig = new Note[tracks][beats];
 		diff = new Note[tracks][beats];
 		
@@ -84,7 +88,7 @@ public class NoteCollection {
 			   (orig[track][beat].getVolume() == diff[track][beat].getVolume()) &&
 			   (orig[track][beat].getDuration() == diff[track][beat].getDuration()) &&
 			   (orig[track][beat].getInstrument() == diff[track][beat].getInstrument()) &&
-			   (orig[track][beat].isRest() == diff[track][beat].isRest()));
+			   (!(orig[track][beat].isRest() ^ diff[track][beat].isRest())));
 	}
 	
 	public boolean allRests(){

@@ -8,12 +8,21 @@ import capstone.gui.Note;
 import capstone.gui.utils.SequencerUtils;
 
 public class Labels {
-	private JLabel 	pitch, volume, duration, instrument, tempo, scale;
+	private JLabel 	pitch, volume, duration, instrument, tempo, scale, tSig;
 	
 	public Labels(){
 		tempo = new JLabel();
 		modifyTempoLabel();
+		tSig = new JLabel();
+		modifyTimeSignatureLabel();
 		scale = new JLabel("Scale: None");
+		pitch = new JLabel();
+		volume = new JLabel();
+		duration = new JLabel();
+		instrument = new JLabel();
+	}
+	
+	public void resetNoteLabels(){
 		pitch = new JLabel();
 		volume = new JLabel();
 		duration = new JLabel();
@@ -78,9 +87,13 @@ public class Labels {
 				"" + n.getInstrument());
 	}
 	
-	public Component[] getComponents(){
-		Component[] all = { pitch, volume, duration, instrument, tempo, scale };
+	public Component[] getNorthComponents(){
+		Component[] all = { tempo, scale, tSig };
 		
 		return all;
+	}
+	
+	public void modifyTimeSignatureLabel(){
+		tSig.setText("Time Signature: " + SequencerUtils.tSig.getName());
 	}
 }

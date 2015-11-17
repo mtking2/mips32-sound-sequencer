@@ -8,37 +8,54 @@ import java.io.IOException;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JSlider;
+import javax.swing.JPanel;
 
-import capstone.gui.Scale;
+import capstone.gui.SequencerDisplay;
+import capstone.gui.TimeSignature;
+import capstone.gui.containers.Labels;
 import capstone.gui.containers.NoteCollection;
 
 /**
-  *	A factory object that creates {@link java.awt.event.ActionListener} objects for the various components of
+  *	A factory object that creates {@link ActionListener} objects for the various components of
   * the graphical user interface.
   *	
-  * @see java.awt.event.ActionListener
+  * @see ActionListener
   *	@author Brad Westley
   *	@author Michael King
   *	@version 11.20.15
   */
 public class ActionListenerFactory {
 	/**
-	  *	Creates the action listener that sets the tempo after tempo selection.
-	  *
-	  * @see java.awt.event.ActionListener
-	  * @param parent the parent component that this listener's object is contained in
-	  * @return the created tempo setting ActionListener
-	  */
-	public static ActionListener getTempoSelectListener(Component parent){
+	 * Creates the action listener that brings up a window to 
+	 * select a new time signature.
+	 * 
+	 * @see ActionListener
+	 * @return the created time signature selection action listener
+	 */
+	public static ActionListener getTimeSignatureSelectListener(
+			SequencerDisplay parent, Labels labels, NoteCollection notes, 
+			JButton currentButton, JPanel center){
 		return new ActionListener(){
 			@Override
-			public void actionPerformed(ActionEvent e){
-				try{
-					SequencerUtils.tempo = Integer.parseInt(e.getActionCommand());
-				} catch(NumberFormatException ex){
-					SequencerUtils.showTempoError(parent);
-				}
+			public void actionPerformed(ActionEvent e) {
+				// TODO check if notes are entered, prompt user to delete all
+				
+				String[] objects = new String[TimeSignature.values().length];
+				
+				for(int i = 0; i < objects.length; i++)
+					objects[i] = TimeSignature.values()[i].getName();
+				
+				String input =  (String)
+						JOptionPane.showInputDialog(parent, "Select a new time signature:", 
+								"Time Signature Select", JOptionPane.QUESTION_MESSAGE, null, 
+								objects, "4/4");
+				
+				for(TimeSignature tSig : TimeSignature.values())
+					if(tSig.getName().equals(input)) SequencerUtils.tSig = tSig;
+				
+				labels.modifyTimeSignatureLabel();
+				
+				parent.setupButtons();
 			}
 		};
 	}
@@ -46,7 +63,7 @@ public class ActionListenerFactory {
 	/**
 	  *	Creates the action listener that exits the program.
 	  *
-	  * @see java.awt.event.ActionListener
+	  * @see ActionListener
 	  * @return the created exit ActionListener
 	  */
 	public static ActionListener getExitListener(){
@@ -61,7 +78,7 @@ public class ActionListenerFactory {
 	/**
 	  *	Creates the action listener that saves track data to a file.
 	  *
-	  * @see java.awt.event.ActionListener
+	  * @see ActionListener
 	  * @param components the components displaying the track data
 	  * @param parent the parent component this listener's object is contained in
 	  * @param notes the collection of data for each track
@@ -82,7 +99,7 @@ public class ActionListenerFactory {
 	/**
 	  *	Creates the action listener that plays a sequence.
 	  *
-	  * @see java.awt.event.ActionListener
+	  * @see ActionListener
 	  * @param components the components displaying the track data
 	  * @param notes the collection of data for each track
 	  * @param self the 'play' button itself
@@ -132,7 +149,7 @@ public class ActionListenerFactory {
 	/**
 	  *	Creates the action listener that stops a playing sequence.
 	  *
-	  * @see java.awt.event.ActionListener
+	  * @see ActionListener
 	  * @param parent the parent component this listener's object is contained in
 	  * @return the created stop ActionListener
 	  */
@@ -151,7 +168,7 @@ public class ActionListenerFactory {
 	/**
 	  *	Creates the action listener that commits the changes to notes.
 	  *
-	  * @see java.awt.event.ActionListener
+	  * @see ActionListener
 	  * @param components the components displaying the track data
 	  * @param notes the collection of data for each track
 	  * @param confirm the 'confirm changes' button
@@ -181,7 +198,7 @@ public class ActionListenerFactory {
 	/**
 	  *	Creates the action listener that brings up the window to select a new tempo.
 	  *
-	  * @see java.awt.event.ActionListener
+	  * @see ActionListener
 	  * @param parent the parent component this listener's object is contained in
 	  * @param tempoLabel the label that displays the tempo
 	  * @return the created tempo selection ActionListener
@@ -213,7 +230,7 @@ public class ActionListenerFactory {
 	/**
 	  *	Creates the action listener that brings up a window to select a new scale.
 	  *
-	  * @see java.awt.event.ActionListener
+	  * @see ActionListener
 	  * @param parent the parent component this listener's object is contained in
 	  * @param tempoLabel the label that displays the current scale
 	  * @return the created scale selection ActionListener

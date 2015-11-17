@@ -1,10 +1,10 @@
 .text
 
 setup:
-	li $t3, 0	# How many times loop has finished
-	li $t4, 8	# How many times the loop will run
 	li $t5, 0      	# Which note is being played
-	li $t6, 16	# How many notes to play
+	
+	la $t6, beats	# Load address for notes to play
+	lw $t6, 0($t6)	# Load how many notes to play
 
 	lw $t7, tempo	# Load tempo
 	li $t8, 0	# Offset for array values
@@ -46,8 +46,6 @@ jump:
 	jr $ra		# Jump to return address
 	
 reset:
-
-	addi $t3, $t3, 1	# Increment times looped by 1
 	
 	li $t5, 0  	# How many notes have been played
 	li $t8, 0	# Reset offset to 0
@@ -55,7 +53,6 @@ reset:
 	# Reset to first track data
 	jal loadFirstTrack
 
-	beq $t3, $t4, exit
 	j main
 
 sleep:
@@ -69,7 +66,7 @@ sleep:
 loadFirstTrack:
 	la $t0, pitchArray1	# $t0 = first track's pitch data
 	la $t1, durationArray1	# $t1 = first track's duration data
-	la $t2, volumeArray1	# $t3 = first track's volume data
+	la $t2, volumeArray1	# $t2 = first track's volume data
 
 	# Add offset to array addresses
 	add $t0, $t0, $t8
@@ -92,7 +89,7 @@ loadFirstTrack:
 loadSecondTrack:
 	la $t0, pitchArray2	# $t0 = second track's pitch data
 	la $t1, durationArray2	# $t1 = second track's duration data
-	la $t2, volumeArray2	# $t3 = second track's volume data
+	la $t2, volumeArray2	# $t2 = second track's volume data
 
 	# Add offset to array addresses
 	add $t0, $t0, $t8
@@ -115,7 +112,7 @@ loadSecondTrack:
 loadThirdTrack:
 	la $t0, pitchArray3	# $t0 = third track's pitch data
 	la $t1, durationArray3	# $t1 = third track's duration data
-	la $t2, volumeArray3	# $t3 = third track's volume data
+	la $t2, volumeArray3	# $t2 = third track's volume data
 
 	# Add offset to array addresses
 	add $t0, $t0, $t8
@@ -138,7 +135,7 @@ loadThirdTrack:
 loadFourthTrack:
 	la $t0, pitchArray4	# $t0 = fourth track's pitch data
 	la $t1, durationArray4	# $t1 = fourth track's duration data
-	la $t2, volumeArray4	# $t3 = fourth track's volume data
+	la $t2, volumeArray4	# $t2 = fourth track's volume data
 
 	# Add offset to array addresses
 	add $t0, $t0, $t8
@@ -157,12 +154,3 @@ loadFourthTrack:
 	li $a2, 3	# Set channel to fourth channel
 
 	jr $ra			# Jump to return address
-
-exit:
-	li $v0, 10	# Load exit system call
-	syscall
-	# first track data
-	jal loadFirstTrack
-
-	beq $t3, $t4, exit
-	j main
