@@ -17,6 +17,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -60,9 +61,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 	private JPanel panel, north, west, center;
 	private JMenuBar menuBar;
-	private JMenu fileMenu, editMenu;
+	private JMenu fileMenu, editMenu, viewMenu;
 	private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem, 
 		scaleMenuItem, timeSigMenuItem;
+	private JCheckBoxMenuItem flatMenuItem;
 
 	private NoteButton currentButton;
 	private JCheckBox restBox;
@@ -145,6 +147,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		editMenu = new JMenu("Edit");
 		editMenu.setMnemonic(KeyEvent.VK_E);
 		menuBar.add(editMenu);
+		
+		// View Menu, V - Mnemonic
+		viewMenu = new JMenu("View");
+		viewMenu.setMnemonic(KeyEvent.VK_V);
+		menuBar.add(viewMenu);
 
 		// File->New, N - Mnemonic
 		newMenuItem = new JMenuItem("New", KeyEvent.VK_N);
@@ -183,6 +190,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				ActionListenerFactory.getTimeSignatureSelectListener(
 						this, labels, notes, currentButton, center));
 		editMenu.add(timeSigMenuItem);
+		
+		// View -> Flats, L - Mnemonic
+		flatMenuItem = new JCheckBoxMenuItem("Use Flats", false);
+		flatMenuItem.setMnemonic(KeyEvent.VK_L);
+		flatMenuItem.addActionListener(
+				ActionListenerFactory.getFlatListener(
+						labels, center.getComponents(), notes, currentButton));
+		viewMenu.add(flatMenuItem);
 	}
 
 	public void createTrackSelectionArea(){

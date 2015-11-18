@@ -61,6 +61,7 @@ public class SequencerUtils {
 	
 	public static boolean ignoreStateChange = false;
 	public static boolean playing = false;
+	public static boolean flats = false;
 	
 	public static void showTempoError(Component parent){
 		JOptionPane.showMessageDialog(parent, 
