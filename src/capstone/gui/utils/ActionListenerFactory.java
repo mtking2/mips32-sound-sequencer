@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -18,10 +19,12 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import capstone.gui.Note;
+import capstone.gui.NoteButton;
 import capstone.gui.SequencerDisplay;
 import capstone.gui.TimeSignature;
 import capstone.gui.containers.Labels;
 import capstone.gui.containers.NoteCollection;
+import capstone.gui.enums.Pitch;
 
 /**
   *	A factory object that creates {@link ActionListener} objects for the various components of
@@ -47,33 +50,79 @@ public class ActionListenerFactory {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO check if notes are entered, prompt user to delete all
-				
+
 				String[] objects = new String[TimeSignature.values().length];
-				
+
 				for(int i = 0; i < objects.length; i++)
 					objects[i] = TimeSignature.values()[i].getName();
-				
+
 				String input =  (String)
 						JOptionPane.showInputDialog(parent, "Select a new time signature:", 
 								"Time Signature Select", JOptionPane.QUESTION_MESSAGE, null, 
 								objects, "4/4");
-				
+
 				for(TimeSignature tSig : TimeSignature.values())
 					if(tSig.getName().equals(input)) SequencerUtils.tSig = tSig;
-				
+
 				labels.modifyTimeSignatureLabel();
-				
+
 				parent.setupButtons();
 			}
 		};
 	}
-	
+
 	/**
-	  *	Creates the action listener that exits the program.
-	  *
-	  * @see ActionListener
-	  * @return the created exit ActionListener
-	  */
+	 * Creates an ActionListener that will change how notes are displayed, from sharps
+	 * to flats and vice versa.
+	 *
+	 * @param labels the object containing the display's notes
+	 * @param components the components contained in the center panel (all NoteButtons)
+	 * @see ActionListener
+	 * @return the created ActionListener that changes between flats and sharps
+	 */
+	public static ActionListener getFlatListener(Labels labels,
+			Component[] components, NoteCollection notes,
+			NoteButton currentButton){
+		return new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e){
+				boolean selected =
+						((JCheckBoxMenuItem) e.getSource()).getState();
+
+				SequencerUtils.flats = selected;
+
+				NoteButton[] buttons = new NoteButton[components.length];
+
+				for(int i = 0; i < components.length; i++)
+					buttons[i] = (NoteButton) components[i];
+
+				for(NoteButton button : buttons){
+					Note note = notes.getNote(
+							button.getTrack(), button.getBeat());
+
+					button.setText(SequencerUtils.intPitchToString(
+							note.getPitch()).toString());
+				}
+
+				labels.getScaleLabel().setText("Scale: "
+						+ SequencerUtils.scale);
+
+				Note current = notes.getNote(
+						currentButton.getTrack(), currentButton.getBeat());
+
+				labels.modifyPitchLabel(SequencerUtils.intPitchToString(
+						current.getPitch()).toString());
+
+			}
+		};
+	}
+
+	/**
+	 *	Creates the action listener that exits the program.
+	 *
+	 * @see ActionListener
+	 * @return the created exit ActionListener
+	 */
 	public static ActionListener getExitListener(){
 		return new ActionListener(){
 			@Override
@@ -82,16 +131,16 @@ public class ActionListenerFactory {
 			}
 		};
 	}
-	
+
 	/**
-	  *	Creates the action listener that saves track data to a file.
-	  *
-	  * @see ActionListener
-	  * @param components the components displaying the track data
-	  * @param parent the parent component this listener's object is contained in
-	  * @param notes the collection of data for each track
-	  * @return the created save ActionListener
-	  */
+	 *	Creates the action listener that saves track data to a file.
+	 *
+	 * @see ActionListener
+	 * @param components the components displaying the track data
+	 * @param parent the parent component this listener's object is contained in
+	 * @param notes the collection of data for each track
+	 * @return the created save ActionListener
+	 */
 	public static ActionListener getSaveListener(Component[] components,
 			Component parent, NoteCollection notes){
 		return new ActionListener(){
@@ -103,25 +152,25 @@ public class ActionListenerFactory {
 			}
 		};
 	}
-	
+
 	/**
-	  *	Creates the action listener that plays a sequence.
-	  *
-	  * @see ActionListener
-	  * @param components the components displaying the track data
-	  * @param notes the collection of data for each track
-	  * @param self the 'play' button itself
-	  * @param stop the 'stop' button
-	  * @param parent the parent component this listener's object is contained in
-	  * @return the created play ActionListener
-	  */
+	 *	Creates the action listener that plays a sequence.
+	 *
+	 * @see ActionListener
+	 * @param components the components displaying the track data
+	 * @param notes the collection of data for each track
+	 * @param self the 'play' button itself
+	 * @param stop the 'stop' button
+	 * @param parent the parent component this listener's object is contained in
+	 * @return the created play ActionListener
+	 */
 	public static ActionListener getPlayListener(Component[] components,
 			NoteCollection notes, JButton self, JButton stop,Component parent){
 		return new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				notes.commit();
-                stop.setEnabled(true);
-                self.setEnabled(false);
+				stop.setEnabled(true);
+				self.setEnabled(false);
 				SequencerUtils.resetNoteBackgrounds(components, notes);
 
 				if(notes.allRests()){
@@ -137,14 +186,14 @@ public class ActionListenerFactory {
 						//System.out.println(playPath);
 						Process playProc = Runtime.getRuntime().exec(playPath);
 
-                        ActionListener doStop = new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                playProc.destroy();
-                                stop.setEnabled(false);
-                                self.setEnabled(true);
-                            }
-                        };
+						ActionListener doStop = new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								playProc.destroy();
+								stop.setEnabled(false);
+								self.setEnabled(true);
+							}
+						};
 						stop.addActionListener(doStop);
 					} catch (IOException ex) {
 						System.out.println(ex.getMessage());
@@ -153,14 +202,14 @@ public class ActionListenerFactory {
 			}
 		};
 	}
-	
+
 	/**
-	  *	Creates the action listener that stops a playing sequence.
-	  *
-	  * @see ActionListener
-	  * @param parent the parent component this listener's object is contained in
-	  * @return the created stop ActionListener
-	  */
+	 *	Creates the action listener that stops a playing sequence.
+	 *
+	 * @see ActionListener
+	 * @param parent the parent component this listener's object is contained in
+	 * @return the created stop ActionListener
+	 */
 	public static ActionListener getStopListener(Component parent){
 		return new ActionListener(){
 			@Override
@@ -172,19 +221,19 @@ public class ActionListenerFactory {
 			}
 		};
 	}
-	
+
 	/**
-	  *	Creates the action listener that commits the changes to notes.
-	  *
-	  * @see ActionListener
-	  * @param components the components displaying the track data
-	  * @param notes the collection of data for each track
-	  * @param confirm the 'confirm changes' button
-	  * @param reset the 'reset' button
-	  * @param play the 'play' button
-	  * @param parent the parent component this listener's object is contained in
-	  * @return the created commit ActionListener
-	  */
+	 *	Creates the action listener that commits the changes to notes.
+	 *
+	 * @see ActionListener
+	 * @param components the components displaying the track data
+	 * @param notes the collection of data for each track
+	 * @param confirm the 'confirm changes' button
+	 * @param reset the 'reset' button
+	 * @param play the 'play' button
+	 * @param parent the parent component this listener's object is contained in
+	 * @return the created commit ActionListener
+	 */
 	public static ActionListener getConfirmListener(Component[] components, 
 			NoteCollection notes, JButton confirm, JButton reset, JButton play, Component parent){
 		return new ActionListener(){
@@ -193,7 +242,7 @@ public class ActionListenerFactory {
 				if(notes.isModified()){
 					confirm.setContentAreaFilled(false);
 					reset.setContentAreaFilled(false);
-                    play.setEnabled(true);
+					play.setEnabled(true);
 					notes.commit();
 					SequencerUtils.resetNoteBackgrounds(components, notes);
 				} else {
@@ -227,33 +276,33 @@ public class ActionListenerFactory {
 						tree.getLastSelectedPathComponent();
 
 
-                if (node != null) {
-                    Object selection = node.getUserObject();
-                    //System.out.println(selection);
-                    Object value = SequencerUtils.instrumentMap.getReverseMap().get(selection);
-                    if (value!=null) {
-                        int i = (int) value;
-                        //System.out.println(i);
-                        SequencerUtils.selectedInstrument = i;
-                        for(Note n : notes.getRow(SequencerUtils.track)) {
-                            n.setInstrument(i);
-                            n.setTreePath(new TreePath(node.getPath()));
-                        }
-                        notes.getNote(SequencerUtils.track, SequencerUtils.beat).setInstrument(i);
-                    }
-                }
+				if (node != null) {
+					Object selection = node.getUserObject();
+					//System.out.println(selection);
+					Object value = SequencerUtils.instrumentMap.getReverseMap().get(selection);
+					if (value!=null) {
+						int i = (int) value;
+						//System.out.println(i);
+						SequencerUtils.selectedInstrument = i;
+						for(Note n : notes.getRow(SequencerUtils.track)) {
+							n.setInstrument(i);
+							n.setTreePath(new TreePath(node.getPath()));
+						}
+						notes.getNote(SequencerUtils.track, SequencerUtils.beat).setInstrument(i);
+					}
+				}
 			}
 		};
 	}
 
 	/**
-	  *	Creates the action listener that brings up the window to select a new tempo.
-	  *
-	  * @see ActionListener
-	  * @param parent the parent component this listener's object is contained in
-	  * @param tempoLabel the label that displays the tempo
-	  * @return the created tempo selection ActionListener
-	  */
+	 *	Creates the action listener that brings up the window to select a new tempo.
+	 *
+	 * @see ActionListener
+	 * @param parent the parent component this listener's object is contained in
+	 * @param tempoLabel the label that displays the tempo
+	 * @return the created tempo selection ActionListener
+	 */
 	public static ActionListener getTempoListener(Component parent, JLabel tempoLabel){
 		return new ActionListener(){
 			@Override
@@ -264,7 +313,7 @@ public class ActionListenerFactory {
 
 				try {
 					int tempo = Integer.parseInt(answer);
-					
+
 					if(tempo > 0 && tempo <= 300){
 						SequencerUtils.tempo = tempo;
 						tempoLabel.setText("Tempo: " + tempo + " bpm");

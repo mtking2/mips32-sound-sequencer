@@ -1,9 +1,14 @@
 package capstone.gui.enums;
 
+import capstone.gui.utils.SequencerUtils;
+
 public enum Pitch {
 	C, C_SHARP, D, D_SHARP, E, F, F_SHARP, G, G_SHARP, A, A_SHARP, B, SPECIAL;
 	
 	public String toString(){
+		if(SequencerUtils.flats && isAccidental())
+			return asFlat(this);
+		
 		switch(this){
 		case A:			return "A";
 		case A_SHARP:	return "A#";
@@ -46,5 +51,19 @@ public enum Pitch {
 		case SPECIAL:	return SPECIAL;
 		default:		return null;
 		}
+	}
+	
+	private static String asFlat(Pitch p){
+		if(!p.isAccidental()){
+			return p.toString();
+		}
+
+		return p.next() + "b";
+	}
+	
+	private boolean isAccidental(){
+		return (this.equals(A_SHARP) || this.equals(C_SHARP) || 
+				this.equals(F_SHARP) || this.equals(D_SHARP) || 
+				this.equals(G_SHARP));
 	}
 }
