@@ -82,7 +82,7 @@ public class Labels {
 	}
 	
 	public Component[] getComponents(){
-		Component[] all = { pitch, volume, duration, tempo, scale };
+		Component[] all = { tempo, scale, tSig};
 		
 		return all;
 	}

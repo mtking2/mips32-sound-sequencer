@@ -283,7 +283,7 @@ public class ActionListenerFactory {
 	  *
 	  * @see ActionListener
 	  * @param parent the parent component this listener's object is contained in
-	  * @param tempoLabel the label that displays the current scale
+	  * @param scaleLabel the label that displays the current scale
 	  * @return the created scale selection ActionListener
 	  */
 	public static ActionListener getScaleListener(Component parent, 

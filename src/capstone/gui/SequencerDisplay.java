@@ -1,13 +1,6 @@
 package capstone.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -121,6 +114,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		north.add(stop);
 		north.add(confirm);
 		north.add(reset);
+
+        for(Component c : labels.getComponents())
+            north.add(c);
 
 		panel.add(north, BorderLayout.NORTH);
 		panel.add(center, BorderLayout.CENTER);
@@ -322,7 +318,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		if (src instanceof NoteButton) {
 			NoteButton nextButton = (NoteButton) src;
 
-			// Change background of previous button if
+            currentButton.setContentAreaFilled(true);
+            nextButton.setBackground(Color.WHITE);
+
+            // Change background of previous button if
 			// it was a rest
 			if(notes.getNote(SequencerUtils.track, SequencerUtils.beat).isRest()){
 				currentButton.setBackground(Color.GRAY);
@@ -334,6 +333,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 					currentButton.setBackground(null);
 				}
 			}
+
 
 			SequencerUtils.track = nextButton.getTrack();
 			SequencerUtils.beat = nextButton.getBeat();
@@ -431,6 +431,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		// Multiply number of beats in time signature by two so there are 
 		// two measures
 		int beats = SequencerUtils.tSig.getBeats() * 2;
+        System.out.println(beats);
 
 		notes.reset(tracks, beats);
 		
@@ -442,10 +443,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				Note note = new Note(i, j);
 				NoteButton button = new NoteButton(i, j);
 				button.addActionListener(this);
-				// All notes start as rests, so start with red background
-				button.setBackground(Color.RED);
+				// All notes start as rests, so start with gray background
+				button.setBackground(Color.GRAY);
+				SequencerUtils.setRestIcon(button);
 				// Set button text field to pitch
-				button.setText(SequencerUtils.intPitchToString(note.getPitch()));
+				//button.setText(SequencerUtils.intPitchToString(note.getPitch()));
 
 				if(i == 0 && j == 0){
 					// Default note is first note
