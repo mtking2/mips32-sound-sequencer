@@ -95,20 +95,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		west.setPreferredSize(new Dimension(350, 200));
 
-        /*
-		JButton play = buttons.getPlayButton();
-		JButton stop = buttons.getStopButton();
-		JButton confirm = buttons.getConfirmButton();
-		JButton reset = buttons.getResetButton();
-		
-		play.addActionListener(ActionListenerFactory.getPlayListener(
-				center.getComponents(), notes, play, stop, this));
-		stop.addActionListener(ActionListenerFactory.getStopListener(this));
-        */
-		//buttons.getConfirmButton().setContentAreaFilled(false);
-
-		//buttons.getResetButton().setContentAreaFilled(false);
-
 		north.add(buttons.getPlayButton());
 		north.add(buttons.getStopButton());
 		north.add(buttons.getConfirmButton());
@@ -227,7 +213,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				if(!SequencerUtils.ignoreStateChange){
 					boolean selected = e.getStateChange() == ItemEvent.SELECTED;
 					
-					getCurrentNoteFromCollection().setIfRest(selected);
+					Note n = getCurrentNoteFromCollection();
+					
+					n.setIfRest(selected);
 					
 					if(selected){
 						if(notes.hasNoteBeenModified(SequencerUtils.track, 
@@ -237,10 +225,15 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 							currentButton.setBackground(Color.GRAY);
 					} else {
 						if(notes.hasNoteBeenModified(SequencerUtils.track, 
-								SequencerUtils.beat))
+								SequencerUtils.beat)){
 							currentButton.setBackground(Color.GREEN);
-						else
+							currentButton.setIcon(null);
+							currentButton.setText(SequencerUtils.intPitchToString(n.getPitch()));
+						} else {
 							currentButton.setBackground(null);
+							currentButton.setIcon(null);
+				            currentButton.setText(SequencerUtils.intPitchToString(n.getPitch()));
+						}
 					}
 
 					buttons.getConfirmButton().setEnabled(
@@ -330,9 +323,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		if (src instanceof NoteButton) {
 			NoteButton nextButton = (NoteButton) src;
 
-            nextButton.setBackground(null);
-            currentButton.setContentAreaFilled(true);
-
             // Change background of previous button if
 			// it was a rest
 			if(notes.getNote(SequencerUtils.track, SequencerUtils.beat).isRest()){
@@ -346,6 +336,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				}
 			}
 
+			nextButton.setBackground(null);
 
 			SequencerUtils.track = nextButton.getTrack();
 			SequencerUtils.beat = nextButton.getBeat();
@@ -418,8 +409,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				// skip this pitch
 				sliders.setPitchValue(++p);
 			}
-			labels.modifyPitchLabel(SequencerUtils.intPitchToString(p));
+			String pitchAsString = SequencerUtils.intPitchToString(p);
+			labels.modifyPitchLabel(pitchAsString);
 			getCurrentNoteFromCollection().setPitch(p);
+			currentButton.setText(pitchAsString);
 		} else if (sliders.isVolumeAdjusting()){
 			int v = sliders.getVolumeValue();
 			labels.modifyVolumeLabel("" + v);
@@ -465,6 +458,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				if(i == 0 && j == 0){
 					// Default note is first note
 					currentButton = button;
+					// Set first note as selected
+					button.setBackground(null);
 				}
 
 				notes.setNote(i, j, note);

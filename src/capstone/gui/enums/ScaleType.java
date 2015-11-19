@@ -3,12 +3,12 @@ package capstone.gui.enums;
 import capstone.gui.utils.SequencerUtils;
 
 public enum ScaleType {
-	IONIAN("Ionian", SequencerUtils.IONIAN), 
+	IONIAN("Major (Ionian)", SequencerUtils.IONIAN), 
 	DORIAN("Dorian", SequencerUtils.DORIAN), 
 	PHRYGIAN("Phrygian", SequencerUtils.PHRYGIAN), 
 	LYDIAN("Lydian", SequencerUtils.LYDIAN), 
 	MIXOLYDIAN("Mixolydian", SequencerUtils.MIXOLYDIAN), 
-	AEOLIAN("Aeolian", SequencerUtils.AEOLIAN), 
+	AEOLIAN("Minor (Aeolian)", SequencerUtils.AEOLIAN), 
 	LOCRIAN("Locrian", SequencerUtils.LOCRIAN);
 
 	/** The name of the scale **/

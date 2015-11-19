@@ -24,7 +24,6 @@ import capstone.gui.SequencerDisplay;
 import capstone.gui.TimeSignature;
 import capstone.gui.containers.Labels;
 import capstone.gui.containers.NoteCollection;
-import capstone.gui.enums.Pitch;
 
 /**
   *	A factory object that creates {@link ActionListener} objects for the various components of
@@ -49,8 +48,18 @@ public class ActionListenerFactory {
 		return new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO check if notes are entered, prompt user to delete all
+				// Check if notes are entered, prompt user to delete all
+				
+				if(!notes.allRests()){
+					int input = JOptionPane.showConfirmDialog(parent, 
+							"All notes will be reset if you select a new "
+							+ "time signature.  Continue?", "Confirm Note Reset", 
+							JOptionPane.YES_NO_OPTION);
+					
+					if(input != JOptionPane.YES_OPTION) return;
+				}
 
+				// Get the names of the time signatures
 				String[] objects = new String[TimeSignature.values().length];
 
 				for(int i = 0; i < objects.length; i++)
@@ -61,6 +70,7 @@ public class ActionListenerFactory {
 								"Time Signature Select", JOptionPane.QUESTION_MESSAGE, null, 
 								objects, "4/4");
 
+				// Get the time signature that was chosen
 				for(TimeSignature tSig : TimeSignature.values())
 					if(tSig.getName().equals(input)) SequencerUtils.tSig = tSig;
 
@@ -100,6 +110,9 @@ public class ActionListenerFactory {
 					Note note = notes.getNote(
 							button.getTrack(), button.getBeat());
 
+					if(!note.isRest())
+						button.setText(
+								SequencerUtils.intPitchToString(note.getPitch()));
 				}
 
                 if (SequencerUtils.scale == null)
