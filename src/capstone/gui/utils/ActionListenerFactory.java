@@ -100,19 +100,19 @@ public class ActionListenerFactory {
 					Note note = notes.getNote(
 							button.getTrack(), button.getBeat());
 
-					button.setText(SequencerUtils.intPitchToString(
-							note.getPitch()).toString());
 				}
 
-				labels.getScaleLabel().setText("Scale: "
-						+ SequencerUtils.scale);
+                if (SequencerUtils.scale == null)
+                    labels.getScaleLabel().setText("Scale: None");
+                else
+				    labels.getScaleLabel().setText("Scale: "
+						    + SequencerUtils.scale);
 
 				Note current = notes.getNote(
 						currentButton.getTrack(), currentButton.getBeat());
 
 				labels.modifyPitchLabel(SequencerUtils.intPitchToString(
 						current.getPitch()).toString());
-
 			}
 		};
 	}
@@ -240,8 +240,8 @@ public class ActionListenerFactory {
 			@Override
 			public void actionPerformed(ActionEvent e){
 				if(notes.isModified()){
-					confirm.setContentAreaFilled(false);
-					reset.setContentAreaFilled(false);
+					confirm.setEnabled(false);
+					reset.setEnabled(false);
 					play.setEnabled(true);
 					notes.commit();
 					SequencerUtils.resetNoteBackgrounds(components, notes);

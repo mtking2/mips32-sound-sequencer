@@ -244,6 +244,8 @@ public class SequencerUtils {
 	
 	public static void toFile(Component parent, NoteCollection notes) {
 		File file = new File(SequencerUtils.getPathToMIPS() + "mips.asm");
+		if (file.exists())
+            file.delete();
 
 		byte[] data = exportNotesToMIPS(notes).getBytes();
 		byte[] code = null;

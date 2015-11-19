@@ -95,6 +95,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		west.setPreferredSize(new Dimension(350, 200));
 
+        /*
 		JButton play = buttons.getPlayButton();
 		JButton stop = buttons.getStopButton();
 		JButton confirm = buttons.getConfirmButton();
@@ -103,19 +104,15 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		play.addActionListener(ActionListenerFactory.getPlayListener(
 				center.getComponents(), notes, play, stop, this));
 		stop.addActionListener(ActionListenerFactory.getStopListener(this));
+        */
+		//buttons.getConfirmButton().setContentAreaFilled(false);
 
-		confirm.setContentAreaFilled(false);
-		confirm.addActionListener(
-				ActionListenerFactory.getConfirmListener(center.getComponents(), 
-						notes, confirm, reset, play, this));
+		//buttons.getResetButton().setContentAreaFilled(false);
 
-		reset.setContentAreaFilled(false);
-		reset.addActionListener(this);
-
-		north.add(play);
-		north.add(stop);
-		north.add(confirm);
-		north.add(reset);
+		north.add(buttons.getPlayButton());
+		north.add(buttons.getStopButton());
+		north.add(buttons.getConfirmButton());
+		north.add(buttons.getResetButton());
 
         for(Component c : labels.getComponents())
             north.add(c);
@@ -246,9 +243,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 							currentButton.setBackground(null);
 					}
 
-					buttons.getConfirmButton().setContentAreaFilled(
+					buttons.getConfirmButton().setEnabled(
 							notes.isModified());
-					buttons.getResetButton().setContentAreaFilled(
+					buttons.getResetButton().setEnabled(
 							notes.isModified());
 				}
 			}
@@ -333,8 +330,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		if (src instanceof NoteButton) {
 			NoteButton nextButton = (NoteButton) src;
 
+            nextButton.setBackground(null);
             currentButton.setContentAreaFilled(true);
-            nextButton.setBackground(Color.WHITE);
 
             // Change background of previous button if
 			// it was a rest
@@ -383,10 +380,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			currentButton.setBackground(Color.GRAY);
             notes.setNote(currentNote.getTrack(), currentNote.getBeat(), currentNote);
             SequencerUtils.resetNoteBackgrounds(center.getComponents(),notes);
+			if (notes.allRests())
+                buttons.getPlayButton().setEnabled(false);
 		} else if(src.equals(buttons.getResetButton())){
 			if(notes.isModified()){
-				buttons.getConfirmButton().setContentAreaFilled(false);
-				buttons.getResetButton().setContentAreaFilled(false);
+				buttons.getConfirmButton().setEnabled(false);
+				buttons.getResetButton().setEnabled(false);
 
 				Note original = notes.getOriginalNote(SequencerUtils.track,
 													  SequencerUtils.beat);
@@ -432,8 +431,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			getCurrentNoteFromCollection().setDuration(d);
 		}
 
-		buttons.getConfirmButton().setContentAreaFilled(notes.isModified());
-		buttons.getResetButton().setContentAreaFilled(notes.isModified());
+		//buttons.getConfirmButton().setEnabled(notes.isModified());
+		//buttons.getResetButton().setEnabled(notes.isModified());
 	}
 
 	private Note getCurrentNoteFromCollection(){
@@ -446,7 +445,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		// Multiply number of beats in time signature by two so there are 
 		// two measures
 		int beats = SequencerUtils.tSig.getBeats() * 2;
-        System.out.println(beats);
 
 		notes.reset(tracks, beats);
 		
@@ -480,22 +478,29 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		JButton confirm = buttons.getConfirmButton();
 		JButton reset = buttons.getResetButton();
 		JButton play = buttons.getPlayButton();
+        JButton stop = buttons.getStopButton();
 
 		// Reset ActionListeners on buttons
 		for(ActionListener l : confirm.getActionListeners())
 			confirm.removeActionListener(l);
 		
-		for(ActionListener l : confirm.getActionListeners())
+		for(ActionListener l : reset.getActionListeners())
 			reset.removeActionListener(l);
-		
+
+        for(ActionListener l : play.getActionListeners())
+            play.removeActionListener(l);
+
 		confirm.addActionListener(
 				ActionListenerFactory.getConfirmListener(center.getComponents(), 
 						notes, confirm, reset, play, this));
 		
 		reset.addActionListener(this);
-		
-		confirm.setContentAreaFilled(false);
-		reset.setContentAreaFilled(false);
+        play.addActionListener(ActionListenerFactory.getPlayListener(
+                center.getComponents(), notes, play, stop, this));
+        stop.addActionListener(ActionListenerFactory.getStopListener(this));
+
+		confirm.setEnabled(false);
+		reset.setEnabled(false);
 		
 		createTrackSelectionArea();
 	}
