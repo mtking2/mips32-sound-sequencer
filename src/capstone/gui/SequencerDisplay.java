@@ -89,7 +89,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		north.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		
 		notes = new NoteCollection(tracks, beats);
-		
+
+        menuInit();
 		setupButtons();
 		
 		west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
@@ -106,8 +107,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		panel.add(north, BorderLayout.NORTH);
 		panel.add(center, BorderLayout.CENTER);
 		panel.add(west, BorderLayout.WEST);
-		
-		menuInit();
 
 		this.setContentPane(panel);
 		this.setJMenuBar(menuBar);
@@ -486,6 +485,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         for(ActionListener l : play.getActionListeners())
             play.removeActionListener(l);
 
+        for(ActionListener l : flatMenuItem.getActionListeners())
+            flatMenuItem.removeActionListener(l);
+
 		confirm.addActionListener(
 				ActionListenerFactory.getConfirmListener(center.getComponents(), 
 						notes, confirm, reset, play, this));
@@ -493,7 +495,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		reset.addActionListener(this);
         play.addActionListener(ActionListenerFactory.getPlayListener(
                 center.getComponents(), notes, play, stop, this));
-        //stop.addActionListener(ActionListenerFactory.getStopListener(this));
+        flatMenuItem.addActionListener(
+                ActionListenerFactory.getFlatListener(
+                        labels, center.getComponents(), notes, currentButton));
 
 		confirm.setEnabled(false);
 		reset.setEnabled(false);
