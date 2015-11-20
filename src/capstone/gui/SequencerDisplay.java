@@ -375,8 +375,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
                 buttons.getPlayButton().setEnabled(false);
 		} else if(src.equals(buttons.getResetButton())){
 			if(notes.isModified()){
-				buttons.getConfirmButton().setEnabled(false);
-				buttons.getResetButton().setEnabled(false);
+
 
 				Note original = notes.getOriginalNote(SequencerUtils.track,
 													  SequencerUtils.beat);
@@ -389,6 +388,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				notes.reset();
 
 				SequencerUtils.resetNoteBackgrounds(center.getComponents(), notes);
+				buttons.getConfirmButton().setEnabled(false);
+				buttons.getResetButton().setEnabled(false);
 			} else {
 				JOptionPane.showMessageDialog(this, "No notes have changed.");
 			}
@@ -424,8 +425,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			getCurrentNoteFromCollection().setDuration(d);
 		}
 
-		//buttons.getConfirmButton().setEnabled(notes.isModified());
-		//buttons.getResetButton().setEnabled(notes.isModified());
+		buttons.getConfirmButton().setEnabled(notes.isModified());
+		buttons.getResetButton().setEnabled(notes.isModified());
 	}
 
 	private Note getCurrentNoteFromCollection(){
@@ -492,7 +493,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		reset.addActionListener(this);
         play.addActionListener(ActionListenerFactory.getPlayListener(
                 center.getComponents(), notes, play, stop, this));
-        stop.addActionListener(ActionListenerFactory.getStopListener(this));
+        //stop.addActionListener(ActionListenerFactory.getStopListener(this));
 
 		confirm.setEnabled(false);
 		reset.setEnabled(false);

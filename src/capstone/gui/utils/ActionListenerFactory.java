@@ -205,6 +205,7 @@ public class ActionListenerFactory {
 								playProc.destroy();
 								stop.setEnabled(false);
 								self.setEnabled(true);
+								SequencerUtils.playing = false;
 							}
 						};
 						stop.addActionListener(doStop);
@@ -255,7 +256,8 @@ public class ActionListenerFactory {
 				if(notes.isModified()){
 					confirm.setEnabled(false);
 					reset.setEnabled(false);
-					play.setEnabled(true);
+					if(!notes.allRests() && !SequencerUtils.playing)
+                        play.setEnabled(true);
 					notes.commit();
 					SequencerUtils.resetNoteBackgrounds(components, notes);
 				} else {

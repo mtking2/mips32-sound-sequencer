@@ -139,9 +139,6 @@ public class SequencerUtils {
             button.setText(SequencerUtils.intPitchToString(n.getPitch()));
         }
 
-		//button.setText(
-		//		SequencerUtils.intPitchToString(n.getPitch()).toString());
-
 	}
 
 	public static void setRestIcon(JButton button) {
@@ -176,6 +173,12 @@ public class SequencerUtils {
 
 			builder.append("\n");
 		}
+
+		builder.append('\n');
+
+		int beats = SequencerUtils.tSig.getBeats() * 2;
+
+		builder.append("beats:\t.word\t" + beats + '\n');
 
 		builder.append("\n");
 
@@ -230,14 +233,6 @@ public class SequencerUtils {
 
 			builder.append(notes.getNote(track, i).getDuration());
 		}
-
-		builder.append('\n');
-		
-		int beats = SequencerUtils.tSig.getBeats() * 2;
-		
-		builder.append("beats:\t.word\t" + beats + '\n');
-		
-		builder.append('\n');
 
 		return builder.toString();
 	}
