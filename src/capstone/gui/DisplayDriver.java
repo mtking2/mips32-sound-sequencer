@@ -15,7 +15,7 @@ public class DisplayDriver {
 	 * @param args unused
 	 */
 	public static void main(String[] args){
-		SequencerDisplay display = new SequencerDisplay("MIPS Sound Sequencer", 1300, 450);
+		SequencerDisplay display = new SequencerDisplay("MIPS Sound Sequencer", 1400, 450);
 
 		display.run();
 	}
