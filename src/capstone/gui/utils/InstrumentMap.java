@@ -9,11 +9,13 @@ import java.util.Scanner;
 /**
  * Created by michael on 11/4/15.
  */
-public class InstrumentMap extends HashMap {
-
-    public static final int NUM_INST = 127;
+public class InstrumentMap extends HashMap<Object, Object> {
+    /** Generated serialization UID **/
+	private static final long serialVersionUID = 2508140311509124210L;
+	
+	public static final int NUM_INST = 127;
     public static final int FAMILY_SIZE = 8;
-    private HashMap reverseMap;
+    private HashMap<Object, Object> reverseMap;
 
     public InstrumentMap() {
         super(144);
@@ -33,22 +35,26 @@ public class InstrumentMap extends HashMap {
             String line = scanIn.nextLine();
 
             if (!line.startsWith("#") && !line.isEmpty()) {
-                Scanner scanLine = new Scanner(line).useDelimiter("[.]");
+                Scanner scanLine = new Scanner(line);
+                scanLine.useDelimiter("[.]");
                 int key = scanLine.nextInt()-1;
                 String value = scanLine.next();
                 this.put(key,value);
                 reverseMap.put(value, key);
+                scanLine.close();
             } else if (line.startsWith("#")) {
                 this.put("type"+i++, line.substring(1));
             }
         }
+        
+        scanIn.close();
 
         //System.out.println(this.size());
         //System.out.println(this);
         //System.out.println(reverseMap);
     }
 
-    public HashMap getReverseMap() {
+    public HashMap<Object, Object> getReverseMap() {
         return reverseMap;
     }
 

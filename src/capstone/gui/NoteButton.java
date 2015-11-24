@@ -9,7 +9,7 @@ import javax.swing.JButton;
  * @see JButton
  * @author Brad Westley
  * @author Michael King
- * @version 11.20.2015
+ * @version 12.11.15
  */
 public class NoteButton extends JButton {
 	/** Generated serialization UID **/

@@ -9,8 +9,10 @@ import javax.swing.tree.TreePath;
  * Created by michael on 11/6/15.
  */
 public class InstrumentMenu extends DefaultMutableTreeNode {
-
-    private JTree tree;
+    /** Generated serialization UID **/
+	private static final long serialVersionUID = -8656648598223743768L;
+	
+	private JTree tree;
     private DefaultMutableTreeNode root;
 
     public InstrumentMenu() {

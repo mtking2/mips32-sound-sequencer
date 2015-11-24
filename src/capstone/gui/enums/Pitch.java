@@ -2,9 +2,22 @@ package capstone.gui.enums;
 
 import capstone.gui.utils.SequencerUtils;
 
+/**
+ * Class enumerating all musical pitches.
+ * 
+ * @author Brad Westley
+ * @author Michael King
+ * @version 12.11.15
+ */
 public enum Pitch {
 	C, C_SHARP, D, D_SHARP, E, F, F_SHARP, G, G_SHARP, A, A_SHARP, B, SPECIAL;
 	
+	/**
+	 * Converts the pitch to a string representation.
+	 * 
+	 * @return the pitch as a string
+	 */
+	@Override
 	public String toString(){
 		if(SequencerUtils.flats && isAccidental())
 			return asFlat(this);
@@ -27,6 +40,13 @@ public enum Pitch {
 		}
 	}
 	
+	/**
+	 * Convert a string representation of a pitch to its 
+	 * enumerated counterpart.
+	 * 
+	 * @param s the name of a pitch
+	 * @return the pitch associated with the given string
+	 */
 	public Pitch toPitch(String s){
 		for(Pitch p : values())
 			if(p.toString().equals(s)) return p;
@@ -34,6 +54,9 @@ public enum Pitch {
 		return null;
 	}
 	
+	/**
+	 * @return the pitch one half-step above this pitch
+	 */
 	public Pitch next(){
 		switch(this){
 		case A:			return A_SHARP;
@@ -53,14 +76,23 @@ public enum Pitch {
 		}
 	}
 	
+	/**
+	 * If this pitch is a sharp, get its string representation as 
+	 * if it were a flat.
+	 * 
+	 * @param p the pitch to display as a flat
+	 * @return the string representation of this note as a flat
+	 */
 	private static String asFlat(Pitch p){
-		if(!p.isAccidental()){
-			return p.toString();
-		}
+		// If not an accidental, no need to add flat symbol
+		if(!p.isAccidental()) return p.toString();
 
 		return p.next() + "b";
 	}
 	
+	/**
+	 * @return if this pitch is a sharp or a flat
+	 */
 	private boolean isAccidental(){
 		return (this.equals(A_SHARP) || this.equals(C_SHARP) || 
 				this.equals(F_SHARP) || this.equals(D_SHARP) || 

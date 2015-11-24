@@ -28,7 +28,7 @@ import capstone.gui.containers.Buttons;
 import capstone.gui.containers.Labels;
 import capstone.gui.containers.NoteCollection;
 import capstone.gui.containers.Sliders;
-import capstone.gui.utils.ActionListenerFactory;
+import capstone.gui.utils.ListenerFactory;
 import capstone.gui.utils.InstrumentMenu;
 import capstone.gui.utils.SequencerUtils;
 
@@ -37,7 +37,7 @@ import capstone.gui.utils.SequencerUtils;
  *
  * @author Brad Westley
  * @author Michael King
- * @version 11.20.2015
+ * @version 12.10.15
  */
 public class SequencerDisplay extends JFrame implements ActionListener, ChangeListener {
 	/** Generated serialization UID **/
@@ -51,20 +51,39 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	private Sliders sliders;
 	/** Collection of the buttons contained in the sequencer **/
 	private Buttons buttons;
+	
+	/** Sequencer main panel **/
+	private JPanel panel;
 
-	private JPanel panel, north, west, center;
+	/** Panel on the sequencer. **/
+	private JPanel north, west, center;
+	
+	/** The top menu **/
 	private JMenuBar menuBar;
+	
+	/** Top-level menu selection **/
 	private JMenu fileMenu, editMenu, viewMenu;
+	
+	/** Menu item on the top menu **/
 	private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem, 
-		scaleMenuItem, timeSigMenuItem;
-	private JCheckBoxMenuItem flatMenuItem;
-
+		scaleMenuItem, timeSigMenuItem, flatMenuItem;
+	
+	/** The currently selected button **/
 	private NoteButton currentButton;
+	
+	/** The check box designating if the current note is a rest **/
 	private JCheckBox restBox;
 
-	//private JFormattedTextField durationLabel;
+	/** The menu of all instruments **/
 	private InstrumentMenu instrumentMenu;
 
+	/**
+	 * Create a new display with the given title, width, height.
+	 * 
+	 * @param title the title of the display
+	 * @param width how many pixels wide to make the display
+	 * @param height how many pixels high to make the display
+	 */
 	public SequencerDisplay(String title, int width, int height){
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setTitle(title);
@@ -100,7 +119,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		north.add(buttons.getConfirmButton());
 		north.add(buttons.getResetButton());
 
-        for(Component c : labels.getComponents())
+        for(Component c : labels.getTopComponents())
             north.add(c);
 
 		panel.add(north, BorderLayout.NORTH);
@@ -114,6 +133,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		this.setSize(width, height);
 	}
 
+	/**
+	 * Initialize the menu at the top of the display.
+	 */
 	private void menuInit() {
 		menuBar = new JMenuBar();
 
@@ -139,34 +161,34 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		// File -> Save, S - Mnemonic
 		saveMenuItem = new JMenuItem("Save", KeyEvent.VK_S);
 		saveMenuItem.addActionListener(
-				ActionListenerFactory.getSaveListener(center.getComponents(), 
+				ListenerFactory.getSaveListener(center.getComponents(), 
 						this, 
 						notes));
 		fileMenu.add(saveMenuItem);
 
 		// File->Exit, X - Mnemonic
 		exitMenuItem = new JMenuItem("Exit", KeyEvent.VK_X);
-		exitMenuItem.addActionListener(ActionListenerFactory.getExitListener());
+		exitMenuItem.addActionListener(ListenerFactory.getExitListener());
 		fileMenu.add(exitMenuItem);
 
 		// Edit -> Tempo..., T - Mnemonic
 		tempoMenuItem = new JMenuItem("Tempo...", KeyEvent.VK_T);
 		tempoMenuItem.addActionListener(
-				ActionListenerFactory.getTempoListener(this,
+				ListenerFactory.getTempoListener(this,
 						labels.getTempoLabel()));
 		editMenu.add(tempoMenuItem);
 
 		// Edit -> Scale..., S - Mnemonic
 		scaleMenuItem = new JMenuItem("Scale...", KeyEvent.VK_S);
 		scaleMenuItem.addActionListener(
-				ActionListenerFactory.getScaleListener(this,
+				ListenerFactory.getScaleListener(this,
 						labels.getScaleLabel()));
 		editMenu.add(scaleMenuItem);
 		
 		// Edit -> Time Signature..., I - Mnemonic
 		timeSigMenuItem = new JMenuItem("Time Signature...", KeyEvent.VK_I);
 		timeSigMenuItem.addActionListener(
-				ActionListenerFactory.getTimeSignatureSelectListener(
+				ListenerFactory.getTimeSignatureSelectListener(
 						this, labels, notes, currentButton, center));
 		editMenu.add(timeSigMenuItem);
 		
@@ -174,11 +196,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		flatMenuItem = new JCheckBoxMenuItem("Use Flats", false);
 		flatMenuItem.setMnemonic(KeyEvent.VK_L);
 		flatMenuItem.addActionListener(
-				ActionListenerFactory.getFlatListener(
+				ListenerFactory.getFlatListener(
 						labels, center.getComponents(), notes, currentButton));
 		viewMenu.add(flatMenuItem);
 	}
 
+	/**
+	 * Create the area where the notes are displayed.
+	 */
 	public void createTrackSelectionArea(){
 		JButton clearNote = buttons.getClearButton();
 		JPanel subNorth = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -298,7 +323,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         c.gridwidth = 2;
         c.ipady = 130;
         instrumentMenu = new InstrumentMenu();
-        instrumentMenu.getTree().addTreeSelectionListener(ActionListenerFactory.getInstrumentListener(
+        instrumentMenu.getTree().addTreeSelectionListener(ListenerFactory.getInstrumentListener(
                                                     instrumentMenu.getTree(), notes));
         JScrollPane instPane = new JScrollPane(instrumentMenu.getTree());
         subCenter.add(instPane,c);
@@ -308,7 +333,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		sliders.addListener(this);
 
-		duration.addActionListener(ActionListenerFactory.getDurationListener(
+		duration.addActionListener(ListenerFactory.getDurationListener(
 				notes, duration,sliders.getDurationSlider()));
 
 		west.add(subNorth, BorderLayout.NORTH);
@@ -316,6 +341,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		west.add(subSouth, BorderLayout.SOUTH);
 	}
 
+	/**
+	 * Fires when an action has been performed on a component that the 
+	 * display is listening to.
+	 * 
+	 * @param e the event that was performed
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object src = e.getSource();
@@ -395,10 +426,18 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		} 
 	}
 	
+	/**
+	 * Brings up the sequencer window.
+	 */
 	public void run(){
 		setVisible(true);
 	}
 
+	/**
+	 * Fired when a change occurs to one of the sliders in the sequencer.
+	 * 
+	 * @param e the event that occurred
+	 */
 	@Override
 	public void stateChanged(ChangeEvent e) {
 		if (sliders.isPitchAdjusting()){
@@ -423,15 +462,20 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
             labels.modifyDurationLabel("" + d);
 			getCurrentNoteFromCollection().setDuration(d);
 		}
-
-		//buttons.getConfirmButton().setEnabled(notes.isModified());
-		//buttons.getResetButton().setEnabled(notes.isModified());
 	}
 
+	/**
+	 * Get the currently selected note.
+	 * 
+	 * @return the currently selected note
+	 */
 	private Note getCurrentNoteFromCollection(){
 		return notes.getNote(SequencerUtils.track, SequencerUtils.beat);
 	}
 	
+	/**
+	 * Set up the note buttons in the center panel.
+	 */
 	public void setupButtons(){
 		int tracks = SequencerUtils.NUMBER_OF_TRACKS;
 		
@@ -486,13 +530,13 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
             play.removeActionListener(l);
 
 		confirm.addActionListener(
-				ActionListenerFactory.getConfirmListener(center.getComponents(), 
+				ListenerFactory.getConfirmListener(center.getComponents(), 
 						notes, confirm, reset, play, this));
 		
 		reset.addActionListener(this);
-        play.addActionListener(ActionListenerFactory.getPlayListener(
+        play.addActionListener(ListenerFactory.getPlayListener(
                 center.getComponents(), notes, play, stop, this));
-        stop.addActionListener(ActionListenerFactory.getStopListener(this));
+        stop.addActionListener(ListenerFactory.getStopListener(this));
 
 		confirm.setEnabled(false);
 		reset.setEnabled(false);

@@ -26,20 +26,25 @@ import capstone.gui.containers.Labels;
 import capstone.gui.containers.NoteCollection;
 
 /**
-  *	A factory object that creates {@link ActionListener} objects for the various components of
-  * the graphical user interface.
+  *	A factory object that creates objects that implement {@link EventListener} 
+  * for the various components of the graphical user interface.
   *	
-  * @see ActionListener
+  * @see EventListener
   *	@author Brad Westley
   *	@author Michael King
   *	@version 11.20.15
   */
-public class ActionListenerFactory {
+public class ListenerFactory {
 	/**
-	 * Creates the action listener that brings up a window to 
+	 * Creates the {@link ActionListener} that brings up a window to 
 	 * select a new time signature.
 	 * 
 	 * @see ActionListener
+	 * @param parent the sequencer display
+	 * @param labels the container that stores the sequencer labels
+	 * @param notes the notes that the user has entered
+	 * @param currentButton the currently selected button
+	 * @param center the panel containing the note button objects
 	 * @return the created time signature selection action listener
 	 */
 	public static ActionListener getTimeSignatureSelectListener(
@@ -82,11 +87,13 @@ public class ActionListenerFactory {
 	}
 
 	/**
-	 * Creates an ActionListener that will change how notes are displayed, from sharps
+	 * Creates an {@link ActionListener} that will change how notes are displayed, from sharps
 	 * to flats and vice versa.
 	 *
 	 * @param labels the object containing the display's notes
 	 * @param components the components contained in the center panel (all NoteButtons)
+	 * @param notes the notes that the user has entered
+	 * @param currentButton the currently selected button
 	 * @see ActionListener
 	 * @return the created ActionListener that changes between flats and sharps
 	 */
@@ -131,7 +138,7 @@ public class ActionListenerFactory {
 	}
 
 	/**
-	 *	Creates the action listener that exits the program.
+	 *	Creates the {@link ActionListener} that exits the program.
 	 *
 	 * @see ActionListener
 	 * @return the created exit ActionListener
@@ -146,12 +153,12 @@ public class ActionListenerFactory {
 	}
 
 	/**
-	 *	Creates the action listener that saves track data to a file.
+	 *	Creates the {@link ActionListener} that saves track data to a file.
 	 *
 	 * @see ActionListener
-	 * @param components the components displaying the track data
-	 * @param parent the parent component this listener's object is contained in
-	 * @param notes the collection of data for each track
+	 * @param parent the parent container
+	 * @param components the components contained in the center panel (all NoteButtons)
+	 * @param notes the notes that the user has entered
 	 * @return the created save ActionListener
 	 */
 	public static ActionListener getSaveListener(Component[] components,
@@ -167,14 +174,14 @@ public class ActionListenerFactory {
 	}
 
 	/**
-	 *	Creates the action listener that plays a sequence.
+	 *	Creates the {@link ActionListener} that plays a sequence.
 	 *
 	 * @see ActionListener
-	 * @param components the components displaying the track data
-	 * @param notes the collection of data for each track
+	 * @param components the components contained in the center panel (all NoteButtons)
+	 * @param notes the notes that the user has entered
 	 * @param self the 'play' button itself
 	 * @param stop the 'stop' button
-	 * @param parent the parent component this listener's object is contained in
+	 * @param parent the parent container
 	 * @return the created play ActionListener
 	 */
 	public static ActionListener getPlayListener(Component[] components,
@@ -217,10 +224,10 @@ public class ActionListenerFactory {
 	}
 
 	/**
-	 *	Creates the action listener that stops a playing sequence.
+	 *	Creates the {@link ActionListener} that stops a playing sequence.
 	 *
 	 * @see ActionListener
-	 * @param parent the parent component this listener's object is contained in
+	 * @param parent the parent container
 	 * @return the created stop ActionListener
 	 */
 	public static ActionListener getStopListener(Component parent){
@@ -236,15 +243,15 @@ public class ActionListenerFactory {
 	}
 
 	/**
-	 *	Creates the action listener that commits the changes to notes.
+	 * Creates the {@link ActionListener} that commits the changes to notes.
 	 *
 	 * @see ActionListener
-	 * @param components the components displaying the track data
-	 * @param notes the collection of data for each track
+	 * @param components the components contained in the center panel (all NoteButtons)
+	 * @param notes the notes that the user has entered
 	 * @param confirm the 'confirm changes' button
 	 * @param reset the 'reset' button
 	 * @param play the 'play' button
-	 * @param parent the parent component this listener's object is contained in
+	 * @param parent the parent container
 	 * @return the created commit ActionListener
 	 */
 	public static ActionListener getConfirmListener(Component[] components, 
@@ -265,7 +272,15 @@ public class ActionListenerFactory {
 		};
 	}
 
-
+	/**
+	 * Creates an {@link ActionListener} that sets the duration text field.
+	 * 
+	 * @see ActionListener
+	 * @param notes the notes that the user has entered
+	 * @param self the duration text field
+	 * @param duration the duration slider
+	 * @return the created duration listener
+	 */
 	public static ActionListener getDurationListener(NoteCollection notes, JTextField self, JSlider duration) {
 		return new ActionListener() {
 			@Override
@@ -274,13 +289,19 @@ public class ActionListenerFactory {
 				if (d>=0) {
 					notes.getNote(SequencerUtils.track, SequencerUtils.beat).setDuration(d);
 					duration.setValue(d);
-				} else {
-
 				}
 			}
 		};
 	}
 
+	/**
+	 * Creates the {@link TreeSelectionListener} that sets a track's instrument.
+	 * 
+	 * @see TreeSelectionListener
+	 * @param tree the tree that lists all instruments
+	 * @param notes the notes that the user has entered
+	 * @return the created instrument selection listener
+	 */
 	public static TreeSelectionListener getInstrumentListener(JTree tree, NoteCollection notes) {
 		return new TreeSelectionListener() {
 			@Override
