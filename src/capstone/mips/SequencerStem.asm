@@ -10,34 +10,54 @@ setup:
 	li $t8, 0	# Offset for array values
 
 main:
+	# Load first track note data
 	jal loadFirstTrack
+	# Play note from first track
 	jal playNote
+	
+	# Load second note data
 	jal loadSecondTrack
+	# Play note from second track
 	jal playNote
+	
+	# Load third track data
 	jal loadThirdTrack
+	# Play note from third track
 	jal playNote
+	
+	# Load fourth track data
 	jal loadFourthTrack
+	# Play note from fourth track
 	jal playNote
+	
+	# Sleep until next beat
 	jal sleep
 
-	addi $t5, $t5, 1	# Increment notes played by 1
-	addi $t8, $t8, 4	# Increment offset by 1 byte
+	# Increment notes played by 1
+	addi $t5, $t5, 1
+	# Increment offset by 1 byte
+	addi $t8, $t8, 4
 
+	# if notes played == number of beats, go back to beginning of sequence
 	beq $t5, $t6, reset
+	
+	# Loop and play next note
 	j main
-
+	
+# Subroutines #
 
 playNote:
 
 	li $v0, 37 	# Load MIDI playing service
 
-	lw $a0, 0($t0)		# Load current pitch
+	lw $a0, 0($t0)		# Load current note's pitch
 
+	# If pitch is -1, skip playing (note is rest)
 	beq $a0, -1, jump
 
-	lw $a1, 0($t1)		# Load current duration
+	lw $a1, 0($t1)		# Load current note's duration
 	
-	lw $a3, 0($t2)		# Load current volume
+	lw $a3, 0($t2)		# Load current note's volume
 
 	syscall		# Play sound
 
@@ -64,7 +84,7 @@ sleep:
 	jr $ra
 
 loadFirstTrack:
-	la $t0, pitchArray1	# $t0 = first track's pitch data
+	la $t0, pitchArray1		# $t0 = first track's pitch data
 	la $t1, durationArray1	# $t1 = first track's duration data
 	la $t2, volumeArray1	# $t2 = first track's volume data
 
