@@ -21,9 +21,9 @@ import javax.swing.tree.TreePath;
 import capstone.gui.Note;
 import capstone.gui.NoteButton;
 import capstone.gui.SequencerDisplay;
-import capstone.gui.TimeSignature;
 import capstone.gui.containers.Labels;
 import capstone.gui.containers.NoteCollection;
+import capstone.gui.enums.TimeSignature;
 
 /**
   *	A factory object that creates objects that implement {@link EventListener} 
@@ -168,7 +168,15 @@ public class ListenerFactory {
 			public void actionPerformed(ActionEvent e) {
 				notes.commit();
 				SequencerUtils.resetNoteBackgrounds(components, notes);
-				SequencerUtils.toFile(parent, notes);
+				
+				try {
+					SequencerUtils.toFile(notes);
+					
+					JOptionPane.showMessageDialog(parent, 
+							"File saved successfully.");
+				} catch (IOException ex) {
+					JOptionPane.showMessageDialog(parent, ex.getMessage());
+				}
 			}
 		};
 	}
@@ -200,7 +208,13 @@ public class ListenerFactory {
 					JOptionPane.showMessageDialog(parent, "The sequence is already playing.");
 				} else {
 					SequencerUtils.playing = true;
-					SequencerUtils.toFile(parent, notes);
+					
+					try {
+						SequencerUtils.toFile(notes);
+					} catch (IOException ex) {
+						JOptionPane.showMessageDialog(parent, ex.getMessage());
+					}
+					
 					try {
 						String playPath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/mips.asm";
 						//System.out.println(playPath);

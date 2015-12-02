@@ -1,4 +1,4 @@
-package capstone.gui;
+package capstone.gui.enums;
 
 /**
  * A class enumerating several musical time signatures.

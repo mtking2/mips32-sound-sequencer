@@ -4,10 +4,12 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Image;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -18,10 +20,10 @@ import javax.swing.JOptionPane;
 import capstone.gui.Note;
 import capstone.gui.NoteButton;
 import capstone.gui.Scale;
-import capstone.gui.TimeSignature;
 import capstone.gui.containers.NoteCollection;
 import capstone.gui.enums.Pitch;
 import capstone.gui.enums.ScaleType;
+import capstone.gui.enums.TimeSignature;
 
 /**
  * Class that keeps general information about the sequence, as well 
@@ -64,6 +66,18 @@ public class SequencerUtils {
 	
 	/** The number of tracks in the sequencer **/
 	public static final int NUMBER_OF_TRACKS = 4;
+	
+	/** The file name to save track data to **/
+	private static final String FILENAME = "mipsdata.mss";
+	
+	/** The file name to save MIPS code to  **/
+	private static final String MIPS_FILENAME = "mips.asm";
+	
+	/** The size of one word in bytes **/
+	private static final int WORD_SIZE = 4;
+	
+	/** The pitch value that designates that the note is a rest **/
+	private static final String REST_PITCH = "1000";
 		
 	////////////
 	
@@ -228,154 +242,6 @@ public class SequencerUtils {
 	}
 	
 	/**
-	 * Export note information to a MIPS file.
-	 * 
-	 * @param notes the stored note information
-	 * @return a string containing exported note information
-	 */
-	public static String exportNotesToMIPS(NoteCollection notes){
-		StringBuilder builder = new StringBuilder();
-
-		// Begin with data section
-		builder.append(".data\n\n");
-
-		builder.append("instruments:    .word ");
-
-		for(int i = 0; i < notes.getAll().length; i++){
-			if(i > 0) builder.append(", ");
-
-			builder.append(notes.getNote(i, 0).getInstrument());
-		}
-
-		builder.append("\n\n");
-
-		for(int i = 0; i < notes.getAll().length; i++){
-			builder.append("# TRACK " + (i + 1) + " DATA #\n\n");
-
-			builder.append(notesDataToMIPS(notes, i));
-
-			builder.append("\n");
-		}
-
-		builder.append('\n');
-
-		int beats = SequencerUtils.tSig.getBeats() * 2;
-
-		builder.append("beats:\t.word\t" + beats + '\n');
-
-		builder.append("\n");
-
-        // converts the tempo (in BPMs) to delay time (in milliseconds).
-		int bpmToMs = 60000/SequencerUtils.tempo;
-
-		builder.append("tempo:        .word    "
-				+ bpmToMs);
-
-		builder.append("\n\n");
-
-		return builder.toString();
-	}
-	
-	/**
-	 * Convert note data for a track to MIPS arrays.
-	 * 
-	 * @param notes the stored note information
-	 * @param track the track to convert
-	 * @return a string representing the track's note values as MIPS arrays
-	 */
-	public static String notesDataToMIPS(NoteCollection notes, int track){
-		StringBuilder builder = new StringBuilder();
-
-		// Add pitch array
-		builder.append("pitchArray" + (track + 1) + ":\t.word ");
-
-		for(int i = 0; i < notes.getRow(track).length; i++){
-			if(i > 0) builder.append(", ");
-
-			if(!notes.getNote(track, i).isRest()){
-				builder.append(notes.getNote(track, i).getPitch());
-			} else {
-				// -1 is value designating a rest
-				builder.append(-1);
-			}
-		}
-
-		builder.append("\n");
-
-		// Add volume array
-		builder.append("volumeArray" + (track + 1) + ":\t.word ");
-
-		for(int i = 0; i < notes.getRow(track).length; i++){
-			if(i > 0) builder.append(", ");
-
-            // convert the volume percentage into an integer value between 1 and 127
-			int d = (int)(notes.getNote(track, i).getVolume()/0.7874);
-			builder.append(d);
-		}
-
-		builder.append('\n');
-
-		// Add duration array
-		builder.append("durationArray" + (track + 1) + ":\t.word ");
-
-		for(int i = 0; i < notes.getRow(track).length; i++){
-			if(i > 0) builder.append(", ");
-
-			builder.append(notes.getNote(track, i).getDuration());
-		}
-
-		return builder.toString();
-	}
-	
-	/**
-	 * Create MIPS file for playing the current sequence.
-	 * 
-	 * @param parent the container to display messages to
-	 * @param notes the stored note information
-	 */
-	public static void toFile(Component parent, NoteCollection notes) {
-		File file = new File(SequencerUtils.getPathToMIPS() + "mips.asm");
-		if (file.exists())
-            file.delete();
-
-		byte[] data = exportNotesToMIPS(notes).getBytes();
-		byte[] code = null;
-
-		try {
-			code = Files.readAllBytes(
-					Paths.get(SequencerUtils.getPathToMIPS() + 
-							"SequencerStem.asm"));
-		} catch (IOException ex) {
-			JOptionPane.showMessageDialog(parent,
-					"Error reading from file SequencerStem.asm:\n"
-							+ ex.getMessage());
-			return;
-		}
-
-		// Combine track data and template into one array
-
-		byte[] contents = new byte[data.length + code.length];
-
-		for (int i = 0; i < data.length; i++)
-			contents[i] = data[i];
-
-		for (int i = data.length; i < data.length + code.length; i++)
-			contents[i] = code[i - data.length];
-
-		try {
-			Files.write(Paths.get(file.getPath()),
-					contents,
-					StandardOpenOption.CREATE,
-					StandardOpenOption.WRITE);
-		} catch (IOException ex) {
-			JOptionPane.showMessageDialog(parent,
-					"Error saving to file:\n" + ex.getMessage());
-		}
-
-		JOptionPane.showMessageDialog(parent, "File successfully saved.");
-	}
-	
-	/**
 	 * Brings up a prompt for selecting a new scale, or removing the 
 	 * current scale if needed.
 	 * 
@@ -409,5 +275,157 @@ public class SequencerUtils {
 				scaleLabel.setText("Scale: " + scale);
 			}
 		}
+	}
+	
+	/**
+	 * Creates a data file as well as a MIPS file for playing the sequence.
+	 * 
+	 * @param notes the stored note data
+	 * @throws IOException if something goes wrong during writing to file
+	 */
+	public static void toFile(NoteCollection notes) throws IOException {
+		saveDataFile(notes);
+		saveMipsFile();
+	}
+
+	/**
+	 * Creates the MIPS code file that plays the sequence.
+	 * 
+	 * @throws IOException if something goes wrong during writing to file
+	 */
+	private static void saveMipsFile() throws IOException {
+		StringBuilder builder = new StringBuilder();
+
+		builder.append(".data\n\n");
+		builder.append("tempo:\t.word\t" + tempo + '\n');
+		builder.append("beats:\t.word\t" + tSig.getBeats() + '\n');
+		builder.append("tracks:\t.word\t" + 4);		// Number of tracks hardcoded
+		builder.append("filename:\t.asciiz\t\"mipsdata.mss\"\n\n");
+
+		Path p = Paths.get(getPathToMIPS() + "SequencerStem.asm");
+
+		byte[] stemData = Files.readAllBytes(p);
+
+		File mipsFile = new File(getPathToMIPS() + MIPS_FILENAME);
+
+		OutputStream stream = new FileOutputStream(mipsFile);
+
+		stream.write(builder.toString().getBytes());
+		stream.write(stemData);
+		
+		stream.close();
+	}
+	
+	/**
+	 * Saves MIDI information to a file.
+	 * 
+	 * @param notes the stored note information
+	 * @throws IOException if something goes wrong during writing to file
+	 */
+	private static void saveDataFile(NoteCollection notes) throws IOException {
+		File file = new File(getPathToMIPS() + FILENAME);
+		
+		OutputStream stream = new FileOutputStream(file);
+		
+		// Write instruments
+		for(int i = 0; i < NUMBER_OF_TRACKS; i++)
+			stream.write(toWord(notes.getNote(i, 0).getInstrument()).getBytes());
+
+		for(int i = 0; i < NUMBER_OF_TRACKS; i++)
+			stream.write(getFormattedTrackContent(notes, i));
+
+		stream.close();
+	}
+	
+	/**
+	 * Get the MIDI data for a specific track.
+	 * 
+	 * @param notes the stored note information
+	 * @param track the track to store
+	 * @return the formatted track data as a series of bytes
+	 */
+	private static byte[] getFormattedTrackContent(NoteCollection notes, int track){
+		Note[] row = notes.getRow(track);
+		
+		StringBuilder pitches = new StringBuilder(getNoteValueByteLength());
+		StringBuilder volumes = new StringBuilder(getNoteValueByteLength());
+		StringBuilder durations = new StringBuilder(getNoteValueByteLength());
+		
+		for(Note n : row){
+			// If rest, denote by having pitch be 1000 in data file
+			if(n.isRest()){
+				pitches.append(REST_PITCH);
+			} else {
+				pitches.append(toWord(n.getPitch()));
+			}
+			
+			durations.append(toWord(n.getDuration()));
+			volumes.append(toWord(getVolumeValueFromPercentage(n.getVolume())));
+		}
+		
+		String contentString = 
+				pitches.toString() + durations.toString() + volumes.toString();
+
+		byte[] content = new byte[contentString.length()];
+		
+		for(int i = 0; i < contentString.length(); i++)
+			content[i] = contentString.getBytes()[i];
+		
+		return content;
+	}
+	
+	/**
+	 * Calculate how much space for each note value (pitch, volume,
+	 * duration).
+	 * 
+	 * @return the amount of space to store all note values
+	 */
+	private static int getNoteValueByteLength(){
+		return 4 * tSig.getBeats();
+	}
+	
+	/**
+	 * Convert a number to a four byte word, preceding it with 
+	 * 0's if necessary.
+	 * 
+	 * @param num the number to convert
+	 * @return the number as a four-byte word
+	 */
+	private static String toWord(int num){
+		StringBuilder builder = new StringBuilder(WORD_SIZE);
+		
+		if(num >= 1000 || num < 0){
+			// This should not happen, so make this note a rest
+			// MIPS parses rests as the first byte of word = 1
+			return REST_PITCH;
+		} else {
+			builder.append('0');
+			
+			if(num >= 100){
+				builder.append(num);
+			} else {
+				builder.append('0');
+				
+				if(num >= 10){
+					builder.append(num);
+				} else {
+					builder.append('0');
+					
+					builder.append(num);
+				}
+			}
+		}
+		
+		return builder.toString();
+	}
+	
+	/**
+	 * Converts volume as a percentage to a value between 0 and 127.
+	 * 
+	 * @param volumePercentage the note volume as a percentage
+	 * @return the note volume's MIDI value
+	 */
+	private static int getVolumeValueFromPercentage(int volumePercentage){
+		return (int) (volumePercentage / 0.7874);
 	}
 }

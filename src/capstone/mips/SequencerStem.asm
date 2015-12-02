@@ -1,176 +1,219 @@
 .text
 
-setup:
-	li $t5, 0      	# Which note is being played
-	
-	la $t6, beats	# Load address for notes to play
-	lw $t6, 0($t6)	# Load how many notes to play
+#############
+# REGISTERS #
+#############
 
-	lw $t7, tempo	# Load tempo
-	li $t8, 0	# Offset for array values
+# $t0-$t9 :: Temporary registers
+#
+# $s0 :: file descriptor
+# $s1 :: address where instrument data starts
+# $s2 :: address where track data starts
+# $s3 :: size of each track's data
+# $s4 :: address of current track data
+# $s8 :: beat counter
+# $s9 :: track counter
 
 main:
-	# Load first track note data
-	jal loadFirstTrack
-	# Play note from first track
-	jal playNote
-	
-	# Load second note data
-	jal loadSecondTrack
-	# Play note from second track
-	jal playNote
-	
-	# Load third track data
-	jal loadThirdTrack
-	# Play note from third track
-	jal playNote
-	
-	# Load fourth track data
-	jal loadFourthTrack
-	# Play note from fourth track
-	jal playNote
-	
-	# Sleep until next beat
-	jal sleep
+	## Load track data ##
 
-	# Increment notes played by 1
-	addi $t5, $t5, 1
-	# Increment offset by 1 byte
-	addi $t8, $t8, 4
-
-	# if notes played == number of beats, go back to beginning of sequence
-	beq $t5, $t6, reset
-	
-	# Loop and play next note
-	j main
-	
-# Subroutines #
-
-playNote:
-
-	li $v0, 37 	# Load MIDI playing service
-
-	lw $a0, 0($t0)		# Load current note's pitch
-
-	# If pitch is -1, skip playing (note is rest)
-	beq $a0, -1, jump
-
-	lw $a1, 0($t1)		# Load current note's duration
-	
-	lw $a3, 0($t2)		# Load current note's volume
-
-	syscall		# Play sound
-
-jump:
-
-	jr $ra		# Jump to return address
-	
-reset:
-	
-	li $t5, 0  	# How many notes have been played
-	li $t8, 0	# Reset offset to 0
-
-	# Reset to first track data
-	jal loadFirstTrack
-
-	j main
-
-sleep:
-	# Sleep until next beat
-	li $v0, 32		# Load sleep service
-	add $a0, $0, $t7	# Time to sleep == tempo
+	# Open data file
+	li $v0, 13		# $v0 = syscall 13 (open file)
+	la $a0, filename	# $a0 = file name string
+	li $a1, 0		# $a1 = 0 (open for read)
+	li $a2, 0		# mode (ignored)
 	syscall
+		
+	move $s0, $v0	# $s0 = file descriptor
+	
+	# Read instruments
+	
+	# Calculate bytes to read
+	# bytes to read = number of tracks * 4 bytes
+	la $t0, tracks	# $t0 = &tracks
+	lw $t0, 0($t0)	# $t0 = tracks
+	li $t1, 4		# $t1 = 4
+	mult $t0, $t1	# $lo = $t0 * $t1
+	
+	mflo $a0	# $a0 = $lo (bytes to read)
+	
+	# Read from file
+	jal fileRead
+	
+	# Save stack pointer address
+	move $s1, $sp	$s1 = $sp (address where instruments are stored)
+	
+	# Read track data
+	
+	# Calculate bytes to read
+	# bytes to read = beats * 4 bytes * 3 sets of data (pitch, volume, duration)
+	la $t0, beats	# $t0 = &beats
+	lw $t0, 0($t0)	# $t0 = beats
+	li $t1, 4		# $t1 = 4
+	mult $t0, $t1	# $lo = $t0 * $t1
+	
+	mflo $t0		# $t0 = $lo (result)
+	li $t1, 3		# $t1 = 3
+	mult $t0, $t1	# $lo = $t0 * $t1
+	
+	mflo $s3	# $s3 = bytes to read (size of track data)
+	
+	# Read data for each track
+	li $s9, 0		# Counter
+	
+	trackLoop:
+		addi $s9, $s9, 1	# Increment counter
+		
+		move $a0, $s3	# $a0 = $s3 (bytes to read)
+		jal fileRead
+		
+		la $t0, tracks	# $t0 = &tracks
+		lw $t0, 0($t0)	# $t0 = tracks
+		bne $s9, $t0, trackLoop
+	
+	# Save stack pointer address
+	move $s2, $sp	# $s2 = $sp (address where track data begins)
+	
+	# Close data file
+	li $v0, 16			# $v0 = syscall 16 (close file)
+	add $a0, $s0, $0	# $a0 = $s0 (file descriptor)
+	syscall
+	
+	## Configure MIDI channels ##
+	
+	li $s9, 0	# Counter
+	
+	channelLoop:
+		li $v0, 38		# $v0 = syscall 38 (MIDI program change)
+		move $a0, $s9	# $a0 = $s9 (channel number)
+		
+		# Get instrument value
+		# Address:
+		#	instrument data address + (size of word * current track)
+		li $t0, 4		# $t0 = 4 (size of word)
+		mult $t0, $s9	# $lo = $t0 * $s9 (current track)
+		
+		mflo $t0	# $t0 = $lo (result)
+		
+		add $a1, $s1, $t0	# $a1 = $s1 (instrument data address) + $t0 (offset)
+		
+		# Configure channel
+		syscall
+		
+		addi $s9, $s9, 1	# Increment counter
+	
+		la $t0, tracks	# $t0 = &tracks
+		lw $t0, 0($t0)	# $t0 = tracks
+		
+		bne $s9, $t0, channelLoop
+	
+	## Play notes ##
+	
+play:
+	
+	li $s8, 0	# Beat counter
+	
+	beatLoop:
+	
+		li $s9, 0	# Track counter
+		
+		playNote:
+			# Calculate address for track
+			# Address = 
+			# track data address + 
+			# (size of each track's data * number of tracks)
+			la $t0, tracks	# $t0 = &tracks
+			lw $t0, 0($t0)	# $t0 = tracks
+			mult $t0, $s3	# $lo = $t0 * $s3 (size of track data)
+			mflo $t0		# $t0 = $lo (result)
+			
+			add $s4, $s2, $t0	# $s4 = $s2 (track data address) + $t0 (offset)
+			
+			# Move to correct pitch
+			# 	address + (current beat * size of word)
+			li $t0, 4		# $t0 = 4 (size of word)
+			mult $t0, $s8	# $lo = $t0 * $s8 (beat number)
+			
+			mflo $t0	# $t0 = $lo (result)
+			add $s4, $s4, $t0	# $s4 = $s4 (current track address) + $t0 (beat offset)
+			
+			# Calculate size of data value array
+			# 	size of word * number of beats
+			li $t0, 4		# $t0 = 4 (size of word)
+			la $t1, beats	# $t1 = &beats
+			lw $t1, 0($t1)	# $t1 = beats
+			mult $t0, $t1	# $lo = $t0 * $t1
+			
+			mflo $t0	# $t0 = $lo (result)
+			
+			# Set params
+			
+			move $a0, $s4	# $a0 = &pitch
+			lw $a0, 0($a0)	# $a0 = pitch
+			
+			add $s4, $s4, $t0	# $s4 = $s4 + (size of data value array)
+			
+			move $a1, $s4	# $a0 = &duration
+			lw $a1, 0($a1)	# $a1 = duration
+			
+			add $s4, $s4, $t0	# $s4 = $s4 + (size of data value array)
+			
+			move $a3, $s4	# $a3 = &volume
+			lw $a3, 0($a3)	# $a3 = volume
+			
+			# Load channel (track number)
+			move $a2, $s9
+			
+			li $v0, 33	# $v0 = syscall 33 (MIDI out)
+			syscall
+			
+			addi $s9, $s9, 1	# Increment track counter
+			
+			la $t0, tracks	# $t0 = &tracks
+			lw $t0, 0($t0)	# $t0 = tracks
+			
+			bne $t0, $s9, playNote	# If all tracks played, go to next beat
+			
+			# LOOP END #
+			
+		addi $s8, $s8, 1	# Increment beat counter
+		
+		la $t0, beats	# $t0 = &beats
+		lw $t0, 0($t0)	# $t0 = beats
+		
+		bne $t0, $s8, beatLoop	# If all beats played, go back to first beat
+		j play	# Loop until process is ended
+	
+# fileRead subroutine
+# -------------------
+# Saves data from the dedicated data file onto the stack, looping
+# once for each track in the sequencer.
+#
+# Parameters
+# ----------
+# $a0		: bytes to read
+fileRead:
+	move $t0, $0	# $t0 = 0 (loop count)
+	move $t1, $a0	# $t1 = $a0 (bytes to read)
+	
+	la $t2, tracks	# $t2 = &tracks
+	lw $t2, 0($t3)	# $t2 = tracks
 
+	fileLoop:
+		# Substract stack pointer by bytes to read
+		sub $sp, $sp, $t1	# $sp = $sp - $t1
+		
+		move $t3, $sp	# $t3 = $sp	(write to stack)
+		
+		# Read from file directly onto stack
+		li $v0, 14			# $v0 = syscall 14 (read from file)
+		move $a0, $s0		# $a0 = $s0 (file descriptor)
+		move $a1, $t3		# $a1 = address of input buffer (stack)
+		move $a2, $t1		# $a2 = $t1 (max bytes to read)
+		syscall
+		
+		addi $t0, $t0, 1	# Increment counter
+		bne $t0, $t2, fileLoop	# If all tracks not processed, loop again
+	
+	# Return
 	jr $ra
-
-loadFirstTrack:
-	la $t0, pitchArray1		# $t0 = first track's pitch data
-	la $t1, durationArray1	# $t1 = first track's duration data
-	la $t2, volumeArray1	# $t2 = first track's volume data
-
-	# Add offset to array addresses
-	add $t0, $t0, $t8
-	add $t1, $t1, $t8
-	add $t2, $t2, $t8
-
-	li $v0, 38 	# Load MIDI channel service
-
-	li $a0, 0	# Load channel number
-
-	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lb $a1, 0($a1)		# Load second instrument from address (offset for instrument 1 == 0 bytes)
-
-	syscall
-
-	li $a2, 0	# Set channel number to first channel
-
-	jr $ra			# Jump to return address
-
-loadSecondTrack:
-	la $t0, pitchArray2	# $t0 = second track's pitch data
-	la $t1, durationArray2	# $t1 = second track's duration data
-	la $t2, volumeArray2	# $t2 = second track's volume data
-
-	# Add offset to array addresses
-	add $t0, $t0, $t8
-	add $t1, $t1, $t8
-	add $t2, $t2, $t8
-
-	li $v0, 38 	# Load MIDI channel service
-
-	li $a0, 1	# Load channel number
-
-	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lb $a1, 1($a1)		# Load second instrument from address
-
-	syscall
-
-	li $a2, 1	# Set channel to second channel
-
-	jr $ra			# Jump to return address
-
-loadThirdTrack:
-	la $t0, pitchArray3	# $t0 = third track's pitch data
-	la $t1, durationArray3	# $t1 = third track's duration data
-	la $t2, volumeArray3	# $t2 = third track's volume data
-
-	# Add offset to array addresses
-	add $t0, $t0, $t8
-	add $t1, $t1, $t8
-	add $t2, $t2, $t8
-
-	li $v0, 38 	# Load MIDI channel service
-
-	li $a0, 2	# Load channel number
-
-	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lb $a1, 2($a1)		# Load third instrument from address
-
-	syscall
-
-	li $a2, 2	# Set channel to third channel
-
-	jr $ra			# Jump to return address
-
-loadFourthTrack:
-	la $t0, pitchArray4	# $t0 = fourth track's pitch data
-	la $t1, durationArray4	# $t1 = fourth track's duration data
-	la $t2, volumeArray4	# $t2 = fourth track's volume data
-
-	# Add offset to array addresses
-	add $t0, $t0, $t8
-	add $t1, $t1, $t8
-	add $t2, $t2, $t8
-
-	li $v0, 38 	# Load MIDI channel service
-
-	li $a0, 3	# Load channel number
-
-	la $a1, instruments	# Load ADDRESS of instrument array into param
-	lb $a1, 3($a1)		# Load fourth instrument from address
-
-	syscall
-
-	li $a2, 3	# Set channel to fourth channel
-
-	jr $ra			# Jump to return address
