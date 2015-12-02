@@ -217,14 +217,18 @@ public class SequencerUtils {
 				button.getBeat());
 
 		if(n.isRest()) {
-			button.setBackground(Color.GRAY);
-            button.setText(null);
-			setRestIcon(button);
+			if (button.isSelected())
+				button.setBackground(Color.WHITE);
+			else
+				button.setBackground(Color.GRAY);
 		} else {
-            button.setBackground(null);
-            button.setIcon(null);
-            button.setText(SequencerUtils.intPitchToString(n.getPitch()));
-        }
+			if (button.isSelected())
+				button.setBackground(Color.WHITE);
+			else
+				button.setBackground(null);
+			button.setIcon(null);
+			button.setText(SequencerUtils.intPitchToString(n.getPitch()));
+		}
 	}
 
 	/**

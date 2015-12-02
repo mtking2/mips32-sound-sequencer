@@ -28,8 +28,8 @@ import capstone.gui.containers.Buttons;
 import capstone.gui.containers.Labels;
 import capstone.gui.containers.NoteCollection;
 import capstone.gui.containers.Sliders;
-import capstone.gui.utils.ListenerFactory;
 import capstone.gui.utils.InstrumentMenu;
+import capstone.gui.utils.ListenerFactory;
 import capstone.gui.utils.SequencerUtils;
 
 /**
@@ -366,7 +366,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				}
 			}
 
-			nextButton.setBackground(null);
+            nextButton.setBackground(Color.WHITE);
+            nextButton.setSelected(true);
+            currentButton.setSelected(false);
 
 			SequencerUtils.track = nextButton.getTrack();
 			SequencerUtils.beat = nextButton.getBeat();
@@ -399,6 +401,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			sliders.setToNote(currentNote);
 			labels.modifyNoteLabels(currentNote);
 			currentButton.setBackground(Color.GRAY);
+            currentButton.setText(null);
+            SequencerUtils.setRestIcon(currentButton);
             notes.setNote(currentNote.getTrack(), currentNote.getBeat(), currentNote);
             SequencerUtils.resetNoteBackgrounds(center.getComponents(),notes);
 			if (notes.allRests())
@@ -507,7 +511,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 					// Default note is first note
 					currentButton = button;
 					// Set first note as selected
-					button.setBackground(null);
+					button.setBackground(Color.WHITE);
+					button.setSelected(true);
 				}
 
 				notes.setNote(i, j, note);
