@@ -21,7 +21,17 @@ Steps to execute program:
 + Locate the `DisplayDriver.java` class within the project structure.
     * This class is in the following path: `mips-sound-sequencer/src/capstone/gui/DisplayDriver.java`
 + Right click on the DisplayDriver.java class, then click on run in the popup menu.
+    * A secondary window may open here asking to setup up the Java SDK. Select the JDK version you downloaded (or already have) and then locate the installation directory of it from the browse viewer within this window.
 
+* If the SDK is properly setup our sequencer program should execute and open up. 
+
+## **Note on sounds in different OSs** ##
+
+For mysterious reasons yet unknown, sounds do not play in Microsoft Windows. It just isn't cool enough for our program :P
+
+We know it has something to do with Windows not instantiating a MIDI output device when [MARS](http://courses.missouristate.edu/KenVollmar/MARS/) is called from command line. However, it works beautifully on Linux. And we have yet to test it on Mac OSX. 
+
+In short, run this on Linux. Linux is love. Linux is life.
 
 ### Contact ###
 
