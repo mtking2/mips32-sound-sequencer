@@ -6,7 +6,7 @@ This repository encompasses the entire project structure and all of the source c
 
 Version: Dec. 2nd, 2015
 
-Authors: Brad Westely & Michael King
+Authors: Brad Westley & Michael King
 
 ### Project Setup ###
 
