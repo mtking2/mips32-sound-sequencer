@@ -238,7 +238,7 @@ public class SequencerUtils {
 	 */
 	public static void setRestIcon(JButton button) {
 		try {
-            Image img = ImageIO.read(new File(getPathToUtils()+"quarter-rest.png"));
+            Image img = ImageIO.read(new File(getPathToUtils()+"eighth_rest.png"));
 			button.setIcon(new ImageIcon(img));
 		} catch (IOException e) {
 			System.out.println(e.getMessage());

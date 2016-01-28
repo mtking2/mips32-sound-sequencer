@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Mars40_CGP2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/capstone/mips/Mars40_CGP2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
