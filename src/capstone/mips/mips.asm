@@ -192,6 +192,8 @@ play:
 		# Load time to wait
 		la $a0, timeToWait	# $a0 = &timeToWait
 		lw $a0, 0($a0)		# $a0 = timeToWait
+		
+		syscall
 			
 		addi $s6, $s6, 1	# Increment beat counter
 		

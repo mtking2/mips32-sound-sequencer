@@ -301,7 +301,7 @@ public class SequencerUtils {
 		StringBuilder builder = new StringBuilder();
 
 		builder.append(".data\n\n");
-		builder.append("tempo:\t.word\t" + tempo + '\n');
+		builder.append("timeToWait:\t.word\t" + timeToWait() + '\n');
 		builder.append("beats:\t.word\t" + tSig.getBeats() + '\n');
 		builder.append("tracks:\t.word\t" + 4);		// Number of tracks hardcoded
 		builder.append("filename:\t.asciiz\t\"mipsdata.mss\"\n\n");
@@ -431,5 +431,16 @@ public class SequencerUtils {
 	 */
 	private static int getVolumeValueFromPercentage(int volumePercentage){
 		return (int) (volumePercentage / 0.7874);
+	}
+	
+	/**
+	 * Convert a tempo in beats per minute to milliseconds to wait between each 
+	 * beat, for MIPS purposes.
+	 * 
+	 * @param tempo the tempo in beats per minute
+	 * @return time to wait in between each beat
+	 */
+	private static int timeToWait(){
+		return (int) 60000 / tempo;
 	}
 }
