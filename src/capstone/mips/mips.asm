@@ -1,10 +1,8 @@
 .data
 
 timeToWait:	.word	500
-beats:	.word	16
+beats:	.word	8
 tracks:	.word	4
-
-# CHANGE THIS
 filename:	.asciiz	"C:\\Users\\Brad\\git\\mips-sound-sequencer\\src\\capstone\\mips\\mipsdata.mss"
 
 .text

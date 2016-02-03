@@ -13,13 +13,18 @@ import java.util.Scanner;
  * @author Michael King
  * @version 11.4.2015
  */
-public class InstrumentMap extends HashMap {
+public class InstrumentMap extends HashMap<Object, Object> {
 
-    /** Integer value corresponding to the size of each instrument family. */
+	/**
+	 * Serialization ID used by Java
+	 */
+	private static final long serialVersionUID = 8407462214337059231L;
+
+	/** Integer value corresponding to the size of each instrument family. */
     public static final int FAMILY_SIZE = 8;
 
     /** A {@link HashMap} object to store this instrument map with keys and values reversed. */
-    private HashMap reverseMap;
+    private HashMap<Object, Object> reverseMap;
 
     /** Constructs and initializes the <code>InstrumentMap</code> with initial capacity of 144. */
     public InstrumentMap() {
@@ -44,11 +49,14 @@ public class InstrumentMap extends HashMap {
             String line = scanIn.nextLine();
 
             if (!line.startsWith("#") && !line.isEmpty()) {
-                Scanner scanLine = new Scanner(line).useDelimiter("[.]");
+                Scanner scanLine = new Scanner(line);
+                scanLine.useDelimiter("[.]");
                 int key = scanLine.nextInt()-1;
                 String value = scanLine.next();
                 this.put(key,value);
                 reverseMap.put(value, key);
+                
+                scanLine.close();
             } else if (line.startsWith("#")) {
                 this.put("type"+i++, line.substring(1));
             }
@@ -60,7 +68,7 @@ public class InstrumentMap extends HashMap {
      * @return the "reverse" of this <code>InstrumentMap</code>. Meaning the key and value
      * of each key-value pair are switched.
      */
-    public HashMap getReverseMap() {
+    public HashMap<Object, Object> getReverseMap() {
         return reverseMap;
     }
 

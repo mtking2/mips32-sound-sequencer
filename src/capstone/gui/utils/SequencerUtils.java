@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -169,8 +170,48 @@ public class SequencerUtils {
 		builder.append(File.separator + "src");
 		builder.append(File.separator + "capstone");
 		builder.append(File.separator + "mips" + File.separator);
+		
+		String answer = builder.toString();
 
-		return builder.toString();
+		// Windows uses backslash as separator, need to escape for MIPS
+		if(System.getProperty("os.name").contains("Windows")){
+			int index = 0;
+			
+			for(char c : builder.toString().toCharArray()){
+				if(c == '\\')					
+					builder.insert(index, c);	// If char is backslash, add another
+				
+				index++;
+			}
+		}
+		
+		return answer;
+	}
+	
+	public static void loadFile(NoteCollection notes) throws IOException {
+		Path p = Paths.get(getPathToMIPS() + FILENAME);
+		
+		List<String> contents = Files.readAllLines(p);
+		
+		// Parse instrument data (first line)
+		String first = contents.get(0);	// 0 -> first index
+		
+		// Use length % 4 (size of word) as boundary
+		// i == trackNumber
+		for(int i = 0; i < (first.length() % 4); i++){
+			int index = i * 4;	// Multiply by 4 so we move word-by-word
+			
+			int instrument = fromWord(first.substring(index, index + 3));
+			
+			notes.setTrackInstrument(i, instrument);
+		}
+		
+		// TODO will need to count beats to see what time sig 
+		// the input file has
+		
+		// TODO parse lines
+		
+		// TODO reset GUI elements
 	}
 
 	/**
@@ -303,8 +344,9 @@ public class SequencerUtils {
 		builder.append(".data\n\n");
 		builder.append("timeToWait:\t.word\t" + timeToWait() + '\n');
 		builder.append("beats:\t.word\t" + tSig.getBeats() + '\n');
-		builder.append("tracks:\t.word\t" + 4);		// Number of tracks hardcoded
-		builder.append("filename:\t.asciiz\t\"mipsdata.mss\"\n\n");
+		builder.append("tracks:\t.word\t" + 4 + '\n');		// Number of tracks hardcoded
+		builder.append("filename:\t.asciiz\t\"" 
+				+ getPathToMIPS() + "mipsdata.mss\"\n\n");
 
 		Path p = Paths.get(getPathToMIPS() + "SequencerStem.asm");
 
@@ -421,6 +463,29 @@ public class SequencerUtils {
 		}
 		
 		return builder.toString();
+	}
+	
+	/**
+	 * Converts a four-character word into an integer.
+	 * 
+	 * @param word the word to convert to an integer
+	 * @return word as an integer, -1 if error
+	 */
+	private static int fromWord(String word){
+		if(word.length() != 4) return -1;	// Word is 4 bytes
+		
+		int result = 0;
+		
+		// Parse word front-to-back
+		for(int i = 0; i < word.length(); i++){
+			int factor = 10 * (4 - i);	// Which power of 10 we are currently parsing
+			
+			int current = word.charAt(i);
+			
+			result += (factor * current);
+		}
+		
+		return result;
 	}
 	
 	/**

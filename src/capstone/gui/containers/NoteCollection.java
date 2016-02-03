@@ -128,6 +128,17 @@ public class NoteCollection {
 	}
 	
 	/**
+	 * Sets the instrument for every note in a particular track.
+	 * 
+	 * @param track which track to modify
+	 * @param instrument the instrument value to assign to each note
+	 */
+	public void setTrackInstrument(int track, int instrument){
+		for(Note n : diff[track])
+			n.setInstrument(instrument);
+	}
+	
+	/**
 	 * Get all modified versions of the contained notes.
 	 * 
 	 * @return
