@@ -173,14 +173,17 @@ public class ListenerFactory {
 				notes.commit();
 				SequencerUtils.resetNoteBackgrounds(components, notes);
 				
-				String filename = 
-						SequencerUtils.filenamePrompt();
+				String file;
 				
 				try {
-					SequencerUtils.toFile(notes, filename);
-					
-					JOptionPane.showMessageDialog(parent, 
-							"File saved successfully.");
+
+					if(SequencerUtils.currentFileName == null){
+						file = "data.mss";
+					} else {
+						file = SequencerUtils.currentFileName;
+					}
+					SequencerUtils.toFile(parent, notes, file);
+
 				} catch (IOException ioe) {
 					JOptionPane.showMessageDialog(parent, ioe.getMessage());
 				}
@@ -194,10 +197,15 @@ public class ListenerFactory {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String filename = SequencerUtils.filenamePrompt();
+				String file;
 				
 				try {
-					SequencerUtils.loadFile(notes, filename, parent);
+					if(SequencerUtils.currentFileName == null){
+						file = "data.mss";
+					} else {
+						file = SequencerUtils.currentFileName;
+					}
+					SequencerUtils.loadFile(parent, notes);
 				} catch (IOException ioe) {
 					JOptionPane.showMessageDialog(parent, ioe.getMessage());
 				}
@@ -238,12 +246,12 @@ public class ListenerFactory {
 						String file;
 						
 						if(SequencerUtils.currentFileName == null){
-							file = "temp.mss";
+							file = "data.mss";
 						} else {
 							file = SequencerUtils.currentFileName;
 						}
 						
-						SequencerUtils.toFile(notes, file);
+						SequencerUtils.toFile(parent, notes, file);
 					} catch (IOException ex) {
 						JOptionPane.showMessageDialog(parent, ex.getMessage());
 					}
@@ -263,7 +271,7 @@ public class ListenerFactory {
 								if(SequencerUtils.currentFileName == null){
 									try {
 										Files.deleteIfExists(
-											Paths.get(SequencerUtils.getPathToDataStorage() + "temp.mss"));
+											Paths.get(SequencerUtils.getPathToDataStorage() + "data.mss"));
 									} catch (IOException ioe){
 										JOptionPane.showMessageDialog(parent, 
 												ioe.getMessage());

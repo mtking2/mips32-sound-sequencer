@@ -511,7 +511,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		// two measures
 		int beats = SequencerUtils.tSig.getBeats() * 2;
 
-		notes.reset(tracks, beats);
+		if (!loading)
+			notes.reset(tracks, beats);
 		
 		center.removeAll();
 		center.setLayout(new GridLayout(tracks, beats));
