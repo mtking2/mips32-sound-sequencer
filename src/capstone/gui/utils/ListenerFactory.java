@@ -4,6 +4,9 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -159,10 +162,11 @@ public class ListenerFactory {
 	 * @param parent the parent container
 	 * @param components the components contained in the center panel (all NoteButtons)
 	 * @param notes the notes that the user has entered
+	 * @param filename the name of the file to 
 	 * @return the created save ActionListener
 	 */
 	public static ActionListener getSaveListener(Component[] components,
-			Component parent, NoteCollection notes){
+			Component parent, NoteCollection notes, String filename){
 		return new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -170,7 +174,7 @@ public class ListenerFactory {
 				SequencerUtils.resetNoteBackgrounds(components, notes);
 				
 				try {
-					SequencerUtils.toFile(notes);
+					SequencerUtils.toFile(notes, filename);
 					
 					JOptionPane.showMessageDialog(parent, 
 							"File saved successfully.");
@@ -210,7 +214,15 @@ public class ListenerFactory {
 					SequencerUtils.playing = true;
 					
 					try {
-						SequencerUtils.toFile(notes);
+						String file;
+						
+						if(SequencerUtils.currentFileName == null){
+							file = "temp.mss";
+						} else {
+							file = SequencerUtils.currentFileName;
+						}
+						
+						SequencerUtils.toFile(notes, file);
 					} catch (IOException ex) {
 						JOptionPane.showMessageDialog(parent, ex.getMessage());
 					}
@@ -226,6 +238,16 @@ public class ListenerFactory {
 								playProc.destroy();
 								stop.setEnabled(false);
 								self.setEnabled(true);
+								
+								if(SequencerUtils.currentFileName == null){
+									try {
+										Files.deleteIfExists(
+											Paths.get(SequencerUtils.getPathToDataStorage() + "temp.mss"));
+									} catch (IOException ioe){
+										JOptionPane.showMessageDialog(parent, 
+												ioe.getMessage());
+									}
+								}
 							}
 						};
 						stop.addActionListener(doStop);

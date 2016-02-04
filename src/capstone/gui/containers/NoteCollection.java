@@ -39,6 +39,7 @@ public class NoteCollection {
 		for(int i = 0; i < tracks; i++){
 			for(int j = 0; j < beats; j++){
 				orig[i][j] = new Note(i, j);
+				diff[i][j] = new Note(i, j);
 			}
 		}
 	}
@@ -136,6 +137,18 @@ public class NoteCollection {
 	public void setTrackInstrument(int track, int instrument){
 		for(Note n : diff[track])
 			n.setInstrument(instrument);
+	}
+	
+	public void editNotePitch(int track, int beat, int pitch){
+		diff[track][beat].setPitch(pitch);
+	}
+	
+	public void editNoteVolume(int track, int beat, int volume){
+		diff[track][beat].setVolume(volume);
+	}
+	
+	public void editNoteDuration(int track, int beat, int duration){
+		diff[track][beat].setDuration(duration);
 	}
 	
 	/**

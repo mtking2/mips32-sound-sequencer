@@ -68,9 +68,6 @@ public class SequencerUtils {
 	/** The number of tracks in the sequencer **/
 	public static final int NUMBER_OF_TRACKS = 4;
 	
-	/** The file name to save track data to **/
-	private static final String FILENAME = "mipsdata.mss";
-	
 	/** The file name to save MIPS code to  **/
 	private static final String MIPS_FILENAME = "mips.asm";
 	
@@ -111,6 +108,8 @@ public class SequencerUtils {
 	
 	/** If the sequencer is displaying flats **/
 	public static boolean flats = false;
+	
+	public static String currentFileName = null;
 	
 	/**
 	 * Display an error message to the user for invalid tempo value.
@@ -188,13 +187,14 @@ public class SequencerUtils {
 		return answer;
 	}
 	
-	public static void loadFile(NoteCollection notes) throws IOException {
-		Path p = Paths.get(getPathToMIPS() + FILENAME);
+	public static void loadFile(NoteCollection notes, String filename) throws IOException {
+		Path p = Paths.get(getPathToDataStorage() + filename);
 		
 		List<String> contents = Files.readAllLines(p);
 		
 		// Parse instrument data (first line)
 		String first = contents.get(0);	// 0 -> first index
+		contents.remove(0);
 		
 		// Use length % 4 (size of word) as boundary
 		// i == trackNumber
@@ -206,10 +206,37 @@ public class SequencerUtils {
 			notes.setTrackInstrument(i, instrument);
 		}
 		
-		// TODO will need to count beats to see what time sig 
-		// the input file has
+		// Use first line to calculate number of beats
+		// (Instrument data has been removed)
+		int beats = contents.get(0).length() % 4;
 		
-		// TODO parse lines
+		NoteCollection newCollection = new NoteCollection(NUMBER_OF_TRACKS, beats);
+		
+		int count = 0;
+		StringBuilder currentWord = new StringBuilder();
+		
+		// Parse lines
+		for(int i = 0; i < contents.size(); i++){
+			String line = contents.get(i);
+			int track = i / 3;
+			
+			for(char c : line.toCharArray()){
+				if(count++ % 4 == 0){
+					switch(i % NUMBER_OF_TRACKS){
+					case 0:	newCollection.editNotePitch(track, count / 4, fromWord(currentWord.toString()));
+					case 1: newCollection.editNoteDuration(track, count / 4, fromWord(currentWord.toString()));
+					case 2: newCollection.editNoteVolume(track, count / 4, fromWord(currentWord.toString()));
+					}
+					
+					currentWord = new StringBuilder(c);
+				} else {
+					currentWord.append(c);
+				}
+			}
+		}
+		
+		// Commit the parsed notes
+		newCollection.commit();
 		
 		// TODO reset GUI elements
 	}
@@ -230,6 +257,23 @@ public class SequencerUtils {
 		builder.append(File.separator + "utils" + File.separator);
 
 		return builder.toString();
+	}
+	
+	/**
+	 * Get the file path to where data files are stored.
+	 * 
+	 * @return
+	 */
+	public static String getPathToDataStorage(){
+		// In windows, escape character is the same as file separator, 
+		// so we need to escape the escape character.
+		if(System.getProperty("os.name").contains("Windows")){
+			return getPathToMIPS() + File.separator + File.separator
+					+ "data";
+		} else {
+			return getPathToMIPS() + File.separator
+					+ "data";
+		}
 	}
 
 	/**
@@ -328,9 +372,13 @@ public class SequencerUtils {
 	 * @param notes the stored note data
 	 * @throws IOException if something goes wrong during writing to file
 	 */
-	public static void toFile(NoteCollection notes) throws IOException {
-		saveDataFile(notes);
-		saveMipsFile();
+	public static void toFile(NoteCollection notes, String filename) throws IOException {
+		// Add file extension to filename if it isn't there already
+		if(!filename.endsWith(".mss"))
+			filename += ".mss";
+		
+		saveDataFile(notes, filename);
+		saveMipsFile(filename);
 	}
 
 	/**
@@ -338,7 +386,7 @@ public class SequencerUtils {
 	 * 
 	 * @throws IOException if something goes wrong during writing to file
 	 */
-	private static void saveMipsFile() throws IOException {
+	private static void saveMipsFile(String filename) throws IOException {
 		StringBuilder builder = new StringBuilder();
 
 		builder.append(".data\n\n");
@@ -346,7 +394,7 @@ public class SequencerUtils {
 		builder.append("beats:\t.word\t" + tSig.getBeats() + '\n');
 		builder.append("tracks:\t.word\t" + 4 + '\n');		// Number of tracks hardcoded
 		builder.append("filename:\t.asciiz\t\"" 
-				+ getPathToMIPS() + "mipsdata.mss\"\n\n");
+				+ getPathToDataStorage() + filename + "\"\n\n");
 
 		Path p = Paths.get(getPathToMIPS() + "SequencerStem.asm");
 
@@ -368,8 +416,8 @@ public class SequencerUtils {
 	 * @param notes the stored note information
 	 * @throws IOException if something goes wrong during writing to file
 	 */
-	private static void saveDataFile(NoteCollection notes) throws IOException {
-		File file = new File(getPathToMIPS() + FILENAME);
+	private static void saveDataFile(NoteCollection notes, String filename) throws IOException {
+		File file = new File(getPathToDataStorage() + filename);
 		
 		OutputStream stream = new FileOutputStream(file);
 		
