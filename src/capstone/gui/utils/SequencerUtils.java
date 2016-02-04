@@ -245,7 +245,7 @@ public class SequencerUtils {
 				SequencerUtils.tSig = tSig;
 		}
 		
-		display.setupButtons();
+		display.setupButtons(true);
 		display.createTrackSelectionArea();
 		
 		scale = null;

@@ -171,6 +171,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		loadMenuItem = new JMenuItem("Load", KeyEvent.VK_L);
 		loadMenuItem.addActionListener(
 				ListenerFactory.getLoadListener(this, notes));
+		fileMenu.add(loadMenuItem);
 
 		// File->Exit, X - Mnemonic
 		exitMenuItem = new JMenuItem("Exit", KeyEvent.VK_X);

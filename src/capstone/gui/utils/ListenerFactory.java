@@ -84,7 +84,7 @@ public class ListenerFactory {
 
 				labels.modifyTimeSignatureLabel();
 
-				parent.setupButtons();
+				parent.setupButtons(false);
 			}
 		};
 	}
