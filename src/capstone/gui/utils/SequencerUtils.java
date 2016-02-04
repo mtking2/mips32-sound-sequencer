@@ -198,6 +198,8 @@ public class SequencerUtils {
 		String first = contents.get(0);	// 0 -> first index
 		contents.remove(0);
 		
+		int[] instruments = new int[NUMBER_OF_TRACKS];
+		
 		// Use length % 4 (size of word) as boundary
 		// i == trackNumber
 		for(int i = 0; i < (first.length() % 4); i++){
@@ -205,14 +207,14 @@ public class SequencerUtils {
 			
 			int instrument = fromWord(first.substring(index, index + 3));
 			
-			notes.setTrackInstrument(i, instrument);
+			instruments[i] = instrument;
 		}
 		
 		// Use first line to calculate number of beats
 		// (Instrument data has been removed)
-		int beats = contents.get(0).length() % 4;
+		int beats = contents.get(0).length() / 4;
 		
-		NoteCollection newCollection = new NoteCollection(NUMBER_OF_TRACKS, beats);
+		notes = new NoteCollection(NUMBER_OF_TRACKS, beats);
 		
 		int count = 0;
 		StringBuilder currentWord = new StringBuilder();
@@ -223,13 +225,14 @@ public class SequencerUtils {
 			int track = i / 3;
 			
 			for(char c : line.toCharArray()){
-				if(count++ % 4 == 0){
+				if(count % 4 == 0){
 					switch(i % NUMBER_OF_TRACKS){
-					case 0:	newCollection.editNotePitch(track, count / 4, fromWord(currentWord.toString()));
-					case 1: newCollection.editNoteDuration(track, count / 4, fromWord(currentWord.toString()));
-					case 2: newCollection.editNoteVolume(track, count / 4, fromWord(currentWord.toString()));
+					case 0:	notes.editNotePitch(track, count / 4, fromWord(currentWord.toString()));
+					case 1: notes.editNoteDuration(track, count / 4, fromWord(currentWord.toString()));
+					case 2: notes.editNoteVolume(track, count / 4, fromWord(currentWord.toString()));
 					}
 					
+					count++;
 					currentWord = new StringBuilder(c);
 				} else {
 					currentWord.append(c);
@@ -238,7 +241,7 @@ public class SequencerUtils {
 		}
 		
 		// Commit the parsed notes
-		newCollection.commit();
+		notes.commit();
 		
 		for(TimeSignature tSig : TimeSignature.values()){
 			if(beats == tSig.getBeats())
@@ -252,6 +255,7 @@ public class SequencerUtils {
 		tempo = 120;	// TODO Add tempo to data file
 		
 		display.resetLabels();
+		display.validate();
 	}
 
 	/**
@@ -282,10 +286,10 @@ public class SequencerUtils {
 		// so we need to escape the escape character.
 		if(System.getProperty("os.name").contains("Windows")){
 			return getPathToMIPS() + File.separator + File.separator
-					+ "data";
+					+ "data" + File.separator + File.separator;
 		} else {
 			return getPathToMIPS() + File.separator
-					+ "data";
+					+ "data" + File.separator;
 		}
 	}
 
@@ -437,9 +441,13 @@ public class SequencerUtils {
 		// Write instruments
 		for(int i = 0; i < NUMBER_OF_TRACKS; i++)
 			stream.write(toWord(notes.getNote(i, 0).getInstrument()).getBytes());
+		
+		stream.write('\n');
 
-		for(int i = 0; i < NUMBER_OF_TRACKS; i++)
+		for(int i = 0; i < NUMBER_OF_TRACKS; i++){
 			stream.write(getFormattedTrackContent(notes, i));
+			if(i != NUMBER_OF_TRACKS - 1) stream.write('\n');
+		}
 
 		stream.close();
 	}
@@ -471,7 +479,9 @@ public class SequencerUtils {
 		}
 		
 		String contentString = 
-				pitches.toString() + durations.toString() + volumes.toString();
+				pitches.toString() + '\n' 
+				+ durations.toString() + '\n'
+				+ volumes.toString();
 
 		byte[] content = new byte[contentString.length()];
 		
