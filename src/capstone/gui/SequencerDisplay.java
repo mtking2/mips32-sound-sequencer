@@ -65,8 +65,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	private JMenu fileMenu, editMenu, viewMenu;
 	
 	/** Menu item on the top menu **/
-	private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, tempoMenuItem, 
-		scaleMenuItem, timeSigMenuItem, flatMenuItem;
+	private JMenuItem newMenuItem, exitMenuItem, saveMenuItem, loadMenuItem,
+		tempoMenuItem, scaleMenuItem, timeSigMenuItem, flatMenuItem;
 	
 	/** The currently selected button **/
 	private NoteButton currentButton;
@@ -110,7 +110,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		notes = new NoteCollection(tracks, beats);
 
         menuInit();
-		setupButtons();
+		setupButtons(false);
 		
 		west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		west.setPreferredSize(new Dimension(350, 200));
@@ -156,14 +156,21 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		// File->New, N - Mnemonic
 		newMenuItem = new JMenuItem("New", KeyEvent.VK_N);
 		fileMenu.add(newMenuItem);
+		
+		// TODO Save
 
-		// File -> Save, S - Mnemonic
-		saveMenuItem = new JMenuItem("Save", KeyEvent.VK_S);
+		// File -> Save As, A - Mnemonic
+		saveMenuItem = new JMenuItem("Save As", KeyEvent.VK_S);
 		saveMenuItem.addActionListener(
-				ListenerFactory.getSaveListener(center.getComponents(), 
+				ListenerFactory.getSaveAsListener(center.getComponents(), 
 						this, 
 						notes));
 		fileMenu.add(saveMenuItem);
+		
+		// File -> Load, L - Mnemonic
+		loadMenuItem = new JMenuItem("Load", KeyEvent.VK_L);
+		loadMenuItem.addActionListener(
+				ListenerFactory.getLoadListener(this, notes));
 
 		// File->Exit, X - Mnemonic
 		exitMenuItem = new JMenuItem("Exit", KeyEvent.VK_X);
@@ -177,8 +184,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 						labels.getTempoLabel()));
 		editMenu.add(tempoMenuItem);
 
-		// Edit -> Scale..., S - Mnemonic
-		scaleMenuItem = new JMenuItem("Scale...", KeyEvent.VK_S);
+		// Edit -> Scale..., C - Mnemonic
+		scaleMenuItem = new JMenuItem("Scale...", KeyEvent.VK_C);
 		scaleMenuItem.addActionListener(
 				ListenerFactory.getScaleListener(this,
 						labels.getScaleLabel()));
@@ -198,6 +205,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				ListenerFactory.getFlatListener(
 						labels, center.getComponents(), notes, currentButton));
 		viewMenu.add(flatMenuItem);
+	}
+	
+	public void resetLabels(){
+		labels.modifyTempoLabel();
+		labels.getScaleLabel().setText("Scale: None");
+		labels.modifyTimeSignatureLabel();
 	}
 
 	/**
@@ -483,8 +496,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	
 	/**
 	 * Set up the note buttons in the center panel.
+	 * 
+	 * @param loading if loading a file, false if starting up for the first time
 	 */
-	public void setupButtons(){
+	public void setupButtons(boolean loading){
+		// Remove all components from center to make sure
+		// no buttons are present already
+		center.removeAll();
+		
 		int tracks = SequencerUtils.NUMBER_OF_TRACKS;
 		
 		// Multiply number of beats in time signature by two so there are 
@@ -498,14 +517,26 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		for(int i = 0; i < tracks; i++){
 			for(int j = 0; j < beats; j++){
-				Note note = new Note(i, j);
+				Note note;
+				
+				if(loading)
+					note = notes.getNote(i, j);
+				else
+					note = new Note(i, j);
+				
 				NoteButton button = new NoteButton(i, j);
 				button.addActionListener(this);
-				// All notes start as rests, so start with gray background
-				button.setBackground(Color.GRAY);
-				SequencerUtils.setRestIcon(button);
-				// Set button text field to pitch
-				//button.setText(SequencerUtils.intPitchToString(note.getPitch()));
+				
+				if(note.isRest())
+					button.setBackground(Color.GRAY);
+				else
+					button.setBackground(null);
+				
+				if(note.isRest()) 
+					SequencerUtils.setRestIcon(button);
+				else
+					// Set button text field to pitch
+					button.setText(SequencerUtils.intPitchToString(note.getPitch()));
 
 				if(i == 0 && j == 0){
 					// Default note is first note
@@ -515,7 +546,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 					button.setSelected(true);
 				}
 
-				notes.setNote(i, j, note);
+				if(!loading) notes.setNote(i, j, note);
 
 				center.add(button);
 			}

@@ -165,23 +165,44 @@ public class ListenerFactory {
 	 * @param filename the name of the file to 
 	 * @return the created save ActionListener
 	 */
-	public static ActionListener getSaveListener(Component[] components,
-			Component parent, NoteCollection notes, String filename){
+	public static ActionListener getSaveAsListener(Component[] components,
+			Component parent, NoteCollection notes){
 		return new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				notes.commit();
 				SequencerUtils.resetNoteBackgrounds(components, notes);
 				
+				String filename = 
+						SequencerUtils.filenamePrompt();
+				
 				try {
 					SequencerUtils.toFile(notes, filename);
 					
 					JOptionPane.showMessageDialog(parent, 
 							"File saved successfully.");
-				} catch (IOException ex) {
-					JOptionPane.showMessageDialog(parent, ex.getMessage());
+				} catch (IOException ioe) {
+					JOptionPane.showMessageDialog(parent, ioe.getMessage());
 				}
 			}
+		};
+	}
+	
+	public static ActionListener getLoadListener(SequencerDisplay parent, 
+			NoteCollection notes){
+		return new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String filename = SequencerUtils.filenamePrompt();
+				
+				try {
+					SequencerUtils.loadFile(notes, filename, parent);
+				} catch (IOException ioe) {
+					JOptionPane.showMessageDialog(parent, ioe.getMessage());
+				}
+			}
+			
 		};
 	}
 

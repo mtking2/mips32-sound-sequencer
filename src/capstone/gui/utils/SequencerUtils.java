@@ -21,6 +21,7 @@ import javax.swing.JOptionPane;
 import capstone.gui.Note;
 import capstone.gui.NoteButton;
 import capstone.gui.Scale;
+import capstone.gui.SequencerDisplay;
 import capstone.gui.containers.NoteCollection;
 import capstone.gui.enums.Pitch;
 import capstone.gui.enums.ScaleType;
@@ -187,7 +188,8 @@ public class SequencerUtils {
 		return answer;
 	}
 	
-	public static void loadFile(NoteCollection notes, String filename) throws IOException {
+	public static void loadFile(NoteCollection notes, String filename, 
+			SequencerDisplay display) throws IOException {
 		Path p = Paths.get(getPathToDataStorage() + filename);
 		
 		List<String> contents = Files.readAllLines(p);
@@ -238,7 +240,18 @@ public class SequencerUtils {
 		// Commit the parsed notes
 		newCollection.commit();
 		
-		// TODO reset GUI elements
+		for(TimeSignature tSig : TimeSignature.values()){
+			if(beats == tSig.getBeats())
+				SequencerUtils.tSig = tSig;
+		}
+		
+		display.setupButtons();
+		display.createTrackSelectionArea();
+		
+		scale = null;
+		tempo = 120;	// TODO Add tempo to data file
+		
+		display.resetLabels();
 	}
 
 	/**
@@ -534,6 +547,10 @@ public class SequencerUtils {
 		}
 		
 		return result;
+	}
+	
+	public static String filenamePrompt(){
+		return (String) JOptionPane.showInputDialog("Please enter a file name:");
 	}
 	
 	/**
