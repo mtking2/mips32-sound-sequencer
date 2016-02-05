@@ -13,10 +13,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 import capstone.gui.Note;
 import capstone.gui.NoteButton;
@@ -188,13 +185,17 @@ public class SequencerUtils {
 		return answer;
 	}
 	
-	public static void loadFile(NoteCollection notes, String filename, 
-			SequencerDisplay display) throws IOException {
+	public static void loadFile(SequencerDisplay display, NoteCollection notes) throws IOException {
+
 		// Reset track and beat number
 		track = 0;
 		beat = 0;
-		
-		Path p = Paths.get(getPathToDataStorage() + filename);
+	
+        JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(new File(getPathToDataStorage()));
+        int option = fc.showOpenDialog(display);
+        String filename = fc.getSelectedFile().getPath();
+		Path p = Paths.get(filename);
 		
 		List<String> contents = Files.readAllLines(p);
 		
@@ -393,13 +394,24 @@ public class SequencerUtils {
 	 * @param notes the stored note data
 	 * @throws IOException if something goes wrong during writing to file
 	 */
-	public static void toFile(NoteCollection notes, String filename) throws IOException {
-		// Add file extension to filename if it isn't there already
-		if(!filename.endsWith(".mss"))
-			filename += ".mss";
-		
-		saveDataFile(notes, filename);
-		saveMipsFile(filename);
+	public static void toFile(Component parent, NoteCollection notes, String file) throws IOException {
+		JFileChooser fc = new JFileChooser();
+		fc.setSelectedFile(new File(getPathToDataStorage() + file));
+		int option = fc.showSaveDialog(parent);
+		String filename = fc.getSelectedFile().getPath();
+
+		if (option == JFileChooser.APPROVE_OPTION) {
+			// Add file extension to filename if it isn't there already
+			if(!filename.endsWith(".mss"))
+				filename += ".mss";
+
+			saveDataFile(notes, filename);
+			saveMipsFile(filename);
+
+			JOptionPane.showMessageDialog(parent,
+					"File saved successfully.");
+		}
+
 	}
 
 	/**
@@ -438,7 +450,7 @@ public class SequencerUtils {
 	 * @throws IOException if something goes wrong during writing to file
 	 */
 	private static void saveDataFile(NoteCollection notes, String filename) throws IOException {
-		File file = new File(getPathToDataStorage() + filename);
+		File file = new File(filename);
 		
 		OutputStream stream = new FileOutputStream(file);
 		
