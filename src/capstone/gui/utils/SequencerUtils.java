@@ -190,6 +190,10 @@ public class SequencerUtils {
 	
 	public static void loadFile(NoteCollection notes, String filename, 
 			SequencerDisplay display) throws IOException {
+		// Reset track and beat number
+		track = 0;
+		beat = 0;
+		
 		Path p = Paths.get(getPathToDataStorage() + filename);
 		
 		List<String> contents = Files.readAllLines(p);
@@ -212,9 +216,9 @@ public class SequencerUtils {
 		
 		// Use first line to calculate number of beats
 		// (Instrument data has been removed)
-		int beats = contents.get(0).length() / 4;
+		int beats = contents.get(0).length() / 8;
 		
-		notes = new NoteCollection(NUMBER_OF_TRACKS, beats);
+		notes.reset(NUMBER_OF_TRACKS, beats * 2);
 		
 		int count = 0;
 		StringBuilder currentWord = new StringBuilder();
