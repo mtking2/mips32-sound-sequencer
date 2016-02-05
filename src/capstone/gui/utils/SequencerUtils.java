@@ -205,12 +205,12 @@ public class SequencerUtils {
 		
 		int[] instruments = new int[NUMBER_OF_TRACKS];
 		
-		// Use length % 4 (size of word) as boundary
+		// Use length / 4 (size of word) as boundary
 		// i == trackNumber
-		for(int i = 0; i < (first.length() % 4); i++){
+		for(int i = 0; i < (first.length() / 4); i++){
 			int index = i * 4;	// Multiply by 4 so we move word-by-word
 			
-			int instrument = fromWord(first.substring(index, index + 3));
+			int instrument = fromWord(first.substring(index, index + 4));
 			
 			instruments[i] = instrument;
 		}
@@ -221,16 +221,17 @@ public class SequencerUtils {
 		
 		notes.reset(NUMBER_OF_TRACKS, beats * 2);
 		
-		int count = 0;
+		int count;
 		StringBuilder currentWord = new StringBuilder();
 		
 		// Parse lines
 		for(int i = 0; i < contents.size(); i++){
 			String line = contents.get(i);
 			int track = i / 3;
+			count = 0;
 			
 			for(char c : line.toCharArray()){
-				if(count % 4 == 0){
+				if(count % 4 == 0 && count != 0){
 					switch(i % NUMBER_OF_TRACKS){
 					case 0:	notes.editNotePitch(track, count / 4, fromWord(currentWord.toString()));
 					case 1: notes.editNoteDuration(track, count / 4, fromWord(currentWord.toString()));
@@ -240,6 +241,7 @@ public class SequencerUtils {
 					count++;
 					currentWord = new StringBuilder(c);
 				} else {
+					count++;
 					currentWord.append(c);
 				}
 			}
