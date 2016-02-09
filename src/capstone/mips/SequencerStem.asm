@@ -9,9 +9,8 @@
 # $s0 :: file descriptor
 # $s1 :: address where instrument data starts
 # $s2 :: address where track data starts
-# $s3 :: size of each track's data
+# $s3 :: size of each line's data
 # $s4 :: address of current track data
-# $s5 :: size of track data for each individual value (pitch, volume, duration)
 # $s6 :: beat counter
 # $s7 :: track counter
 # $s8 :: time (in ms) to wait between beats
@@ -47,31 +46,37 @@ main:
 	
 	# Read track data
 	
-	# Calculate bytes to read
-	# bytes to read = beats * 4 bytes * 3 sets of data (pitch, volume, duration)
+	# Call fileRead by each line of data
+	
+	# Calculate lines to read
+	# lines to read = tracks * 3 lines of data
+	la $t0, tracks	# $t0 = &tracks
+	lw $t0, 0($t0)	# $t0 = tracks
+	li $t1, 3		# $t1 = 3
+	mult $t0, $t1	# $lo = $t0 * $t1
+	
+	mflo $t9	# $t9 = lines to read
+	
+	# Calculate size of line data
+	# size of line data = beats * 4 bytes
 	la $t0, beats	# $t0 = &beats
 	lw $t0, 0($t0)	# $t0 = beats
 	li $t1, 4		# $t1 = 4
 	mult $t0, $t1	# $lo = $t0 * $t1
 	
-	mflo $t0		# $t0 = $lo (result)
-	li $t1, 3		# $t1 = 3
-	mult $t0, $t1	# $lo = $t0 * $t1
+	mflo $s3	# $s3 = size of line data
 	
-	mflo $s3	# $s3 = bytes to read (size of track data)
-	
-	# Read data for each track
+	# Read data for each line
 	li $s7, 0		# Counter
 	
 	trackLoop:
-		addi $s7, $s7, 1	# Increment counter
-		
 		move $a0, $s3	# $a0 = $s3 (bytes to read)
 		jal fileRead
 		
-		la $t0, tracks	# $t0 = &tracks
-		lw $t0, 0($t0)	# $t0 = tracks
-		bne $s7, $t0, trackLoop
+		addi $s7, $s7, 1	# Increment counter
+		
+		# Loop again for each line
+		bne $s7, $t9, trackLoop
 	
 	# Save stack pointer address
 	move $s2, $sp	# $s2 = $sp (address where track data begins)
@@ -112,54 +117,61 @@ main:
 	## Play notes ##
 	
 play:
-	
-	# Calculate size of data value array
-	# = size of word * number of beats
-	li $t0, 4		# $t0 = 4 (size of word)
-	la $t1, beats	# $t1 = &beats
-	lw $t1, 0($t1)	# $t1 = beats
-	mult $t0, $t1	# $lo = $t0 * $t1
-			
-	mflo $s5	# $s5 = $lo (result)
-
 	li $s6, 0	# Beat counter
 	
 	beatLoop:
-	
 		li $s7, 0	# Track counter
 		
 		playNote:
 			# Calculate address for track
 			# Address = 
 			# track data address + 
-			# (size of each track's data * which track is current)
-			mult $s7, $s3	# $lo = $s7 (track counter) * $s3 (size of track data)
+			# [(size of each line's data * 3) * which track is current]
+			li $t0, 3		# $t0 = 3
+			mult $t0, $s3	# $lo = $s3 (size of each line's data) * $t0
+			
 			mflo $t0	# $t0 = $lo (result)
+			
+			mult $s7, $t0	# $lo = $s7 (track counter) * $t0 (size of each track's data)
+			
+			mflo $t0		# $t0 = $lo (result)
 			
 			add $s4, $s2, $t0	# $s4 = $s2 (track data address) + $t0 (offset)
 			
-			# Move to correct pitch
-			# 	address + (current beat * size of word)
+			# Move to correct volume (stored as volume data -> duration data -> pitch data)
+			# =	address + (current beat * size of word) 
+			# 	+ (3 * size of each line's data * current track)
 			li $t0, 4		# $t0 = 4 (size of word)
-			mult $t0, $s6	# $lo = $t0 * $s6 (beat number)
+			mult $t0, $s6	# $lo = $t0 * $s6 (beat counter)
 			
 			mflo $t0	# $t0 = $lo (result)
+			
+			li $t1, 3		# $t1 = 3
+			mult $t1, $s7	# $lo = $t1 * $s7 (track counter)
+			
+			mflo $t1	# $t1 = $lo (result)
+			
+			mult $t1, $s3	# $lo = $t1 (3 * current track) * $s3 (size of each line's data)
+			
+			mflo $t1	# $t1 = $lo (result)
+			
 			add $s4, $s4, $t0	# $s4 = $s4 (current track address) + $t0 (beat offset)
+			add $s4, $s4, $t1	# $s4 = $s4 (current track + beat address) + $t1 (data offset)
 			
 			# Set params
 			
-			move $a0, $s4	# $a0 = &pitch
-			lw $a0, 0($a0)	# $a0 = pitch
-			
-			add $s4, $s4, $s5	# $s4 = $s4 + $s5 (size of data value array)
-			
-			move $a1, $s4	# $a0 = &duration
-			lw $a1, 0($a1)	# $a1 = duration
-			
-			add $s4, $s4, $t0	# $s4 = $s4 + $s5 (size of data value array)
-			
 			move $a3, $s4	# $a3 = &volume
 			lw $a3, 0($a3)	# $a3 = volume
+			
+			add $s4, $s4, $s3	# $s4 = $s4 + $s3 (size of each line's data)
+			
+			move $a1, $s4	# $a1 = &duration
+			lw $a1, 0($a1)	# $a1 = duration
+			
+			add $s4, $s4, $s3	# $s4 = $s4 + $s3 (size of each line's data)
+			
+			move $a0, $s4	# $a3 = &pitch
+			lw $a0, 0($a0)	# $a3 = pitch
 			
 			# Load channel (track number)
 			move $a2, $s7
@@ -197,7 +209,8 @@ play:
 # fileRead subroutine
 # -------------------
 # Saves data from the dedicated data file onto the stack, looping
-# once for each track in the sequencer.
+# once for each track in the sequencer.  Skips one char after reading, 
+# to compensate for newline.
 #
 # Parameters
 # ----------
@@ -206,24 +219,43 @@ fileRead:
 	move $t0, $0	# $t0 = 0 (loop count)
 	move $t1, $a0	# $t1 = $a0 (bytes to read)
 	
-	la $t2, tracks	# $t2 = &tracks
-	lw $t2, 0($t2)	# $t2 = tracks
+	# Subtract bytes to read from stack pointer
+	sub $sp, $sp, $t1
+	
+	move $t6, $sp	# Get copy of stack pointer address to save words to
 
 	fileLoop:
-		# Substract stack pointer by bytes to read
-		sub $sp, $sp, $t1	# $sp = $sp - $t1
-		
-		move $t3, $sp	# Use $t3 to point to where data goes on stack
-		
-		# Read from file directly onto stack
+		# Read from file
 		li $v0, 14			# $v0 = syscall 14 (read from file)
 		move $a0, $s0		# $a0 = $s0 (file descriptor)
-		move $a1, $t3		# $a1 = address of input buffer (stack)
-		move $a2, $t1		# $a2 = $t1 (max bytes to read)
+		la $a1, input		# $a1 = address of input buffer
+		li $a2, 4			# $a2 = 4 (max bytes to read)
 		syscall
 		
-		addi $t0, $t0, 1	# Increment counter
-		bne $t0, $t2, fileLoop	# If all tracks not processed, loop again
+		la $t3, input	# $t3 = &input
+		lw $t3, 0($t3)	# $t3 = input
+		
+		la $t5, diff	# $t5 = &diff
+		lw $t5, 0($t5)	# $t5 = diff
+		
+		# Change character code to decimal value
+		sub $t3, $t3, $t5	# $t3 = $t3 - $t5
+		
+		# Save to stack
+		sw $t3, 0($t6)
+		
+		# Move up the stack to next word address
+		addi $t6, 4		# $t6 = $t6 + 4
+		
+		addi $t0, $t0, 4	# Increment counter by 4 (size of word)
+		bne $t0, $t1, fileLoop	# If all bytes not processed, loop again
+	
+	# Skip newline
+	li $v0, 14			# $v0 = syscall 14 (read from file)
+	move $a0, $s0		# $a0 = $s0 (file descriptor)
+	move $a1, $0		# $a1 = $0 (throw away the newline)
+	li $a2, 1			# $a2 = 1 (max bytes to read)
+	syscall
 	
 	# Return
 	jr $ra
