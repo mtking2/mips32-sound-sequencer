@@ -126,7 +126,7 @@ play:
 			# Calculate address for track
 			# Address = 
 			# track data address + 
-			# [(size of each line's data * 3) * which track is current]
+			# [(size of each line's data * 3) * track counter]
 			li $t0, 3		# $t0 = 3
 			mult $t0, $s3	# $lo = $s3 (size of each line's data) * $t0
 			
@@ -203,7 +203,7 @@ play:
 		la $t0, beats	# $t0 = &beats
 		lw $t0, 0($t0)	# $t0 = beats
 		
-		bne $t0, $s6, beatLoop	# If all beats played, go back to first beat
+		bne $t0, $s6, beatLoop	# If more beats to play, go to next beat
 		j play	# Loop until process is ended
 	
 # fileRead subroutine
@@ -222,30 +222,59 @@ fileRead:
 	# Subtract bytes to read from stack pointer
 	sub $sp, $sp, $t1
 	
-	move $t6, $sp	# Get copy of stack pointer address to save words to
+	move $t2, $sp	# Get copy of stack pointer address to save words to
 
 	fileLoop:
-		# Read from file
+		# Read from file 4 chars at a time
 		li $v0, 14			# $v0 = syscall 14 (read from file)
 		move $a0, $s0		# $a0 = $s0 (file descriptor)
 		la $a1, input		# $a1 = address of input buffer
-		li $a2, 4			# $a2 = 4 (max bytes to read)
+		li $a2, 1			# $a2 = 1 (max bytes to read)
 		syscall
 		
-		la $t3, input	# $t3 = &input
-		lw $t3, 0($t3)	# $t3 = input
+		la $t6, input	# $t6 = &input
+		lb $t6, 0($t6)	# $t6 = input
 		
-		la $t5, diff	# $t5 = &diff
-		lw $t5, 0($t5)	# $t5 = diff
+		li $v0, 14			# $v0 = syscall 14 (read from file)
+		move $a0, $s0		# $a0 = $s0 (file descriptor)
+		la $a1, input		# $a1 = address of input buffer
+		li $a2, 1			# $a2 = 1 (max bytes to read)
+		syscall
 		
-		# Change character code to decimal value
-		sub $t3, $t3, $t5	# $t3 = $t3 - $t5
+		la $t7, input	# $t7 = &input
+		lb $t7, 0($t7)	# $t7 = input
 		
-		# Save to stack
-		sw $t3, 0($t6)
+		li $v0, 14			# $v0 = syscall 14 (read from file)
+		move $a0, $s0		# $a0 = $s0 (file descriptor)
+		la $a1, input		# $a1 = address of input buffer
+		li $a2, 1			# $a2 = 1 (max bytes to read)
+		syscall
+		
+		la $t8, input	# $t8 = &input
+		lb $t8, 0($t8)	# $t8 = input
+		
+		li $v0, 14			# $v0 = syscall 14 (read from file)
+		move $a0, $s0		# $a0 = $s0 (file descriptor)
+		la $a1, input		# $a1 = address of input buffer
+		li $a2, 1			# $a2 = 1 (max bytes to read)
+		syscall
+		
+		la $t9, input	# $t9 = &input
+		lb $t9, 0($t9)	# $t9 = input
+		
+		# $t6 - $t9 == chars that were read
+		# Set params for parseInt
+		move $a0, $t6	# $a0 = $t6
+		move $a1, $t7	# $a1 = $t7
+		move $a2, $t8	# $a2 = $t8
+		move $a3, $t9	# $a3 = $t9		
+		jal parseInt
+		
+		# Save result to stack
+		sw $a0, 0($t2)
 		
 		# Move up the stack to next word address
-		addi $t6, 4		# $t6 = $t6 + 4
+		addi $t2, 4		# $t6 = $t6 + 4
 		
 		addi $t0, $t0, 4	# Increment counter by 4 (size of word)
 		bne $t0, $t1, fileLoop	# If all bytes not processed, loop again
@@ -258,4 +287,47 @@ fileRead:
 	syscall
 	
 	# Return
+	jr $ra
+	
+# parseInt subroutine
+# -------------------
+# Changes four chars into an integer value.
+#
+# Parameters
+# ----------
+# $a0-$a3	: the chars to convert
+#
+# Returns
+# -------
+# $a0		: the parsed integer value
+parseInt:
+	# Subtract 48 from character code to get integer values
+	li $t0, 48			# $t0 = 48
+	sub $a0, $a0, $t0	# $a0 = $a0 - $t0
+	sub $a1, $a1, $t0	# $a1 = $a1 - $t0
+	sub $a2, $a2, $t0	# $a2 = $a2 - $t0
+	sub $a3, $a3, $t0	# $a3 = $a3 - $t0
+	
+	# Add powers of 10 to return value
+	move $t0, $a3	# $t0 = $a3 (last num is already correct power)
+	
+	li $t1, 1000	# $t1 = 1000
+	mult $t1, $a0	# $lo = $t1 * $a0
+	mflo $t1		# $t1 = $lo	(result)
+	
+	add $t0, $t0, $t1	# $t0 = $t0 + $t1
+	
+	li $t1, 100		# $t1 = 100
+	mult $t1, $a1	# $lo = $t1 * $a1
+	mflo $t1		# $t1 = $lo	(result)
+	
+	add $t0, $t0, $t1	# $t0 = $t0 + $t1
+	
+	li $t1, 10		# $t1 = 10
+	mult $t1, $a2	# $lo = $t1 * $a2
+	mflo $t1		# $t1 = $lo	(result)
+	
+	add $t0, $t0, $t1	# $t0 = $t0 + $t1
+	
+	move $a0, $t0	# $a0 = $t0 (return value)
 	jr $ra
