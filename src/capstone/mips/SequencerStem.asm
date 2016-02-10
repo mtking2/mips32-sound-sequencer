@@ -170,8 +170,12 @@ play:
 			
 			add $s4, $s4, $s3	# $s4 = $s4 + $s3 (size of each line's data)
 			
-			move $a0, $s4	# $a3 = &pitch
-			lw $a0, 0($a0)	# $a3 = pitch
+			move $a0, $s4	# $a0 = &pitch
+			lw $a0, 0($a0)	# $a0 = pitch
+			
+			# If pitch is 1000, this is a rest
+			li $t9, 1000
+			beq $a0, $t9, sleep
 			
 			# Load channel (track number)
 			move $a2, $s7
@@ -188,6 +192,7 @@ play:
 			
 			# LOOP END #
 			
+sleep:
 		## Sleep until next beat ##
 		
 		li $v0, 32		# $v0 = syscall 32 (sleep)
