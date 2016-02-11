@@ -13,7 +13,6 @@
 # $s4 :: address of current track data
 # $s6 :: beat counter
 # $s7 :: track counter
-# $s8 :: time (in ms) to wait between beats
 
 main:
 	## Load track data ##
@@ -71,7 +70,22 @@ main:
 	
 	trackLoop:
 		move $a0, $s3	# $a0 = $s3 (bytes to read)
+
+		# Save t values to stack
+		# Must compensate for fileRead saving to stack, 
+		# so save before where the read data will go
+
+		# have to sub from stack bytes to read + 4
+		move $t0, $sp		# Use copy of stack pointer
+		
+		# Subtract how many bytes are going to be moved onto the stack,
+		# and size of the word we are saving
+		sub $t0, $t0, $a0	# $t0 = $t0 - $a0
+		sw $t9, -4($t0)		# Save $t9 to stack
+
 		jal fileRead
+
+		lw $t9, -4($sp)		# $t9 was saved before where $sp moved to
 		
 		addi $s7, $s7, 1	# Increment counter
 		
@@ -91,7 +105,7 @@ main:
 	li $s7, 0	# Counter
 	
 	channelLoop:
-		li $v0, 38		# $v0 = syscall 38 (MIDI program change)
+		li $v0, 38	# $v0 = syscall 38 (MIDI program change)
 		move $a0, $s7	# $a0 = $s7 (channel number)
 		
 		# Get instrument value
@@ -103,6 +117,7 @@ main:
 		mflo $t0	# $t0 = $lo (result)
 		
 		add $a1, $s1, $t0	# $a1 = $s1 (instrument data address) + $t0 (offset)
+		lw $a1, 0($a1)		# $a1 = instrument
 		
 		# Configure channel
 		syscall
@@ -180,7 +195,7 @@ play:
 			# Load channel (track number)
 			move $a2, $s7
 			
-			li $v0, 33	# $v0 = syscall 33 (MIDI out)
+			li $v0, 37	# $v0 = syscall 37 (MIDI out)
 			syscall
 			
 			addi $s7, $s7, 1	# Increment track counter
@@ -221,7 +236,7 @@ sleep:
 # ----------
 # $a0		: bytes to read
 fileRead:
-	move $t0, $0	# $t0 = 0 (loop count)
+	move $t0, $0	# $t0 = 0 (bytes read count)
 	move $t1, $a0	# $t1 = $a0 (bytes to read)
 	
 	# Subtract bytes to read from stack pointer
@@ -272,22 +287,52 @@ fileRead:
 		move $a0, $t6	# $a0 = $t6
 		move $a1, $t7	# $a1 = $t7
 		move $a2, $t8	# $a2 = $t8
-		move $a3, $t9	# $a3 = $t9		
+		move $a3, $t9	# $a3 = $t9
+
+		# Save t register values, $ra on stack
+		li $t4, 4		# $t4 = 4 (size of word)
+
+		sub $sp, $sp, $t4	# $sp = $sp - $t4
+		sw $t0, 0($sp)		# Save $t0 on stack
+
+		sub $sp, $sp, $t4	# $sp = $sp - $t4
+		sw $t1, 0($sp)		# Save $t1 on stack
+
+		sub $sp, $sp, $t4	# $sp = $sp - $t4
+		sw $t2, 0($sp)		# Save $t2 on stack
+
+		sub $sp, $sp, $t4	# $sp = $sp - $t4
+		sw $ra, 0($sp)		# Save $ra on stack
+		
 		jal parseInt
+
+		move $t9, $a0	# $t9 = $a0 (result)
+
+		# Re-load t values, $ra
+		lw $ra, 0($sp)		# Load $ra from stack
+		addi $sp, $sp, 4	# Add 4 to stack
+
+		lw $t2, 0($sp)		# Load $t2 from stack
+		addi $sp, $sp, 4	# $sp = $sp + 4
+
+		lw $t1, 0($sp)		# Load $t2 from stack
+		addi $sp, $sp, 4	# $sp = $sp + 4
+
+		lw $t0, 0($sp)		# Load $t2 from stack
+		addi $sp, $sp, 4	# $sp = $sp + 4
 		
 		# Save result to stack
-		sw $a0, 0($t2)
+		sw $t9, 0($t2)
 		
 		# Move up the stack to next word address
-		addi $t2, 4		# $t6 = $t6 + 4
-		
+		addi $t2, $t2, 4	# $t2 = $t2 + 4
 		addi $t0, $t0, 4	# Increment counter by 4 (size of word)
 		bne $t0, $t1, fileLoop	# If all bytes not processed, loop again
 	
 	# Skip newline
 	li $v0, 14			# $v0 = syscall 14 (read from file)
 	move $a0, $s0		# $a0 = $s0 (file descriptor)
-	move $a1, $0		# $a1 = $0 (throw away the newline)
+	la $a1, input		# $a1 = $0 (throw away the newline)
 	li $a2, 1			# $a2 = 1 (max bytes to read)
 	syscall
 	
@@ -316,20 +361,20 @@ parseInt:
 	# Add powers of 10 to return value
 	move $t0, $a3	# $t0 = $a3 (last num is already correct power)
 	
-	li $t1, 1000	# $t1 = 1000
-	mult $t1, $a0	# $lo = $t1 * $a0
+	li $t1, 1000		# $t1 = 1000
+	mult $t1, $a0		# $lo = $t1 * $a0
 	mflo $t1		# $t1 = $lo	(result)
 	
 	add $t0, $t0, $t1	# $t0 = $t0 + $t1
 	
 	li $t1, 100		# $t1 = 100
-	mult $t1, $a1	# $lo = $t1 * $a1
+	mult $t1, $a1		# $lo = $t1 * $a1
 	mflo $t1		# $t1 = $lo	(result)
 	
 	add $t0, $t0, $t1	# $t0 = $t0 + $t1
 	
 	li $t1, 10		# $t1 = 10
-	mult $t1, $a2	# $lo = $t1 * $a2
+	mult $t1, $a2		# $lo = $t1 * $a2
 	mflo $t1		# $t1 = $lo	(result)
 	
 	add $t0, $t0, $t1	# $t0 = $t0 + $t1

@@ -169,18 +169,6 @@ public class SequencerUtils {
 		builder.append(File.separator + "mips" + File.separator);
 		
 		String answer = builder.toString();
-
-		// Windows uses backslash as separator, need to escape for MIPS
-		if(System.getProperty("os.name").contains("Windows")){
-			int index = 0;
-			
-			for(char c : builder.toString().toCharArray()){
-				if(c == '\\')					
-					builder.insert(index, c);	// If char is backslash, add another
-				
-				index++;
-			}
-		}
 		
 		return answer;
 	}
@@ -221,29 +209,37 @@ public class SequencerUtils {
 		
 		notes.reset(NUMBER_OF_TRACKS, beats * 2);
 		
-		int count;
 		StringBuilder currentWord = new StringBuilder();
 		
 		// Parse lines
 		for(int i = 0; i < contents.size(); i++){
 			String line = contents.get(i);
 			int track = i / 3;
-			count = 0;
+			int count = 0;
 			
 			for(char c : line.toCharArray()){
-				if(count % 4 == 0 && count != 0){
+				currentWord.append(c);
+				
+				int current = fromWord(currentWord.toString());
+				
+				if(currentWord.length() == 4){
 					switch(i % NUMBER_OF_TRACKS){
-					case 0:	notes.editNotePitch(track, count / 4, fromWord(currentWord.toString()));
-					case 1: notes.editNoteDuration(track, count / 4, fromWord(currentWord.toString()));
-					case 2: notes.editNoteVolume(track, count / 4, fromWord(currentWord.toString()));
+					case 0:	
+						if(currentWord.equals(REST_PITCH)) {
+							notes.editNotePitch(track, count / 4, 0);
+							notes.setIfRest(track, count / 4, true);
+						} else {
+							notes.editNotePitch(track, count / 4, current);
+							notes.setIfRest(track, count / 4, false);
+						}
+					case 1: notes.editNoteDuration(track, count / 4, current);
+					case 2: notes.editNoteVolume(track, count / 4, current);
 					}
 					
-					count++;
-					currentWord = new StringBuilder(c);
-				} else {
-					count++;
-					currentWord.append(c);
+					currentWord = new StringBuilder();
 				}
+				
+				count++;
 			}
 		}
 		
@@ -259,7 +255,7 @@ public class SequencerUtils {
 		display.createTrackSelectionArea();
 		
 		scale = null;
-		tempo = 120;	// TODO Add tempo to data file
+		tempo = 120;	// TODO load tempo from file
 		
 		display.resetLabels();
 		display.validate();
@@ -283,21 +279,9 @@ public class SequencerUtils {
 		return builder.toString();
 	}
 	
-	/**
-	 * Get the file path to where data files are stored.
-	 * 
-	 * @return
-	 */
 	public static String getPathToDataStorage(){
-		// In windows, escape character is the same as file separator, 
-		// so we need to escape the escape character.
-		if(System.getProperty("os.name").contains("Windows")){
-			return getPathToMIPS() + File.separator + File.separator
-					+ "data" + File.separator + File.separator;
-		} else {
-			return getPathToMIPS() + File.separator
-					+ "data" + File.separator;
-		}
+		return getPathToMIPS() + File.separator
+				+ "data" + File.separator;
 	}
 
 	/**
@@ -413,7 +397,6 @@ public class SequencerUtils {
 			JOptionPane.showMessageDialog(parent,
 					"File saved successfully.");
 		}
-
 	}
 
 	/**
@@ -428,9 +411,9 @@ public class SequencerUtils {
 		builder.append("timeToWait:\t.word\t" + timeToWait() + '\n');
 		builder.append("beats:\t.word\t" + tSig.getBeats() + '\n');
 		builder.append("tracks:\t.word\t" + 4 + '\n');		// Number of tracks hardcoded
-		builder.append("filename:\t.asciiz\t\"" 
-				+ getPathToDataStorage() + filename + "\"\n\n");
-
+		builder.append("filename:\t.asciiz\t\"" + filename + "\"\n");
+		builder.append("input:\t.space\t4\n\n");
+		
 		Path p = Paths.get(getPathToMIPS() + "SequencerStem.asm");
 
 		byte[] stemData = Files.readAllBytes(p);
@@ -561,7 +544,11 @@ public class SequencerUtils {
 	 * @return word as an integer, -1 if error
 	 */
 	private static int fromWord(String word){
-		if(word.length() != 4) return -1;	// Word is 4 bytes
+		if(word.length() != 4){
+			return -1;	// Must be 4 bytes to be a word
+		} else if (word.charAt(0) == 1){
+			return 0;	// Note is a rest
+		}
 		
 		int result = 0;
 		
