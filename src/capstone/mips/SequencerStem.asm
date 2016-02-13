@@ -51,7 +51,7 @@ main:
 	# lines to read = tracks * 3 lines of data
 	la $t0, tracks	# $t0 = &tracks
 	lw $t0, 0($t0)	# $t0 = tracks
-	li $t1, 3		# $t1 = 3
+	li $t1, 3	# $t1 = 3
 	mult $t0, $t1	# $lo = $t0 * $t1
 	
 	mflo $t9	# $t9 = lines to read
@@ -63,7 +63,13 @@ main:
 	li $t1, 4		# $t1 = 4
 	mult $t0, $t1	# $lo = $t0 * $t1
 	
-	mflo $s3	# $s3 = size of line data
+	mflo $t0	# $t0 = $lo (result)
+
+	li $t1, 2	# $t1 = 2
+	mult $t1, $t0	# $lo = $t1 * $s3
+
+	mflo $s3	# $s3 = $lo (result)
+	
 	
 	# Read data for each line
 	li $s7, 0		# Counter
@@ -156,7 +162,7 @@ play:
 			# Move to correct volume (stored as volume data -> duration data -> pitch data)
 			# =	address + (current beat * size of word) 
 			# 	+ (3 * size of each line's data * current track)
-			li $t0, 4		# $t0 = 4 (size of word)
+			li $t0, 4	# $t0 = 4 (size of word)
 			mult $t0, $s6	# $lo = $t0 * $s6 (beat counter)
 			
 			mflo $t0	# $t0 = $lo (result)
@@ -330,10 +336,10 @@ fileRead:
 		bne $t0, $t1, fileLoop	# If all bytes not processed, loop again
 	
 	# Skip newline
-	li $v0, 14			# $v0 = syscall 14 (read from file)
+	li $v0, 14		# $v0 = syscall 14 (read from file)
 	move $a0, $s0		# $a0 = $s0 (file descriptor)
-	la $a1, input		# $a1 = $0 (throw away the newline)
-	li $a2, 1			# $a2 = 1 (max bytes to read)
+	la $a1, input		# $a1 = input
+	li $a2, 1		# $a2 = 1 (max bytes to read)
 	syscall
 	
 	# Return
