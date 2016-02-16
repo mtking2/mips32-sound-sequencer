@@ -55,6 +55,8 @@ main:
 	mult $t0, $t1	# $lo = $t0 * $t1
 	
 	mflo $t9	# $t9 = lines to read
+	la $t0, linesToRead	# $t0 = &linesToRead
+	sb $t9, 0($t0)		# Store lines to read
 	
 	# Calculate size of line data
 	# size of line data = beats * 4 bytes
@@ -63,13 +65,7 @@ main:
 	li $t1, 4		# $t1 = 4
 	mult $t0, $t1	# $lo = $t0 * $t1
 	
-	mflo $t0	# $t0 = $lo (result)
-
-	li $t1, 2	# $t1 = 2
-	mult $t1, $t0	# $lo = $t1 * $s3
-
 	mflo $s3	# $s3 = $lo (result)
-	
 	
 	# Read data for each line
 	li $s7, 0		# Counter
@@ -77,21 +73,10 @@ main:
 	trackLoop:
 		move $a0, $s3	# $a0 = $s3 (bytes to read)
 
-		# Save t values to stack
-		# Must compensate for fileRead saving to stack, 
-		# so save before where the read data will go
-
-		# have to sub from stack bytes to read + 4
-		move $t0, $sp		# Use copy of stack pointer
-		
-		# Subtract how many bytes are going to be moved onto the stack,
-		# and size of the word we are saving
-		sub $t0, $t0, $a0	# $t0 = $t0 - $a0
-		sw $t9, -4($t0)		# Save $t9 to stack
-
 		jal fileRead
 
-		lw $t9, -4($sp)		# $t9 was saved before where $sp moved to
+		la $t9, linesToRead	# $t9 = &linesToRead
+		lb $t9, 0($t9)		# $t9 = linesToRead
 		
 		addi $s7, $s7, 1	# Increment counter
 		
@@ -148,36 +133,30 @@ play:
 			# Address = 
 			# track data address + 
 			# [(size of each line's data * 3) * track counter]
-			li $t0, 3		# $t0 = 3
+			li $t0, 3	# $t0 = 3
 			mult $t0, $s3	# $lo = $s3 (size of each line's data) * $t0
 			
 			mflo $t0	# $t0 = $lo (result)
+
+			# Need to subtract track counter from 3 to get data from correct track
+			# (first track is stored at the END of the stack)
+			li $t1, 3		# $t1 = 3
+			sub $t1, $t1, $s7	# $t1 = $t1 - $s7 (track counter)
 			
-			mult $s7, $t0	# $lo = $s7 (track counter) * $t0 (size of each track's data)
+			mult $t1, $t0	# $lo = $s7 (track counter) * $t0 (size of each track's data)
 			
 			mflo $t0		# $t0 = $lo (result)
 			
 			add $s4, $s2, $t0	# $s4 = $s2 (track data address) + $t0 (offset)
 			
 			# Move to correct volume (stored as volume data -> duration data -> pitch data)
-			# =	address + (current beat * size of word) 
-			# 	+ (3 * size of each line's data * current track)
-			li $t0, 4	# $t0 = 4 (size of word)
-			mult $t0, $s6	# $lo = $t0 * $s6 (beat counter)
+			# =	address + (size of word + current beat)
+			li $t0, 4	# $t0 = 4 (size of word in bytes)
+			mult $t0, $s6	# $lo = $t0 * $s6
+
+			mflo $t0
 			
-			mflo $t0	# $t0 = $lo (result)
-			
-			li $t1, 3		# $t1 = 3
-			mult $t1, $s7	# $lo = $t1 * $s7 (track counter)
-			
-			mflo $t1	# $t1 = $lo (result)
-			
-			mult $t1, $s3	# $lo = $t1 (3 * current track) * $s3 (size of each line's data)
-			
-			mflo $t1	# $t1 = $lo (result)
-			
-			add $s4, $s4, $t0	# $s4 = $s4 (current track address) + $t0 (beat offset)
-			add $s4, $s4, $t1	# $s4 = $s4 (current track + beat address) + $t1 (data offset)
+			add $s4, $s4, $t0	# $s4 = $s4 (current track address) + $s6 (beat offset)
 			
 			# Set params
 			
@@ -196,7 +175,7 @@ play:
 			
 			# If pitch is 1000, this is a rest
 			li $t9, 1000
-			beq $a0, $t9, sleep
+			beq $a0, $t9, skip
 			
 			# Load channel (track number)
 			move $a2, $s7
@@ -204,11 +183,12 @@ play:
 			li $v0, 37	# $v0 = syscall 37 (MIDI out)
 			syscall
 			
+skip:
 			addi $s7, $s7, 1	# Increment track counter
 			
 			la $t0, tracks	# $t0 = &tracks
 			lw $t0, 0($t0)	# $t0 = tracks
-			
+
 			bne $t0, $s7, playNote	# If all tracks played, go to next beat
 			
 			# LOOP END #
