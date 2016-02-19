@@ -590,4 +590,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		
 		createTrackSelectionArea();
 	}
+
+	public void refresh() {
+        SequencerUtils.resetNoteBackgrounds(center.getComponents(), notes);
+	}
+
 }

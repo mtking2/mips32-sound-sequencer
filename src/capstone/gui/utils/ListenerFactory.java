@@ -246,7 +246,7 @@ public class ListenerFactory {
 						String file;
 						
 						if(SequencerUtils.currentFileName == null){
-							file = "data.mss";
+							file = "temp.mss";
 						} else {
 							file = SequencerUtils.currentFileName;
 						}
@@ -271,7 +271,7 @@ public class ListenerFactory {
 								if(SequencerUtils.currentFileName == null){
 									try {
 										Files.deleteIfExists(
-											Paths.get(SequencerUtils.getPathToDataStorage() + "data.mss"));
+											Paths.get(SequencerUtils.getPathToDataStorage() + "temp.mss"));
 									} catch (IOException ioe){
 										JOptionPane.showMessageDialog(parent, 
 												ioe.getMessage());

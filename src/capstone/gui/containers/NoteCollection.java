@@ -78,6 +78,10 @@ public class NoteCollection {
 									 note.getPitch(), note.getVolume(), 
 									 note.getDuration(), note.getInstrument());
 	}
+
+	public void setIfRest(int track, int beat, boolean isRest) {
+		diff[track][beat].setIfRest(isRest);
+	}
 	
 	/**
 	 * Commit all changes to contained notes.
@@ -134,9 +138,8 @@ public class NoteCollection {
 	 * @param track which track to modify
 	 * @param instrument the instrument value to assign to each note
 	 */
-	public void setTrackInstrument(int track, int instrument){
-		for(Note n : diff[track])
-			n.setInstrument(instrument);
+	public void setTrackInstrument(int track, int beat, int instrument){
+			diff[track][beat].setInstrument(instrument);
 	}
 	
 	public void editNotePitch(int track, int beat, int pitch){
