@@ -1,8 +1,8 @@
 .data
 
-filename:	.asciiz	"randomized.asm"
-output:		.space	4
-beats:		.space	1
+filename:	.asciiz	"C:\\Users\\Brad\\randomized.mss"
+output:		.space	1
+beats:		.word	16
 
 .text
 
@@ -11,101 +11,250 @@ beats:		.space	1
 #############
 #
 # $s0 - size of line data
+# $s1 - file descriptor
+# $s2 - track counter / instrument counter
+# $s3 - beat counter
+# $s4 - value type counter
 
 main:
-	# Set randomizer ranges
-	# Upper bound is exclusive
-
-	# Randomizer id's:
-	# 0 - random from 0-127		(pitch)
-	# 1 - random from 0-2000	(duration)
-	# 2 - random from 0-127		(volume)
-	# 3 - random from 0-1		(boolean)
-
-	li $v0, 42	# $v0 = 42 (set randomizer range)
-	li $a0, 0	# $a0 = 0 (randomizer id)
-	li $a1, 128	# $a1 = 128 (upper bound)
+	# Open file for writing
+	li $v0, 13		# $v0 = 13 (open file)
+	la $a0, filename	# $a0 = name of file
+	li $a1, 1		# $a1 = 1 (open for write/create)
+	li $a2, 0		# $a2 = 0 (ignored)
 	syscall
 
-	li $v0, 42	# $v0 = 42 (set randomizer range)
-	li $a0, 1	# $a0 = 1 (randomizer id)
-	li $a1, 2001	# $a1 = 2001 (upper bound)
-	syscall
-
-	li $v0, 42	# $v0 = 42 (set randomizer range)
-	li $a0, 2	# $a0 = 1 (randomizer id)
-	li $a1, 128	# $a1 = 128 (upper bound)
-	syscall
-
-	li $v0, 42	# $v0 = 42 (set randomizer range)
-	li $a0, 3	# $a0 = 3 (randomizer id)
-	li $a1, 2	# $a1 = 2 (upper bound)
-	syscall
+	move $s1, $v0	# $s1 = file descriptor
 	
 	# Randomize instruments
-	li $t0, 4	# $t0 = 4 (number of tracks)
-	li $t1, 0	# $t1 = 0 (counter)
+	li $s2, 0	# $t1 = 0 (counter)
 
 	instLoop:
-		li $v0, 41	# $v0 = 41 (random int)
+		li $v0, 42	# $v0 = 42 (random int in range)
 		li $a0, 0	# $a0 = 0 (randomizer id)
+		li $a1, 128	# $a1 = 128 (exclusive upper bound)
 		syscall
 
-		# Move stack pointer by 4 (size of word)
-		# Since $t0 is already 4, we can re-use the register
-		sub $sp, $sp, $t0	# $sp = $sp - $t0
+		# Save to file
+		# $a0 already contains result
+		jal toString
 
-		# Save result to stack
-		sw $a0, 0($sp)
+		move $t6, $a0	# $t6 = first char
+		move $t7, $a1	# $t7 = second char
+		move $t8, $a2	# $t8 = third char
+		move $t9, $a3	# $t9 = fourth char
 
-		addi $t1, $t1, 1	# Increment counter
+		# Move each char into output buffer then write
+		la $t2, output	# $t2 = &output
 
+		sb $t6, 0($t2)	# Save char in output buffer
+
+		li $v0, 15	# $v0 = 15 (write to file)
+		move $a0, $s1	# $a0 = $s1 (file descriptor)
+		la $a1, output	# $a1 = &output
+		li $a2, 1	# $a2 = 1 (bytes to write)
+		syscall
+
+		sb $t7, 0($t2)	# Save char in output buffer
+
+		li $v0, 15	# $v0 = 15 (write to file)
+		move $a0, $s1	# $a0 = $s1 (file descriptor)
+		la $a1, output	# $a1 = &output
+		li $a2, 1	# $a2 = 1 (bytes to write)
+		syscall
+
+		sb $t8, 0($t2)	# Save char in output buffer
+
+		li $v0, 15	# $v0 = 15 (write to file)
+		move $a0, $s1	# $a0 = $s1 (file descriptor)
+		la $a1, output	# $a1 = &output
+		li $a2, 1	# $a2 = 1 (bytes to write)
+		syscall
+
+		sb $t9, 0($t2)	# Save char in output buffer
+
+		li $v0, 15	# $v0 = 15 (write to file)
+		move $a0, $s1	# $a0 = $s1 (file descriptor)
+		la $a1, output	# $a1 = &output
+		li $a2, 1	# $a2 = 1 (bytes to write)
+		syscall
+
+		addi $s2, $s2, 1	# Increment counter
+
+		li $t0, 4	# $t0 = 4 (number of tracks)
 		# If not all instruments processed, loop again
-		bne $t0, $t1, instLoop
+		bne $t0, $s2, instLoop
+
+	# Write newline
+	jal writeNL
 
 	# Randomize each line of data
-	# Save on stack as pitch -> duration -> volume
-	
-	li $t0, 4	# $t0 = 4 (number of tracks)
-	li $t1, 0	# $t1 = 0 (track counter)
-	la $t2, beats	# $t2 = &beats
-	lw $t2, 0($t2)	# $t2 = beats
-
-	li $t4, 0	# Value type counter (pitch/volume/duration)
-	li $t5, 3	# Types of values
+	# Save in file as pitch -> duration -> volume
+	li $s2, 0	# $s2 = 0 (track counter)
+	li $s4, 0	# Value type counter (pitch/volume/duration)
 
 	trackLoop:
-		li $t3, 0	# $t3 = 0 (beat counter)
+		li $s3, 0	# $s3 = 0 (beat counter)
 
 		lineLoop:
-			li $v0, 41	# $v0 = 41 (random int)
-			move $a0, $t4	# $a0 = $t4 (randomizer id is same as value type counter)
+			li $v0, 42	# $v0 = 42 (random int)
+			move $a0, $s4	# $a0 = $t4 (use same randomizer as value type counter)
+
+			li $t0, 1	# $t0 = 1
+			beq $t0, $s4, durRange	# Process duration differently
+
+			li $a1, 128	# $a1 = 128 (exclusive upper bound)
+			j call
+
+			durRange:
+			li $a1, 2001	# $a1 = 2001 (exclusive upper bound)
+			
+			call:
 			syscall
 
-			# Save value to stack
-			subi $sp, $sp, 4	# Move stack pointer by one word
-			sw $a0, 0($sp)		# Save randomly generated number to stack
+			# Save value to file
+			# $a0 already contains value to convert into chars
+			jal toString
+
+			move $t6, $a0	# $t6 = first char
+			move $t7, $a1	# $t7 = second char
+			move $t8, $a2	# $t8 = third char
+			move $t9, $a3	# $t9 = fourth char
+
+			# Move each char into output buffer then write
+			la $t2, output	# $t2 = &output
+
+			sb $t6, 0($t2)	# Save char in output buffer
+
+			li $v0, 15	# $v0 = 15 (write to file)
+			move $a0, $s1	# $a0 = $s1 (file descriptor)
+			la $a1, output	# $a1 = &output
+			li $a2, 1	# $a2 = 1 (bytes to write)
+			syscall
+
+			sb $t7, 0($t2)	# Save char in output buffer
+
+			li $v0, 15	# $v0 = 15 (write to file)
+			move $a0, $s1	# $a0 = $s1 (file descriptor)
+			la $a1, output	# $a1 = &output
+			li $a2, 1	# $a2 = 1 (bytes to write)
+			syscall
+
+			sb $t8, 0($t2)	# Save char in output buffer
+
+			li $v0, 15	# $v0 = 15 (write to file)
+			move $a0, $s1	# $a0 = $s1 (file descriptor)
+			la $a1, output	# $a1 = &output
+			li $a2, 1	# $a2 = 1 (bytes to write)
+			syscall
+
+			sb $t9, 0($t2)	# Save char in output buffer
+
+			li $v0, 15	# $v0 = 15 (write to file)
+			move $a0, $s1	# $a0 = $s1 (file descriptor)
+			la $a1, output	# $a1 = &output
+			li $a2, 1	# $a2 = 1 (bytes to write)
+			syscall
 
 			# Increment beat
-			addi $t3, $t3, 1	# $t3 = $t3 + 1
+			addi $s3, $s3, 1	# $t3 = $t3 + 1
+
+			la $t2, beats	# $t2 = &beats
+			lw $t2, 0($t2)	# $t2 = beats
 
 			# If all beats not processed, loop again
-			bne $t3, $t2, lineLoop
+			bne $s3, $t2, lineLoop
+
+			# Write newline
+			jal writeNL
 
 			# Increment value type
-			addi $t4, 1	# $t4 = $t4 + 1
-			li $t3, 0	# Reset beat counter
+			addi $s4, $s4, 1	# $s4 = $s4 + 1
+			li $s3, 0	# Reset beat counter
+
+			li $t5, 3	# $t5 = 3 (number of types of values)
 
 			# If all types of values not processed, loop again
-			bne $t4, $t5, lineLoop
+			bne $s4, $t5, lineLoop
 		
-		addi $t1, $t1, 1	# Increment track counter
-		li $t4, 0		# Reset value type counter
+		addi $s2, $s2, 1	# Increment track counter
+		li $s4, 0		# Reset value type counter
 
+		li $t0, 4	# $t0 = 4 (number of tracks)
 		# If all tracks not processed, loop again
-		bne $t0, $t1, trackLoop
-
-	# TODO Save values to file from stack
+		bne $t0, $s2, trackLoop
 
 	li $v0, 10	# $v0 = 10 (exit)
 	syscall
+
+# toString subroutine
+# -------------------
+# params:
+# $a0 - word to convert
+#
+# returns:
+# $a0 - first char
+# $a1 - second char
+# $a2 - third char
+# $a3 - fourth char
+#
+# Example run:
+# Input of $a0 = 0127 would give:
+# $a0 = '0', $a1 = '1', $a2 = '2', $a3 = '7'
+toString:
+	bnez $a0, nonzero	# If not zero, skip to the actual algorithm
+
+	# If we get here then the value is zero and our life is easy
+	li $a0, 48
+	li $a1, 48
+	li $a2, 48
+	li $a3, 48
+	jr $ra
+
+nonzero:
+
+	move $t0, $a0	# $t0 = $a0 (number to convert)
+
+	li $t1, 1000	# $t1 = 1000
+	div $t0, $t1	# $t0 / $t1
+	mfhi $t0	# $t0 = $hi (use remainder for rest of conversion)
+	mflo $a0	# $a0 = $lo (quotient is first char)
+	addi $a0, $a0, 48	# Convert to character encoding of number
+
+	li $t1, 100	# $t1 = 100
+	div $t0, $t1	# $t0 / $t1
+	mfhi $t0	# $t0 = $hi (use remainder for rest of conversion)
+	mflo $a1	# $a1 = $lo (quotient is second char)
+	addi $a1, $a1, 48	# Convert to character encoding of number
+
+	li $t1, 10	# $t1 = 10
+	div $t0, $t1	# $t0 / $t1
+	mfhi $t0	# $t0 = $hi (use remainder for rest of conversion)
+	mflo $a2	# $a2 = $lo (quotient is third char)
+	addi $a2, $a2, 48	# Convert to character encoding of number
+
+	move $a3, $t0	# $a3 = $t0 (last number)
+	addi $a3, $a3, 48	# Convert to character encoding of number
+
+	jr $ra
+
+# writeNL subroutine
+# ------------------
+#
+# params:
+# none
+#
+# returns:
+# none
+#
+# Writes a newline to the output file.
+writeNL:
+	li $v0, 15	# $v0 = 15 (write to file)
+	move $a0, $s1	# $a0 = $s1 (file descriptor)
+	la $a1, output	# $a1 = &output
+	li $t0, 10	# $t0 = 10 (newline)
+	sb $t0, 0($a1)	# Store newline in output buffer
+	li $a2, 1	# $a2 = 1 (bytes to write)
+	syscall
+
+	jr $ra
