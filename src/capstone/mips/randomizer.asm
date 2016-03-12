@@ -1,8 +1,10 @@
 .data
 
-filename:	.asciiz	"C:\\Users\\Brad\\randomized.mss"
+filename:	.asciiz	"C:\\Users\\Brad\\generated.mss"
 output:		.space	1
 beats:		.word	16
+
+scale:		.byte	2, 2, 1, 2, 2, 2, 1
 
 .text
 
@@ -15,6 +17,18 @@ beats:		.word	16
 # $s2 - track counter / instrument counter
 # $s3 - beat counter
 # $s4 - value type counter
+# $s5 - root note
+# $s6 - mode
+#
+### MODES ###
+#
+# 0 - major
+# 1 - dorian
+# 2 - phrygian
+# 3 - lydian
+# 4 - mixolydian
+# 5 - minor (locrian)
+# 6 - locrian
 
 main:
 	# Open file for writing
@@ -26,7 +40,7 @@ main:
 
 	move $s1, $v0	# $s1 = file descriptor
 	
-	# Randomize instruments
+	# Generate instruments
 	li $s2, 0	# $t1 = 0 (counter)
 
 	instLoop:
@@ -85,10 +99,78 @@ main:
 		# If not all instruments processed, loop again
 		bne $t0, $s2, instLoop
 
-	# Write newline
+	# Write newline to file
 	jal writeNL
 
-	# Randomize each line of data
+	# Generate mode
+	li $v0, 42	# $v0 = 42 (random int in range)
+	li $a0, 0	# $a0 = 0 (randomizer id)
+	li $a1, 7	# $a1 = 7 (exclusive upper bound)
+	syscall
+
+	move $s6, $a0	# $s6 = $a0 (generated mode id)
+
+	# Rewrite scale intervals based on mode
+
+	# If major key then we don't have to do this, skip to end of loop
+	beq $s6, $0, loopCheck
+
+	# Save copy of scale onto stack
+	subi $sp, $sp, 7	# $sp = $sp - 7	(7 bytes/notes)
+
+	li $t7, 7	# $t7 = 7
+	la $t2, scale	# $t2 = &scale
+	move $t6, $0	# $t6 = 0 (counter)
+
+	stackWriteLoop:
+		move $t5, $t2		# $t5 = &scale
+		add $t5, $t5, $t6	# $t5 = $t5 + $t6 (counter)
+		lb $t5, 0($t5)		# $t5 = current scale interval
+
+		move $t1, $sp		# $t1 = $sp
+		add $t1, $t1, $t6	# $t1 = $t1 + $t6 (counter)
+
+		sb $t5, 0($t1)		# Write $t5 onto address on stack at $t1
+		
+		addi $t6, $t6, 1	# Increment counter
+		bne $t6, $t7, stackWriteLoop
+
+	# Rewrite scale using stack copy
+	move $t0, $s6	# $t0 = $s6 (counter for stack copy starts at mode id)
+	move $t6, $0	# $t6 = 0 (second counter for scale in data section starts at 0)
+
+	scaleLoop:
+		move $t1, $sp		# $t1 = $sp
+		add $t1, $t1, $t0	# $t1 = $t1 + $t0 (move to address of next interval in mode)
+
+		lb $t3, 0($t1)	# $t3 = next interval
+
+		move $t4, $t2		# $t4 = $t2 (&scale)
+		add $t4, $t4, $t6	# $t4 = $t4 + $t0 (go to current interval in scale)
+		
+		sb $t3, 0($t4)	# Store interval into scale in data section
+
+		addi $t0, $t0, 1	# Increment counter
+		addi $t6, $t6, 1	# Increment second counter
+		bne $t0, $t7, loopCheck	# If counter is 7 reset to 0, otherwise check if looping again
+		move $t0, $0		# $t0 = 0
+
+		loopCheck:
+		bne $t0, $s6, scaleLoop	# Loop again until back to mode id
+
+	# Return space on stack
+	addi $sp, $sp, 7	# $sp = $sp + 7
+
+	# Generate root note
+	li $v0, 42	# $v0 = 42 (random int in range)
+	li $a0, 0	# $a0 = 0 (randomizer id)
+	li $a1, 13	# $a1 = 13 (exclusive upper bound)
+	syscall
+
+	move $s5, $a0		# $s5 = $a0 (result)
+	addi $s5, $s5, 48	# $s5 = $s5 + 48 (make root between 48 and 60)
+
+	# Generate each line of data
 	# Save in file as pitch -> duration -> volume
 	li $s2, 0	# $s2 = 0 (track counter)
 	li $s4, 0	# Value type counter (pitch/volume/duration)
