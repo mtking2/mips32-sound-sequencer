@@ -104,8 +104,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		panel = new JPanel();
 		panel.setLayout(new BorderLayout());
-		north = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		north = new JPanel();
+        JPanel northSubWest = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		north.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+		north.setLayout(new BorderLayout());
 		
 		notes = new NoteCollection(tracks, beats);
 
@@ -115,14 +117,17 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		west.setPreferredSize(new Dimension(350, 200));
 
-		north.add(buttons.getPlayButton());
-		north.add(buttons.getStopButton());
-		north.add(buttons.getConfirmButton());
-		north.add(buttons.getResetButton());
+		northSubWest.add(buttons.getPlayButton());
+		northSubWest.add(buttons.getStopButton());
+		northSubWest.add(buttons.getConfirmButton());
+		northSubWest.add(buttons.getResetButton());
+
 
         for(Component c : labels.getTopComponents())
-            north.add(c);
+            northSubWest.add(c);
 
+        north.add(buttons.getRandomizeButton(), BorderLayout.EAST);
+        north.add(northSubWest, BorderLayout.WEST);
 		panel.add(north, BorderLayout.NORTH);
 		panel.add(center, BorderLayout.CENTER);
 		panel.add(west, BorderLayout.WEST);
@@ -559,6 +564,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		JButton reset = buttons.getResetButton();
 		JButton play = buttons.getPlayButton();
         JButton stop = buttons.getStopButton();
+		JButton randomize = buttons.getRandomizeButton();
 
 		// Reset ActionListeners on buttons
 		for(ActionListener l : confirm.getActionListeners())
@@ -584,6 +590,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         flatMenuItem.addActionListener(
                 ListenerFactory.getFlatListener(
                         labels, center.getComponents(), notes, currentButton));
+        randomize.addActionListener(ListenerFactory.getRandomizeListener(this, notes));
 
 		confirm.setEnabled(false);
 		reset.setEnabled(false);
@@ -591,8 +598,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		createTrackSelectionArea();
 	}
 
-	public void refresh() {
-        SequencerUtils.resetNoteBackgrounds(center.getComponents(), notes);
-	}
+
 
 }

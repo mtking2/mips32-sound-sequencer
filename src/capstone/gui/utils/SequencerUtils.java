@@ -169,101 +169,111 @@ public class SequencerUtils {
 		
 		return answer;
 	}
-	
-	public static void loadFile(SequencerDisplay display, NoteCollection notes) throws IOException {
+
+
+	public static void loadFile(SequencerDisplay display, NoteCollection notes, String filename) throws IOException {
 
 		// Reset track and beat number
 		track = 0;
 		beat = 0;
-	
-        JFileChooser fc = new JFileChooser();
-        fc.setCurrentDirectory(new File(getPathToDataStorage()));
-        int option = fc.showOpenDialog(display);
 
-        if (option == JFileChooser.APPROVE_OPTION) {
-            String filename = fc.getSelectedFile().getPath();
-            Path p = Paths.get(filename);
+        if (filename==null) {
+            JFileChooser fc = new JFileChooser();
+            fc.setCurrentDirectory(new File(getPathToDataStorage()));
+            int option = fc.showOpenDialog(display);
 
-            List<String> contents = Files.readAllLines(p);
-
-            // Parse instrument data (first line)
-            String first = contents.get(0);    // 0 -> first index
-            contents.remove(0);
-
-            int[] instruments = new int[NUMBER_OF_TRACKS];
-
-            // Use length / 4 (size of word) as boundary
-            // i == trackNumber
-            for (int i = 0; i < (first.length() / 4); i++) {
-                int index = i * 4;    // Multiply by 4 so we move word-by-word
-
-                int instrument = Integer.parseInt(first.substring(index, index + 4));
-
-                instruments[i] = instrument;
-
+            if (option == JFileChooser.APPROVE_OPTION) {
+                String selectedFile = fc.getSelectedFile().getPath();
+                loadHelper(display, notes, selectedFile);
             }
-
-            // Use first line to calculate number of beats
-            // (Instrument data has been removed)
-            int beats = contents.get(0).length() / 8;
-            System.out.println(contents);
-            notes.reset(NUMBER_OF_TRACKS, beats * 2);
-
-            StringBuilder currentWord = new StringBuilder();
-
-            // Parse lines
-
-            for (int i = 0; i < contents.size(); i++) {
-                String line = contents.get(i);
-                int track = i / 3;
-                int count = 0;
-
-                for (char c : line.toCharArray()) {
-                    currentWord.append(c);
-                    int current = Integer.parseInt(currentWord.toString());
-
-                    if (currentWord.length() == 4) {
-                        switch (i % 3) {
-                            case 0:
-                                if (current==REST_PITCH) {
-                                    notes.editNotePitch(track, count / 4, 0);
-                                    notes.setIfRest(track, count / 4, true);
-                                } else {
-                                    notes.editNotePitch(track, count / 4, current);
-                                    notes.setIfRest(track, count / 4, false);
-                                }
-								break;
-                            case 1: notes.editNoteDuration(track, count / 4, current);
-                                    break;
-                            case 2: notes.editNoteVolume(track, count / 4, getPercentageFromVolumeValue(current));
-                                    break;
-                        }
-                        //notes.setTrackInstrument(track, count, instruments[track]);
-                        currentWord = new StringBuilder();
-                    }
-
-                    count++;
-                }
-            }
-
-            // Commit the parsed notes
-            notes.commit();
-
-            for (TimeSignature tSig : TimeSignature.values()) {
-                if (beats == tSig.getBeats())
-                    SequencerUtils.tSig = tSig;
-            }
-
-            display.setupButtons(true);
-            display.createTrackSelectionArea();
-
-            scale = null;
-            tempo = 120;    // TODO load tempo from file
-
-            display.resetLabels();
-            display.validate();
+        } else {
+            loadHelper(display, notes, filename);
         }
 	}
+
+    private static void loadHelper(SequencerDisplay display, NoteCollection notes, String filename) throws IOException {
+        Path p = Paths.get(filename);
+        List<String> contents = Files.readAllLines(p);
+
+        // Parse instrument data (first line)
+        String first = contents.get(0);    // 0 -> first index
+        contents.remove(0);
+
+        int[] instruments = new int[NUMBER_OF_TRACKS];
+
+        // Use length / 4 (size of word) as boundary
+        // i == trackNumber
+        for (int i = 0; i < (first.length() / 4); i++) {
+            int index = i * 4;    // Multiply by 4 so we move word-by-word
+
+            int instrument = Integer.parseInt(first.substring(index, index + 4));
+
+            instruments[i] = instrument;
+
+        }
+
+        // Use first line to calculate number of beats
+        // (Instrument data has been removed)
+        int beats = contents.get(0).length() / 8;
+
+        notes.reset(NUMBER_OF_TRACKS, beats * 2);
+
+        StringBuilder currentWord = new StringBuilder();
+
+        // Parse lines
+
+        for (int i = 0; i < contents.size(); i++) {
+            String line = contents.get(i);
+            int track = i / 3;
+            int count = 0;
+
+            for (char c : line.toCharArray()) {
+                currentWord.append(c);
+                int current = Integer.parseInt(currentWord.toString());
+
+                if (currentWord.length() == 4) {
+                    switch (i % 3) {
+                        case 0:
+                            if (current==REST_PITCH) {
+                                notes.editNotePitch(track, count / 4, 0);
+                                notes.setIfRest(track, count / 4, true);
+                            } else {
+								System.out.println(track+" ---- "+count/4);
+                                notes.editNotePitch(track, count / 4, current);
+                                notes.setIfRest(track, count / 4, false);
+                            }
+                            break;
+                        case 1: notes.editNoteDuration(track, count / 4, current);
+                            break;
+                        case 2: notes.editNoteVolume(track, count / 4, getPercentageFromVolumeValue(current));
+                            break;
+                    }
+                    notes.setTrackInstrument(track, count / 4, instruments[track]);
+                    //System.out.println(instruments[track]);
+                    currentWord = new StringBuilder();
+                }
+
+                count++;
+            }
+        }
+
+        // Commit the parsed notes
+        notes.commit();
+
+        for (TimeSignature tSig : TimeSignature.values()) {
+            if (beats == tSig.getBeats())
+                SequencerUtils.tSig = tSig;
+        }
+
+        display.setupButtons(true);
+        display.createTrackSelectionArea();
+
+        scale = null;
+        tempo = 120;    // TODO load tempo from file
+
+        display.resetLabels();
+        display.validate();
+    }
 
 	/**
 	 * Get the path to the sequencer utils folder

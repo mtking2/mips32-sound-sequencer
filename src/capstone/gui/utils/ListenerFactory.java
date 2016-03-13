@@ -197,15 +197,9 @@ public class ListenerFactory {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String file;
-				
+
 				try {
-					if(SequencerUtils.currentFileName == null){
-						file = "data.mss";
-					} else {
-						file = SequencerUtils.currentFileName;
-					}
-					SequencerUtils.loadFile(parent, notes);
+					SequencerUtils.loadFile(parent, notes, null);
 				} catch (IOException ioe) {
 					JOptionPane.showMessageDialog(parent, ioe.getMessage());
 				}
@@ -267,7 +261,7 @@ public class ListenerFactory {
 								playProc.destroy();
 								stop.setEnabled(false);
 								self.setEnabled(true);
-								
+
 								if(SequencerUtils.currentFileName == null){
 									try {
 										Files.deleteIfExists(
@@ -442,4 +436,20 @@ public class ListenerFactory {
 			}
 		};
 	}
+
+	public static ActionListener getRandomizeListener(SequencerDisplay parent, NoteCollection notes) {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String randomizePath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/randomizer.asm";
+                    //System.out.println(playPath);
+                    Runtime.getRuntime().exec(randomizePath);
+                    SequencerUtils.loadFile(parent, notes, SequencerUtils.getPathToDataStorage()+"randomized.mss");
+                } catch (IOException ex) {
+                    System.out.println(ex.getMessage());
+                }
+            }
+        };
+    }
 }

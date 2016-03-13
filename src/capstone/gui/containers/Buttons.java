@@ -24,6 +24,9 @@ public class Buttons {
 	
 	/** The button that clears note values for the currently selected note **/
 	private JButton clear;
+
+    /** The button that generates a random sequence and populates the tracks */
+	private JButton randomize;
 	
 	/**
 	 * Creates a new button container and initializes all buttons.
@@ -36,6 +39,7 @@ public class Buttons {
 		confirm = new JButton("Commit Changes");
 		reset = new JButton("Reset Changes");
 		clear = new JButton("Clear Note");
+        randomize = new JButton("I'm Feeling Lucky");
 	}
 	
 	/**
@@ -62,4 +66,9 @@ public class Buttons {
 	 * @return the button that clears note values for the currently selected note
 	 */
 	public JButton getClearButton(){	return clear;	}
+
+    /**
+     * @return the button that generates a random sequence and populates the tracks
+     */
+    public JButton getRandomizeButton() { return randomize; }
 }
