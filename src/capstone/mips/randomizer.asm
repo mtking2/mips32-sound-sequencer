@@ -3,7 +3,6 @@
 filename:	.asciiz	"C:\\Users\\Brad\\generated.mss"
 output:		.space	1
 beats:		.word	16
-
 scale:		.byte	2, 2, 1, 2, 2, 2, 1
 
 .text
@@ -18,7 +17,7 @@ scale:		.byte	2, 2, 1, 2, 2, 2, 1
 # $s3 - beat counter
 # $s4 - value type counter
 # $s5 - root note
-# $s6 - mode
+# $s6 - mode (used temporarily)
 #
 ### MODES ###
 #
@@ -182,6 +181,8 @@ main:
 			li $v0, 42	# $v0 = 42 (random int)
 			move $a0, $s4	# $a0 = $t4 (use same randomizer as value type counter)
 
+			beq $s4, $0, generatePitch	# If generating pitch, jump to section where we generate pitch
+
 			li $t0, 1	# $t0 = 1
 			beq $t0, $s4, durRange	# Process duration differently
 
@@ -193,7 +194,28 @@ main:
 			
 			call:
 			syscall
+			j save
 
+			generatePitch:
+			# 15% chance note is rest
+			li $v0, 42	# $v0 = 42 (random int in range)
+			li $a0, 0	# $a0 = 0 (randomizer id)
+			li $a1, 15	# $a1 = 15 (exclusive upper bound)
+			syscall
+
+			bne $a0, $0, generateRegularPitch
+
+			generateRegularPitch:
+			# Generate scale degree
+			li $v0, 42	# $v0 = 42 (random int in range)
+			li $a0, 0	# $a0 = 0 (randomizer id)
+			li $a1, 8	# $a1 = 8 (exclusive upper bound)
+			syscall
+
+			# $a0 is already generated scale degree, send to subroutine
+			jal addToRoot
+
+			save:
 			# Save value to file
 			# $a0 already contains value to convert into chars
 			jal toString
@@ -293,7 +315,7 @@ toString:
 	li $a3, 48
 	jr $ra
 
-nonzero:
+	nonzero:
 
 	move $t0, $a0	# $t0 = $a0 (number to convert)
 
@@ -339,4 +361,42 @@ writeNL:
 	li $a2, 1	# $a2 = 1 (bytes to write)
 	syscall
 
+	jr $ra
+
+# addToRoot subroutine
+# --------------------
+#
+# params:
+# $a0 - scale degree
+#
+# returns:
+# $a0 - note pitch
+#
+# Given a scale degree, gets the pitch value for a note
+# relative to the root note.
+addToRoot:
+	move $t0, $a0		# $t0 = $a0 (scale degree param)
+	beq $t0, $0, rootEnd	# If scale degree is 0 (tonic), no adding needed
+
+	la $t1, scale	# $t1 = &scale
+	move $t2, $s5	# $t2 = $s5 (result, start at root note)
+	li $t3, 0	# $t3 = 0 (counter)
+
+	rootLoop:
+		lb $t4, 0($t1)	# $t4 = next interval value
+
+		add $t2, $t2, $t4	# $t2 = $t2 + $t4
+
+		addi $t1, $t1, 1	# Move to next interval
+		addi $t3, $t3, 1	# Increment counter
+
+		rootLoopTest:
+		bne $t0, $t3, rootLoop
+
+	move $a0, $t2
+
+	jr $ra
+
+	rootEnd:
+	move $a0, $s5
 	jr $ra
