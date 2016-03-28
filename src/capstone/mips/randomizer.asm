@@ -205,6 +205,9 @@ main:
 
 			bne $a0, $0, generateRegularPitch
 
+			li $a0, 1000
+			j save
+
 			generateRegularPitch:
 			# Generate scale degree
 			li $v0, 42	# $v0 = 42 (random int in range)
