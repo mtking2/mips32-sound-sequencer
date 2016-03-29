@@ -42,61 +42,44 @@ main:
 	# Generate instruments
 	li $s2, 0	# $t1 = 0 (counter)
 
-	instLoop:
-		li $v0, 42	# $v0 = 42 (random int in range)
-		li $a0, 0	# $a0 = 0 (randomizer id)
-		li $a1, 128	# $a1 = 128 (exclusive upper bound)
-		syscall
+	# First track is lead melody, second track is bass, 
+	# third & fourth tracks are percussion
 
-		# Save to file
-		# $a0 already contains result
-		jal toString
+	# Generate track one instrument
+	# - between 0 - 32, 41 - 96
 
-		move $t6, $a0	# $t6 = first char
-		move $t7, $a1	# $t7 = second char
-		move $t8, $a2	# $t8 = third char
-		move $t9, $a3	# $t9 = fourth char
+	# Generate number between 0 and 88, if over 32, add 8 (skip bass instruments)
+	li $v0, 42	# $v0 = 42 (random int in range)
+	li $a0, 0	# $a0 = 0 (randomizer id)
+	li $a1, 89	# $a1 = 89 (exclusive upper bound)
+	syscall
 
-		# Move each char into output buffer then write
-		la $t2, output	# $t2 = &output
+	move $t0, $a0	# $t0 = $a0
 
-		sb $t6, 0($t2)	# Save char in output buffer
+	li $t1, 32			# $t0 = 32
+	ble $t0, $t1, noAddEight	# If result <= 32, don't add eight
 
-		li $v0, 15	# $v0 = 15 (write to file)
-		move $a0, $s1	# $a0 = $s1 (file descriptor)
-		la $a1, output	# $a1 = &output
-		li $a2, 1	# $a2 = 1 (bytes to write)
-		syscall
+	addi $t0, $t0, 8	# $t0 = $t0 + 8
 
-		sb $t7, 0($t2)	# Save char in output buffer
+	noAddEight:
+	move $a0, $t0	# $a0 = $t0
+	jal toString
+	jal writeToOutput
 
-		li $v0, 15	# $v0 = 15 (write to file)
-		move $a0, $s1	# $a0 = $s1 (file descriptor)
-		la $a1, output	# $a1 = &output
-		li $a2, 1	# $a2 = 1 (bytes to write)
-		syscall
+	# Generate track 2 instrument
+	# - between 33 - 40 (we can change which instruments later if needed)
+	
+	li $v0, 42	# $v0 = 42 (random int in range)
+	li $a0, 0	# $a0 = 0 (randomizer id)
+	li $a1, 8	# $a1 = 8 (exclusive upper bound)
+	syscall
 
-		sb $t8, 0($t2)	# Save char in output buffer
+	addi $a0, $a0, 33	# $a0 = $a0 + 33 (move to bass instrument range)
 
-		li $v0, 15	# $v0 = 15 (write to file)
-		move $a0, $s1	# $a0 = $s1 (file descriptor)
-		la $a1, output	# $a1 = &output
-		li $a2, 1	# $a2 = 1 (bytes to write)
-		syscall
+	jal toString
+	jal writeToOutput
 
-		sb $t9, 0($t2)	# Save char in output buffer
-
-		li $v0, 15	# $v0 = 15 (write to file)
-		move $a0, $s1	# $a0 = $s1 (file descriptor)
-		la $a1, output	# $a1 = &output
-		li $a2, 1	# $a2 = 1 (bytes to write)
-		syscall
-
-		addi $s2, $s2, 1	# Increment counter
-
-		li $t0, 4	# $t0 = 4 (number of tracks)
-		# If not all instruments processed, loop again
-		bne $t0, $s2, instLoop
+	# TODO generate percussion instruments
 
 	# Write newline to file
 	jal writeNL
@@ -223,45 +206,8 @@ main:
 			# $a0 already contains value to convert into chars
 			jal toString
 
-			move $t6, $a0	# $t6 = first char
-			move $t7, $a1	# $t7 = second char
-			move $t8, $a2	# $t8 = third char
-			move $t9, $a3	# $t9 = fourth char
-
-			# Move each char into output buffer then write
-			la $t2, output	# $t2 = &output
-
-			sb $t6, 0($t2)	# Save char in output buffer
-
-			li $v0, 15	# $v0 = 15 (write to file)
-			move $a0, $s1	# $a0 = $s1 (file descriptor)
-			la $a1, output	# $a1 = &output
-			li $a2, 1	# $a2 = 1 (bytes to write)
-			syscall
-
-			sb $t7, 0($t2)	# Save char in output buffer
-
-			li $v0, 15	# $v0 = 15 (write to file)
-			move $a0, $s1	# $a0 = $s1 (file descriptor)
-			la $a1, output	# $a1 = &output
-			li $a2, 1	# $a2 = 1 (bytes to write)
-			syscall
-
-			sb $t8, 0($t2)	# Save char in output buffer
-
-			li $v0, 15	# $v0 = 15 (write to file)
-			move $a0, $s1	# $a0 = $s1 (file descriptor)
-			la $a1, output	# $a1 = &output
-			li $a2, 1	# $a2 = 1 (bytes to write)
-			syscall
-
-			sb $t9, 0($t2)	# Save char in output buffer
-
-			li $v0, 15	# $v0 = 15 (write to file)
-			move $a0, $s1	# $a0 = $s1 (file descriptor)
-			la $a1, output	# $a1 = &output
-			li $a2, 1	# $a2 = 1 (bytes to write)
-			syscall
+			# Params are already set for writeToOutput
+			jal writeToOutput
 
 			# Increment beat
 			addi $s3, $s3, 1	# $t3 = $t3 + 1
@@ -402,4 +348,60 @@ addToRoot:
 
 	rootEnd:
 	move $a0, $s5
+	jr $ra
+
+# writeToOutput subroutine
+# ------------------------
+#
+# params:
+# $a0 - first char
+# $a1 - second char
+# $a2 - third char
+# $a3 - fourth char
+#
+# returns:
+# none
+#
+# Writes four chars to the output file.
+writeToOutput:
+	move $t0, $a0	# $t0 = $a0
+	move $t1, $a1	# $t1 = $a1
+	move $t2, $a2	# $t2 = $a2
+	move $t3, $a3	# $t3 = $a3
+
+	# Move each char into output buffer then write
+	la $t4, output	# $t2 = &output
+
+	sb $t0, 0($t4)	# Save char in output buffer
+
+	li $v0, 15	# $v0 = 15 (write to file)
+	move $a0, $s1	# $a0 = $s1 (file descriptor)
+	la $a1, output	# $a1 = &output
+	li $a2, 1	# $a2 = 1 (bytes to write)
+	syscall
+
+	sb $t1, 0($t4)	# Save char in output buffer
+
+	li $v0, 15	# $v0 = 15 (write to file)
+	move $a0, $s1	# $a0 = $s1 (file descriptor)
+	la $a1, output	# $a1 = &output
+	li $a2, 1	# $a2 = 1 (bytes to write)
+	syscall
+
+	sb $t2, 0($t4)	# Save char in output buffer
+
+	li $v0, 15	# $v0 = 15 (write to file)
+	move $a0, $s1	# $a0 = $s1 (file descriptor)
+	la $a1, output	# $a1 = &output
+	li $a2, 1	# $a2 = 1 (bytes to write)
+	syscall
+
+	sb $t3, 0($t4)	# Save char in output buffer
+
+	li $v0, 15	# $v0 = 15 (write to file)
+	move $a0, $s1	# $a0 = $s1 (file descriptor)
+	la $a1, output	# $a1 = &output
+	li $a2, 1	# $a2 = 1 (bytes to write)
+	syscall
+
 	jr $ra
