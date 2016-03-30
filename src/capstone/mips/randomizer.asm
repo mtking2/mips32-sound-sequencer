@@ -1,6 +1,6 @@
 .data
 
-filename:	.asciiz	"C:\\Users\\Brad\\generated.mss"
+filename:	.asciiz	"/media/michael/Windows 10/Users/Michael/Google Drive/WCU/Capstone CS/BB clone/mips-sound-sequencer/src/capstone/mips/data/generated.mss"
 output:		.space	1
 beats:		.word	16
 scale:		.byte	2, 2, 1, 2, 2, 2, 1

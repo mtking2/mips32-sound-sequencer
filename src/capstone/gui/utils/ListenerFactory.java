@@ -445,7 +445,7 @@ public class ListenerFactory {
                     String randomizePath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/randomizer.asm";
                     //System.out.println(playPath);
                     Runtime.getRuntime().exec(randomizePath);
-                    SequencerUtils.loadFile(parent, notes, SequencerUtils.getPathToDataStorage()+"randomized.mss");
+                    SequencerUtils.loadFile(parent, notes, SequencerUtils.getPathToDataStorage()+"generated.mss");
                 } catch (IOException ex) {
                     System.out.println(ex.getMessage());
                 }

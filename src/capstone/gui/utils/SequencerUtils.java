@@ -238,7 +238,7 @@ public class SequencerUtils {
                                 notes.editNotePitch(track, count / 4, 0);
                                 notes.setIfRest(track, count / 4, true);
                             } else {
-								System.out.println(track+" ---- "+count/4);
+
                                 notes.editNotePitch(track, count / 4, current);
                                 notes.setIfRest(track, count / 4, false);
                             }
@@ -248,11 +248,11 @@ public class SequencerUtils {
                         case 2: notes.editNoteVolume(track, count / 4, getPercentageFromVolumeValue(current));
                             break;
                     }
-                    notes.setTrackInstrument(track, count / 4, instruments[track]);
+                    //notes.setTrackInstrument(track, count / 4, instruments[track]);
                     //System.out.println(instruments[track]);
                     currentWord = new StringBuilder();
                 }
-
+				System.out.println(track+" ---- "+count/4);
                 count++;
             }
         }
