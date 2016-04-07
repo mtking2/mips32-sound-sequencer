@@ -1,5 +1,11 @@
 package capstone.gui;
 
+import java.io.IOException;
+
+import javax.swing.JOptionPane;
+
+import capstone.gui.utils.SequencerUtils;
+
 /**
  * Creates the window containing the sequencer and runs it.
  * 
@@ -15,8 +21,15 @@ public class DisplayDriver {
 	 * @param args unused
 	 */
 	public static void main(String[] args){
-		SequencerDisplay display = new SequencerDisplay("MIPS Sound Sequencer", 1400, 450);
-
+		SequencerDisplay display = new SequencerDisplay("MIPS Sound Sequencer", 1400, 450);		
+		
+		try {
+			SequencerUtils.saveRandomizerFile();
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(display, 
+					"Error saving randomizer to file: " + e.getMessage());
+		}
+		
 		display.run();
 	}
 }

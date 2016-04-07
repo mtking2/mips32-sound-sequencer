@@ -194,19 +194,23 @@ public class SequencerUtils {
     private static void loadHelper(SequencerDisplay display, NoteCollection notes, String filename) throws IOException {
         Path p = Paths.get(filename);
         List<String> contents = Files.readAllLines(p);
+        
+        // Parse tempo (first line)
+        tempo = Integer.parseInt(contents.get(0));
+        contents.remove(0);
 
-        // Parse instrument data (first line)
-        String first = contents.get(0);    // 0 -> first index
+        // Parse instrument data (next line)
+        String next = contents.get(0);    // 0 -> first index
         contents.remove(0);
 
         int[] instruments = new int[NUMBER_OF_TRACKS];
 
         // Use length / 4 (size of word) as boundary
         // i == trackNumber
-        for (int i = 0; i < (first.length() / 4); i++) {
+        for (int i = 0; i < (next.length() / 4); i++) {
             int index = i * 4;    // Multiply by 4 so we move word-by-word
 
-            int instrument = Integer.parseInt(first.substring(index, index + 4));
+            int instrument = Integer.parseInt(next.substring(index, index + 4));
 
             instruments[i] = instrument;
 
@@ -269,7 +273,6 @@ public class SequencerUtils {
         display.createTrackSelectionArea();
 
         scale = null;
-        tempo = 120;    // TODO load tempo from file
 
         display.resetLabels();
         display.validate();
@@ -444,6 +447,34 @@ public class SequencerUtils {
 	}
 	
 	/**
+	 * Adds path to randomizer file and overwrites it.
+	 * 
+	 * @throws IOException if something goes wrong during writing to file
+	 */
+	public static void saveRandomizerFile() throws IOException {
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append(".data\n\n");
+		builder.append("filename:\t.asciiz\t" + getPathToDataStorage() 
+				+ "generated.mss");
+		
+		String filename = "randomizer.asm";
+		
+		Path p = Paths.get(getPathToMIPS() + filename);
+		
+		byte[] randomizerBytes = Files.readAllBytes(p);
+		
+		File randomizer = new File(getPathToMIPS() + filename);
+		
+		OutputStream stream = new FileOutputStream(randomizer);
+		
+		stream.write(builder.toString().getBytes());
+		stream.write(randomizerBytes);
+		
+		stream.close();
+	}
+	
+	/**
 	 * Saves MIDI information to a file.
 	 * 
 	 * @param notes the stored note information
@@ -453,6 +484,10 @@ public class SequencerUtils {
 		File file = new File(filename);
 		
 		OutputStream stream = new FileOutputStream(file);
+		
+		// Write tempo
+		stream.write(toWord(tempo).getBytes());
+		stream.write('\n');
 		
 		// Write instruments
 		for(int i = 0; i < NUMBER_OF_TRACKS; i++)
@@ -550,33 +585,6 @@ public class SequencerUtils {
 		}
 		
 		return builder.toString();
-	}
-	
-	/**
-	 * Converts a four-character word into an integer.
-	 * 
-	 * @param word the word to convert to an integer
-	 * @return word as an integer, -1 if error
-	 */
-	private static int fromWord(String word){
-		if(word.length() != 4){
-			return -1;	// Must be 4 bytes to be a word
-		} else if (word.charAt(0) == 1){
-			return 0;	// Note is a rest
-		}
-		
-		int result = 0;
-		
-		// Parse word front-to-back
-		for(int i = 0; i < word.length(); i++){
-			int factor = 10 * (4 - i);	// Which power of 10 we are currently parsing
-			
-			int current = word.charAt(i);
-			
-			result += (factor * current);
-		}
-		
-		return result;
 	}
 
 	/**

@@ -1,6 +1,3 @@
-.data
-
-filename:	.asciiz	"/media/michael/Windows 10/Users/Michael/Google Drive/WCU/Capstone CS/BB clone/mips-sound-sequencer/src/capstone/mips/data/generated.mss"
 output:		.space	1
 beats:		.word	16
 scale:		.byte	2, 2, 1, 2, 2, 2, 1
@@ -38,6 +35,19 @@ main:
 	syscall
 
 	move $s1, $v0	# $s1 = file descriptor
+
+	# Generate tempo between 80 (slow) to 240 (fast)
+	li $v0, 42	# $v0 = 42 (random int in range)
+	li $a0, 0	# $a0 = 0 (randomizer id)
+	li $a1, 161	# $a1 = 161 (exclusive upper bound)
+	syscall
+
+	addi $a0, $a0, 80	# $a0 = $a0 (result) + 80
+
+	jal toString
+	jal writeToOutput	# Write to file
+
+	jal writeNL	# Write newline
 	
 	# Generate instruments
 	li $s2, 0	# $t1 = 0 (counter)
@@ -79,7 +89,16 @@ main:
 	jal toString
 	jal writeToOutput
 
-	# TODO generate percussion instruments
+	# Instrument for percussion is ignored, use 1000
+	# to designate to MIPS this will be a percussion track
+
+	li $a0, 1000	# $a0 = 1000 (percussion designation)
+	jal toString
+	jal writeToOutput
+
+	li $a0, 1000	# $a0 = 1000 (percussion designation)
+	jal toString
+	jal writeToOutput
 
 	# Write newline to file
 	jal writeNL
@@ -240,8 +259,21 @@ main:
 	li $v0, 10	# $v0 = 10 (exit)
 	syscall
 
+# generatePercussion subroutine
+# -----------------------------
+#
+# params:
+# $a0 - track number
+# $a1 - beat number
+#
+# returns:
+# $a0 - pitch (drum midi sound)
+
+	# TODO generate percussion sound or rest
+
 # toString subroutine
 # -------------------
+#
 # params:
 # $a0 - word to convert
 #
