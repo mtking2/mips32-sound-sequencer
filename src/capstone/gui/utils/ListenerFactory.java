@@ -162,7 +162,6 @@ public class ListenerFactory {
 	 * @param parent the parent container
 	 * @param components the components contained in the center panel (all NoteButtons)
 	 * @param notes the notes that the user has entered
-	 * @param filename the name of the file to 
 	 * @return the created save ActionListener
 	 */
 	public static ActionListener getSaveAsListener(Component[] components,
@@ -271,6 +270,7 @@ public class ListenerFactory {
 												ioe.getMessage());
 									}
 								}
+                                SequencerUtils.playing = false;
 							}
 						};
 						stop.addActionListener(doStop);
@@ -446,6 +446,7 @@ public class ListenerFactory {
                     //System.out.println(playPath);
                     Runtime.getRuntime().exec(randomizePath);
                     SequencerUtils.loadFile(parent, notes, SequencerUtils.getPathToDataStorage()+"generated.mss");
+                    parent.enablePlayButton();
                 } catch (IOException ex) {
                     System.out.println(ex.getMessage());
                 }

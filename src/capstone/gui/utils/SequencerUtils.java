@@ -297,8 +297,7 @@ public class SequencerUtils {
 	}
 	
 	public static String getPathToDataStorage(){
-		return getPathToMIPS() + File.separator
-				+ "data" + File.separator;
+		return getPathToMIPS() + "data" + File.separator;
 	}
 
 	/**
@@ -455,17 +454,17 @@ public class SequencerUtils {
 		StringBuilder builder = new StringBuilder();
 		
 		builder.append(".data\n\n");
-		builder.append("filename:\t.asciiz\t" + getPathToDataStorage() 
-				+ "generated.mss");
-		
+		builder.append("filename:\t.asciiz\t" + "\"" + getPathToDataStorage()
+				+ "generated.mss" + "\"");
+		//System.out.println(getPathToDataStorage() );
 		String filename = "randomizer.asm";
 		
-		Path p = Paths.get(getPathToMIPS() + filename);
+		Path p = Paths.get(getPathToMIPS() + "randomizerStem.asm");
 		
 		byte[] randomizerBytes = Files.readAllBytes(p);
 		
 		File randomizer = new File(getPathToMIPS() + filename);
-		
+		//System.out.println(getPathToMIPS());
 		OutputStream stream = new FileOutputStream(randomizer);
 		
 		stream.write(builder.toString().getBytes());

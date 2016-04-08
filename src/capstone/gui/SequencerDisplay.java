@@ -219,6 +219,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		labels.modifyTimeSignatureLabel();
 	}
 
+	public void enablePlayButton() {
+		this.buttons.getPlayButton().setEnabled(true);
+	}
+
 	/**
 	 * Create the area where the notes are displayed.
 	 */
@@ -586,7 +590,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		reset.addActionListener(this);
         play.addActionListener(ListenerFactory.getPlayListener(
                 center.getComponents(), notes, play, stop, this));
-        stop.addActionListener(ListenerFactory.getStopListener(this));
+        //stop.addActionListener(ListenerFactory.getStopListener(this));
         flatMenuItem.addActionListener(
                 ListenerFactory.getFlatListener(
                         labels, center.getComponents(), notes, currentButton));
