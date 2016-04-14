@@ -151,6 +151,14 @@ public class ListenerFactory {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				System.exit(0);
+				try {
+					Files.delete(Paths.get(
+							SequencerUtils.getPathToMIPS() 
+							+ "randomizerStem.asm"));
+				} catch (IOException ex) {
+					System.out.println("Problem deleting randomizer file: "
+							+ ex.getMessage());
+				}
 			}
 		};
 	}

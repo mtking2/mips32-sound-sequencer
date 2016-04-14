@@ -1,4 +1,3 @@
-
 output:		.space	1
 beats:		.word	16
 scale:		.byte	2, 2, 1, 2, 2, 2, 1
