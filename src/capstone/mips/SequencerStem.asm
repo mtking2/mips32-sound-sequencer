@@ -26,6 +26,12 @@ main:
 		
 	move $s0, $v0	# $s0 = file descriptor
 	
+	# Skip tempo line
+	li $a0, 5	# $a0 = 5 (bytes to read)
+	jal fileRead
+
+	addi $sp, $sp, 5	# Add space back to stack (time to wait is already accounted for)
+	
 	# Read instruments
 	
 	# Calculate bytes to read
