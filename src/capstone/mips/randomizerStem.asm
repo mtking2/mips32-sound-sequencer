@@ -252,24 +252,101 @@ main:
 		addi $s2, $s2, 1	# Increment track counter
 		li $s4, 0		# Reset value type counter
 
-		li $t0, 4	# $t0 = 4 (number of tracks)
+		li $t0, 2	# $t0 = 2 (number of instrument tracks)
 		# If all tracks not processed, loop again
 		bne $t0, $s2, trackLoop
 
+	# Generate percussion
+
+	# Generate pitch (drum) that first track will be
+
+	# Save in file as pitch -> duration -> volume
+	li $s2, 0	# $s2 = 0 (track counter)
+	li $s4, 0	# Value type counter (pitch/volume/duration)
+
+	percussionOneLoop:
+		# Generate value between 0 and 46 then add 34
+		li $v0, 42	# $v0 = 42 (random int in range)
+		li $a0, 0	# $a0 = 0 (randomizer id)
+		li $a1, 47	# $a1 = 47 (exclusive upper bound)
+		syscall
+
+		addi $s7, $a0, 34	# $t0 = $a0 + 34
+
+		li $s3, 0	# $s3 = 0 (beat counter)
+
+		percussionOneLine:
+			li $v0, 42	# $v0 = 42 (random int)
+			move $a0, $s4	# $a0 = $t4 (use same randomizer as value type counter)
+
+			beq $s4, $0, generatePercussionPitch	# If generating pitch, jump to section where we generate pitch
+
+			li $t0, 1	# $t0 = 1
+			beq $t0, $s4, percussionDurRange	# Process duration differently
+
+			li $a1, 128	# $a1 = 128 (exclusive upper bound)
+			j percussionCall
+
+			percussionDurRange:
+			li $a1, 2001	# $a1 = 2001 (exclusive upper bound)
+			
+			percussionCall:
+			syscall
+			j save
+
+			generatePercussionPitch:
+			# 50% chance note is rest
+			li $v0, 42	# $v0 = 42 (random int in range)
+			li $a0, 0	# $a0 = 0 (randomizer id)
+			li $a1, 15	# $a1 = 15 (exclusive upper bound)
+			syscall
+
+			bne $a0, $0, generateRegularPercussionPitch
+
+			li $a0, 1000
+			j percussionSave
+
+			generateRegularPercussionPitch:
+			move $a0, $s7
+
+			percussionSave:
+			# Save value to file
+			# $a0 already contains value to convert into chars
+			jal toString
+
+			# Params are already set for writeToOutput
+			jal writeToOutput
+
+			# Increment beat
+			addi $s3, $s3, 1	# $t3 = $t3 + 1
+
+			la $t2, beats	# $t2 = &beats
+			lw $t2, 0($t2)	# $t2 = beats
+
+			# If all beats not processed, loop again
+			bne $s3, $t2, percussionOneLine
+
+			# Write newline
+			jal writeNL
+
+			# Increment value type
+			addi $s4, $s4, 1	# $s4 = $s4 + 1
+			li $s3, 0	# Reset beat counter
+
+			li $t5, 3	# $t5 = 3 (number of types of values)
+
+			# If all types of values not processed, loop again
+			bne $s4, $t5, percussionOneLine
+		
+		addi $s2, $s2, 1	# Increment track counter
+		li $s4, 0		# Reset value type counter
+
+		li $t0, 2	# $t0 = 2 (number of percussion tracks)
+		# If all tracks not processed, loop again
+		bne $t0, $s2, percussionOneLoop
+
 	li $v0, 10	# $v0 = 10 (exit)
 	syscall
-
-# generatePercussion subroutine
-# -----------------------------
-#
-# params:
-# $a0 - track number
-# $a1 - beat number
-#
-# returns:
-# $a0 - pitch (drum midi sound)
-
-	# TODO generate percussion sound or rest
 
 # toString subroutine
 # -------------------
