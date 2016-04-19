@@ -298,7 +298,7 @@ main:
 			# 50% chance note is rest
 			li $v0, 42	# $v0 = 42 (random int in range)
 			li $a0, 0	# $a0 = 0 (randomizer id)
-			li $a1, 15	# $a1 = 15 (exclusive upper bound)
+			li $a1, 2	# $a1 = 2 (exclusive upper bound)
 			syscall
 
 			bne $a0, $0, generateRegularPercussionPitch
