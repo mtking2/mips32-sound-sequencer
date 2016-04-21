@@ -27,10 +27,11 @@ main:
 	move $s0, $v0	# $s0 = file descriptor
 	
 	# Skip tempo line
-	li $a0, 5	# $a0 = 5 (bytes to read)
-	jal fileRead
-
-	addi $sp, $sp, 5	# Add space back to stack (time to wait is already accounted for)
+	li $v0, 14	# $v0 = 14 (read from file)
+	move $a0, $s0	# $a0 = $s0 (file descriptor)
+	la $a1, input	# $a1 = &input (input buffer)
+	li $a2, 5	# $a2 = 5 (bytes to read)
+	syscall
 	
 	# Read instruments
 	
@@ -185,7 +186,16 @@ play:
 			
 			# Load channel (track number)
 			move $a2, $s7
-			
+
+			# 3rd and 4th tracks are percussion
+			li $t9, 1
+			bgt $a2, $t9, percussionChannel
+			j continue
+
+			percussionChannel:
+			li $a2, 9
+
+			continue:
 			li $v0, 37	# $v0 = syscall 37 (MIDI out)
 			syscall
 			

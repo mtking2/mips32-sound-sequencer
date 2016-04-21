@@ -426,7 +426,7 @@ public class SequencerUtils {
 		builder.append(".data\n\n");
 		builder.append("linesToRead:\t.word\t"+ getNumLines(filename) +'\n');
 		builder.append("timeToWait:\t.word\t" + timeToWait() + '\n');
-		builder.append("beats:\t.word\t" + tSig.getBeats() + '\n');
+		builder.append("beats:\t.word\t" + (tSig.getBeats() * 2) + '\n');
 		builder.append("tracks:\t.word\t" + 4 + '\n');		// Number of tracks hardcoded
 		builder.append("filename:\t.asciiz\t\"" + filename + "\"\n");
 		builder.append("input:\t.space\t4\n\n");

@@ -188,14 +188,12 @@ main:
 			li $t0, 1	# $t0 = 1
 			beq $t0, $s4, durRange	# Process duration differently
 
-			li $a1, 128	# $a1 = 128 (exclusive upper bound)
-			j call
+			li $a0, 127	# $a1 = 128 (exclusive upper bound)
+			j save
 
 			durRange:
-			li $a1, 2001	# $a1 = 2001 (exclusive upper bound)
+			li $a0, 1000	# $a1 = 1000 (exclusive upper bound)
 			
-			call:
-			syscall
 			j save
 
 			generatePitch:
@@ -284,15 +282,12 @@ main:
 			li $t0, 1	# $t0 = 1
 			beq $t0, $s4, percussionDurRange	# Process duration differently
 
-			li $a1, 128	# $a1 = 128 (exclusive upper bound)
-			j percussionCall
+			li $a0, 127	# $a1 = 128 (exclusive upper bound)
+			j percussionSave
 
 			percussionDurRange:
-			li $a1, 2001	# $a1 = 2001 (exclusive upper bound)
-			
-			percussionCall:
-			syscall
-			j save
+			li $a0, 2001	# $a1 = 2001 (exclusive upper bound)
+			j percussionSave
 
 			generatePercussionPitch:
 			# 50% chance note is rest
