@@ -160,6 +160,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		// File->New, N - Mnemonic
 		newMenuItem = new JMenuItem("New", KeyEvent.VK_N);
+
 		fileMenu.add(newMenuItem);
 		
 		// TODO Save
@@ -219,9 +220,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		labels.modifyTimeSignatureLabel();
 	}
 
-	public void enablePlayButton() {
-		this.buttons.getPlayButton().setEnabled(true);
-	}
+
+    public void buttonToggle(JButton button, boolean state)    {
+        button.setEnabled(state);
+    }
+
+    public Buttons getButtons() {
+        return buttons;
+    }
 
 	/**
 	 * Create the area where the notes are displayed.
@@ -585,11 +591,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		confirm.addActionListener(
 				ListenerFactory.getConfirmListener(center.getComponents(), 
-						notes, confirm, reset, play, this));
+						notes, this));
 		
 		reset.addActionListener(this);
         play.addActionListener(ListenerFactory.getPlayListener(
-                center.getComponents(), notes, play, stop, this));
+                center.getComponents(), notes, this));
         //stop.addActionListener(ListenerFactory.getStopListener(this));
         flatMenuItem.addActionListener(
                 ListenerFactory.getFlatListener(

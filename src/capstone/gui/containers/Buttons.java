@@ -27,7 +27,7 @@ public class Buttons {
 
     /** The button that generates a random sequence and populates the tracks */
 	private JButton randomize;
-	
+
 	/**
 	 * Creates a new button container and initializes all buttons.
 	 */

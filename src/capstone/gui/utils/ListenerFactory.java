@@ -207,6 +207,7 @@ public class ListenerFactory {
 
 				try {
 					SequencerUtils.loadFile(parent, notes, null);
+                    parent.buttonToggle(parent.getButtons().getPlayButton(), true);
 				} catch (IOException ioe) {
 					JOptionPane.showMessageDialog(parent, ioe.getMessage());
 				}
@@ -221,18 +222,18 @@ public class ListenerFactory {
 	 * @see ActionListener
 	 * @param components the components contained in the center panel (all NoteButtons)
 	 * @param notes the notes that the user has entered
-	 * @param self the 'play' button itself
-	 * @param stop the 'stop' button
 	 * @param parent the parent container
 	 * @return the created play ActionListener
 	 */
 	public static ActionListener getPlayListener(Component[] components,
-			NoteCollection notes, JButton self, JButton stop,Component parent){
+			NoteCollection notes, SequencerDisplay parent){
 		return new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				notes.commit();
-				stop.setEnabled(true);
-				self.setEnabled(false);
+                parent.buttonToggle(parent.getButtons().getStopButton(), true);
+                parent.buttonToggle(parent.getButtons().getPlayButton(), false);
+                parent.buttonToggle(parent.getButtons().getRandomizeButton(), false);
+
 				SequencerUtils.resetNoteBackgrounds(components, notes);
 
 				if(notes.allRests()){
@@ -252,7 +253,9 @@ public class ListenerFactory {
 							file = SequencerUtils.currentFileName;
 						}
 						
-						SequencerUtils.toFile(parent, notes, file);
+						//SequencerUtils.toFile(parent, notes, file);
+						SequencerUtils.saveDataFile(notes, file);
+                        SequencerUtils.saveMipsFile(file);
 					} catch (IOException ex) {
 						JOptionPane.showMessageDialog(parent, ex.getMessage());
 					}
@@ -266,9 +269,9 @@ public class ListenerFactory {
 							@Override
 							public void actionPerformed(ActionEvent e) {
 								playProc.destroy();
-								stop.setEnabled(false);
-								self.setEnabled(true);
-
+                                parent.buttonToggle(parent.getButtons().getStopButton(), false);
+                                parent.buttonToggle(parent.getButtons().getPlayButton(), true);
+                                parent.buttonToggle(parent.getButtons().getRandomizeButton(), true);
 								if(SequencerUtils.currentFileName == null){
 									try {
 										Files.deleteIfExists(
@@ -281,7 +284,7 @@ public class ListenerFactory {
                                 SequencerUtils.playing = false;
 							}
 						};
-						stop.addActionListener(doStop);
+						parent.getButtons().getStopButton().addActionListener(doStop);
 					} catch (IOException ex) {
 						System.out.println(ex.getMessage());
 					}
@@ -315,21 +318,19 @@ public class ListenerFactory {
 	 * @see ActionListener
 	 * @param components the components contained in the center panel (all NoteButtons)
 	 * @param notes the notes that the user has entered
-	 * @param confirm the 'confirm changes' button
-	 * @param reset the 'reset' button
-	 * @param play the 'play' button
 	 * @param parent the parent container
 	 * @return the created commit ActionListener
 	 */
 	public static ActionListener getConfirmListener(Component[] components, 
-			NoteCollection notes, JButton confirm, JButton reset, JButton play, Component parent){
+			NoteCollection notes, SequencerDisplay parent){
 		return new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e){
 				if(notes.isModified()){
-					confirm.setEnabled(false);
-					reset.setEnabled(false);
-					play.setEnabled(true);
+                    parent.buttonToggle(parent.getButtons().getConfirmButton(), false);
+                    parent.buttonToggle(parent.getButtons().getResetButton(), false);
+                    parent.buttonToggle(parent.getButtons().getPlayButton(), true);
+
 					notes.commit();
 					SequencerUtils.resetNoteBackgrounds(components, notes);
 				} else {
@@ -453,8 +454,10 @@ public class ListenerFactory {
                     String randomizePath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/randomizer.asm";
                     //System.out.println(playPath);
                     Runtime.getRuntime().exec(randomizePath);
+
                     SequencerUtils.loadFile(parent, notes, SequencerUtils.getPathToDataStorage()+"generated.mss");
-                    parent.enablePlayButton();
+                    //randProc.destroy();
+                    parent.buttonToggle(parent.getButtons().getPlayButton(), true);
                 } catch (IOException ex) {
                     System.out.println(ex.getMessage());
                 }

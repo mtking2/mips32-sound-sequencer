@@ -256,7 +256,7 @@ public class SequencerUtils {
                     //System.out.println(instruments[track]);
                     currentWord = new StringBuilder();
                 }
-				System.out.println(track+" ---- "+count/4);
+				//System.out.println(track+" ---- "+count/4);
                 count++;
             }
         }
@@ -420,7 +420,7 @@ public class SequencerUtils {
 	 * 
 	 * @throws IOException if something goes wrong during writing to file
 	 */
-	private static void saveMipsFile(String filename) throws IOException {
+	public static void saveMipsFile(String filename) throws IOException {
 		StringBuilder builder = new StringBuilder();
 
 		builder.append(".data\n\n");
@@ -455,7 +455,7 @@ public class SequencerUtils {
 		
 		builder.append(".data\n\n");
 		builder.append("filename:\t.asciiz\t" + "\"" + getPathToDataStorage()
-				+ "generated.mss" + "\"");
+				+ "generated.mss" + "\"\n");
 		//System.out.println(getPathToDataStorage() );
 		String filename = "randomizer.asm";
 		
@@ -479,7 +479,7 @@ public class SequencerUtils {
 	 * @param notes the stored note information
 	 * @throws IOException if something goes wrong during writing to file
 	 */
-	private static void saveDataFile(NoteCollection notes, String filename) throws IOException {
+	public static void saveDataFile(NoteCollection notes, String filename) throws IOException {
 		File file = new File(filename);
 		
 		OutputStream stream = new FileOutputStream(file);
