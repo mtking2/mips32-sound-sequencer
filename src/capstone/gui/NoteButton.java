@@ -1,6 +1,10 @@
 package capstone.gui;
 
-import javax.swing.JButton;
+import com.alee.laf.button.WebButton;
+
+import javax.swing.*;
+import java.awt.*;
+
 
 /**
  * A button that represents a musical note, and allows 
@@ -11,7 +15,7 @@ import javax.swing.JButton;
  * @author Michael King
  * @version 12.11.15
  */
-public class NoteButton extends JButton {
+public class NoteButton extends WebButton {
 	/** Generated serialization UID **/
 	private static final long serialVersionUID = 37648261342304622L;
 	
@@ -19,6 +23,9 @@ public class NoteButton extends JButton {
 	private int track;
 	/** Which beat this note is on **/
 	private int beat;
+    /** The default color for this button **/
+    private Color defaultTopColor;
+    private Color defaultBottomColor;
 	
 	/**
 	 * Creates a new button for modifying a note on a particular 
@@ -29,7 +36,8 @@ public class NoteButton extends JButton {
 	 */
 	public NoteButton(int track, int beat){
 		super();
-		
+        this.defaultTopColor = this.getTopBgColor();
+        this.defaultBottomColor = this.getBottomBgColor();
 		this.track = track;
 		this.beat = beat;
 	}
@@ -51,4 +59,9 @@ public class NoteButton extends JButton {
 	public int getBeat(){
 		return beat;
 	}
+
+    public void setDefaultColor() {
+        this.setTopBgColor(defaultTopColor);
+        this.setBottomBgColor(defaultBottomColor);
+    }
 }

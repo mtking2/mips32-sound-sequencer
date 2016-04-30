@@ -104,7 +104,7 @@ public class SequencerUtils {
 	/** If the sequencer is displaying flats **/
 	public static boolean flats = false;
 	
-	public static String currentFileName = null;
+	public static String currentFileName = "data.mss";
 	
 	/**
 	 * Display an error message to the user for invalid tempo value.
@@ -159,16 +159,27 @@ public class SequencerUtils {
 	public static String getPathToMIPS(){
 		StringBuilder builder = new StringBuilder();
 
-		builder.append(System.getProperty("user.dir"));
+		//builder.append(System.getProperty("user.dir"));
 
-		builder.append(File.separator + "src");
+		builder.append("src");
 		builder.append(File.separator + "capstone");
 		builder.append(File.separator + "mips" + File.separator);
-		
+
 		String answer = builder.toString();
 		
 		return answer;
 	}
+
+    public static String getPathToResources() {
+        StringBuilder builder = new StringBuilder();
+        //builder.append(System.getProperty("user.dir"));
+        builder.append("src");
+        builder.append(File.separator + "capstone");
+        builder.append(File.separator + "resources" + File.separator);
+
+        String answer = builder.toString();
+        return answer;
+    }
 
 
 	public static void loadFile(SequencerDisplay display, NoteCollection notes, String filename) throws IOException {
@@ -207,7 +218,7 @@ public class SequencerUtils {
 
         // Use length / 4 (size of word) as boundary
         // i == trackNumber
-        for (int i = 0; i < (next.length() / 4); i++) {
+        for (int i = 0; i < (next.length() / 4) ; i++) {
             int index = i * 4;    // Multiply by 4 so we move word-by-word
 
             int instrument = Integer.parseInt(next.substring(index, index + 4));
@@ -216,10 +227,11 @@ public class SequencerUtils {
 
         }
 
+
         // Use first line to calculate number of beats
         // (Instrument data has been removed)
         int beats = contents.get(0).length() / 8;
-
+        System.out.println(beats + " : "+ contents.get(0));
         notes.reset(NUMBER_OF_TRACKS, beats * 2);
 
         StringBuilder currentWord = new StringBuilder();
@@ -286,7 +298,7 @@ public class SequencerUtils {
 	public static String getPathToUtils(){
 		StringBuilder builder = new StringBuilder();
 
-		builder.append(System.getProperty("user.dir"));
+		//builder.append(System.getProperty("user.dir"));
 
 		builder.append(File.separator + "src");
 		builder.append(File.separator + "capstone");
@@ -326,15 +338,27 @@ public class SequencerUtils {
 				button.getBeat());
 
 		if(n.isRest()) {
-			if (button.isSelected())
-				button.setBackground(Color.WHITE);
-			else
-				button.setBackground(Color.GRAY);
+			if (button.isSelected()) {
+                //button.setBackground(Color.WHITE);
+                button.setBottomBgColor(Color.WHITE);
+                button.setTopBgColor(Color.WHITE);
+
+            } else {
+                //button.setBackground(Color.GRAY);
+                button.setBottomBgColor(Color.lightGray);
+                button.setTopBgColor(Color.lightGray);
+            }
 		} else {
-			if (button.isSelected())
-				button.setBackground(Color.WHITE);
-			else
-				button.setBackground(null);
+			if (button.isSelected()) {
+                //button.setBackground(Color.WHITE);
+                button.setBottomBgColor(Color.WHITE);
+                button.setTopBgColor(Color.WHITE);
+            } else {
+                //button.setBackground(null);
+                button.setDefaultColor();
+                //button.setBottomBgColor(null);
+                //button.setTopBgColor(null);
+            }
 			button.setIcon(null);
 			button.setText(SequencerUtils.intPitchToString(n.getPitch()));
 		}
@@ -347,7 +371,7 @@ public class SequencerUtils {
 	 */
 	public static void setRestIcon(JButton button) {
 		try {
-            Image img = ImageIO.read(new File(getPathToUtils()+"eighth_rest.png"));
+            Image img = ImageIO.read(new File(getPathToResources()+"images/eighth_rest.png"));
 			button.setIcon(new ImageIcon(img));
 		} catch (IOException e) {
 			System.out.println(e.getMessage());

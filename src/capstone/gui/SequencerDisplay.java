@@ -7,19 +7,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -31,6 +19,8 @@ import capstone.gui.containers.Sliders;
 import capstone.gui.utils.InstrumentMenu;
 import capstone.gui.utils.ListenerFactory;
 import capstone.gui.utils.SequencerUtils;
+import com.alee.laf.WebLookAndFeel;
+import com.alee.laf.button.WebButton;
 
 /**
  * A graphical interface that represents a music sequencer.
@@ -88,7 +78,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setTitle(title);
 		this.setResizable(false);
-		
+		try {
+            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+            UIManager.setLookAndFeel (new WebLookAndFeel());
+            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
 		labels = new Labels();
 		
 		buttons = new Buttons();
@@ -112,8 +109,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		notes = new NoteCollection(tracks, beats);
 
         menuInit();
-		setupButtons(false);
-		
+        setupButtons(false);
+
 		west.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		west.setPreferredSize(new Dimension(350, 200));
 
@@ -158,12 +155,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		viewMenu.setMnemonic(KeyEvent.VK_V);
 		menuBar.add(viewMenu);
 
+        //TODO new
+
 		// File->New, N - Mnemonic
 		newMenuItem = new JMenuItem("New", KeyEvent.VK_N);
 
 		fileMenu.add(newMenuItem);
-		
-		// TODO Save
 
 		// File -> Save As, A - Mnemonic
 		saveMenuItem = new JMenuItem("Save As", KeyEvent.VK_S);
@@ -259,6 +256,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 		restBox = new JCheckBox("Rest");
 		restBox.setSelected(true);
+        subNorth.add(restBox,c);
 
 		restBox.addItemListener(new ItemListener() {
 			@Override
@@ -272,18 +270,27 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 					
 					if(selected){
 						if(notes.hasNoteBeenModified(SequencerUtils.track, 
-								SequencerUtils.beat))
-							currentButton.setBackground(Color.GREEN);
-						else
-							currentButton.setBackground(Color.GRAY);
+								SequencerUtils.beat)) {
+                            //currentButton.setBackground(Color.GREEN);
+                            currentButton.setBottomBgColor(Color.GREEN);
+                            currentButton.setTopBgColor(Color.GREEN);
+                        } else {
+                            //currentButton.setBackground(Color.gray);
+                            currentButton.setBottomBgColor(Color.lightGray);
+                            currentButton.setTopBgColor(Color.lightGray);
+                        }
 					} else {
 						if(notes.hasNoteBeenModified(SequencerUtils.track, 
 								SequencerUtils.beat)){
-							currentButton.setBackground(Color.GREEN);
+							//currentButton.setBackground(Color.GREEN);
+                            currentButton.setBottomBgColor(Color.GREEN);
+                            currentButton.setTopBgColor(Color.GREEN);
 							currentButton.setIcon(null);
 							currentButton.setText(SequencerUtils.intPitchToString(n.getPitch()));
 						} else {
-							currentButton.setBackground(null);
+							//currentButton.setBackground(null);
+                            currentButton.setDefaultColor();
+                            //currentButton.setBottomBgColor(Color.)
 							currentButton.setIcon(null);
 				            currentButton.setText(SequencerUtils.intPitchToString(n.getPitch()));
 						}
@@ -294,6 +301,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 					buttons.getResetButton().setEnabled(
 							notes.isModified());
 				}
+                //SequencerUtils.resetNoteBackgrounds(center.getComponents(),notes);
 			}
 		});
 
@@ -302,13 +310,10 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		c.ipady = 10;
 		c.fill = GridBagConstraints.HORIZONTAL;
 
-		c.gridx = 1;
-		c.gridy = 0;
-		subCenter.add(restBox,c);
 
 		// Add pitch slider to panel
 		c.gridx = 0;
-		c.gridy++;
+		c.gridy=0;
 		subCenter.add(new JLabel("Pitch "), c);
 		c.gridx++;
 		subCenter.add(sliders.getPitchSlider(), c);
@@ -385,17 +390,24 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
             // Change background of previous button if
 			// it was a rest
 			if(notes.getNote(SequencerUtils.track, SequencerUtils.beat).isRest()){
-				currentButton.setBackground(Color.GRAY);
+				//currentButton.setBackground(Color.GRAY);
+                currentButton.setBottomBgColor(Color.lightGray);
+                currentButton.setTopBgColor(Color.lightGray);
 			} else {
 				if(notes.hasNoteBeenModified(SequencerUtils.track, 
 						SequencerUtils.beat)){
-					currentButton.setBackground(Color.GREEN);
+					//currentButton.setBackground(Color.GREEN);
+                    currentButton.setBottomBgColor(Color.green);
+                    currentButton.setTopBgColor(Color.green);
 				} else {
-					currentButton.setBackground(null);
+					//currentButton.setBackground(null);
+                    currentButton.setDefaultColor();
 				}
 			}
 
-            nextButton.setBackground(Color.WHITE);
+            //nextButton.setBackground(Color.WHITE);
+            nextButton.setDefaultColor();
+            //nextButton.setTopBgColor(Color.WHITE);
             nextButton.setSelected(true);
             currentButton.setSelected(false);
 
@@ -429,8 +441,12 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			currentNote = new Note(currentNote.getTrack(), currentNote.getBeat());
 			sliders.setToNote(currentNote);
 			labels.modifyNoteLabels(currentNote);
-			currentButton.setBackground(Color.GRAY);
+
+			//currentButton.setBackground(Color.GRAY);
+            currentButton.setBottomBgColor(Color.lightGray);
+            currentButton.setTopBgColor(Color.lightGray);
             currentButton.setText(null);
+
             SequencerUtils.setRestIcon(currentButton);
             notes.setNote(currentNote.getTrack(), currentNote.getBeat(), currentNote);
             SequencerUtils.resetNoteBackgrounds(center.getComponents(),notes);
@@ -506,7 +522,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	 * 
 	 * @return the currently selected note
 	 */
-	private Note getCurrentNoteFromCollection(){
+	private Note getCurrentNoteFromCollection() {
 		return notes.getNote(SequencerUtils.track, SequencerUtils.beat);
 	}
 	
@@ -543,10 +559,14 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 				NoteButton button = new NoteButton(i, j);
 				button.addActionListener(this);
 				
-				if(note.isRest())
-					button.setBackground(Color.GRAY);
-				else
-					button.setBackground(null);
+				if(note.isRest()) {
+                    //button.setForeground(Color.GRAY);
+                    button.setBottomBgColor(Color.lightGray);
+                    button.setTopBgColor(Color.lightGray);
+                } else {
+                    currentButton.setDefaultColor();
+                    //button.setBackground(null);
+                }
 				
 				if(note.isRest()) 
 					SequencerUtils.setRestIcon(button);
@@ -558,7 +578,9 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 					// Default note is first note
 					currentButton = button;
 					// Set first note as selected
-					button.setBackground(Color.WHITE);
+                    //button.setBackground(Color.white);
+					button.setBottomBgColor(Color.WHITE);
+                    button.setTopBgColor(Color.WHITE);
 					button.setSelected(true);
 				}
 

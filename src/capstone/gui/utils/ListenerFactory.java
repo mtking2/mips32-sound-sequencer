@@ -3,8 +3,12 @@ package capstone.gui.utils;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EventListener;
 
@@ -180,13 +184,11 @@ public class ListenerFactory {
 				notes.commit();
 				SequencerUtils.resetNoteBackgrounds(components, notes);
 				
-				String file;
+
 				
 				try {
-
-					if(SequencerUtils.currentFileName == null){
-						file = "data.mss";
-					} else {
+                    String file = "data.mss";
+					if(SequencerUtils.currentFileName != null){
 						file = SequencerUtils.currentFileName;
 					}
 					SequencerUtils.toFile(parent, notes, file);
@@ -261,9 +263,20 @@ public class ListenerFactory {
 					}
 					
 					try {
-						String playPath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/mips.asm";
-						//System.out.println(playPath);
+                        /*ProcessBuilder pb = new ProcessBuilder("java -jar \""+SequencerUtils.getPathToResources()+
+                                                    "Mars40_CGP2.jar\" \""+SequencerUtils.getPathToMIPS()+"mips.asm\"");
+                        //pb.directory(new File(SequencerUtils.getPathToResources()));
+                        pb.inheritIO();
+                        Process playProc = pb.start();
+                        playProc.waitFor();*/
+
+
+						String playPath =   "java -jar "+SequencerUtils.getPathToResources()+
+                                            "Mars40_CGP2.jar "+SequencerUtils.getPathToMIPS()+"mips.asm";
+
+						System.out.println(playPath);
 						Process playProc = Runtime.getRuntime().exec(playPath);
+
 
 						ActionListener doStop = new ActionListener() {
 							@Override
@@ -336,6 +349,8 @@ public class ListenerFactory {
 				} else {
 					JOptionPane.showMessageDialog(parent, "No notes have changed.");
 				}
+				SequencerUtils.resetNoteBackgrounds(components, notes);
+                parent.update(parent.getGraphics());
 			}
 		};
 	}
@@ -446,21 +461,37 @@ public class ListenerFactory {
 		};
 	}
 
+
+
 	public static ActionListener getRandomizeListener(SequencerDisplay parent, NoteCollection notes) {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //parent.buttonToggle(parent.getButtons().getRandomizeButton(), false);
                 try {
-                    String randomizePath = "java -jar src/capstone/mips/Mars40_CGP2.jar src/capstone/mips/randomizer.asm";
-                    //System.out.println(playPath);
-                    Runtime.getRuntime().exec(randomizePath);
+                    /*String mips = SequencerUtils.getPathToMIPS();
+                    String randomizePath = "java -jar "+mips+"Mars40_CGP2.jar "+mips+"randomizer.asm";
+                    ProcessBuilder pb = new ProcessBuilder(randomizePath);
+                    pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+                    pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+                    Process p = pb.start();*/
 
+                    String randomizePath =  "java -jar "+SequencerUtils.getPathToResources()+
+                                            "Mars40_CGP2.jar "+SequencerUtils.getPathToMIPS()+"randomizer.asm";
+                    System.out.println(randomizePath);
+                    Process randProc = Runtime.getRuntime().exec(randomizePath);
+
+
+                    Thread.sleep(2000);
+                    randProc.destroyForcibly();
                     SequencerUtils.loadFile(parent, notes, SequencerUtils.getPathToDataStorage()+"generated.mss");
-                    //randProc.destroy();
-                    parent.buttonToggle(parent.getButtons().getPlayButton(), true);
-                } catch (IOException ex) {
+                } catch (IOException | InterruptedException ex) {
                     System.out.println(ex.getMessage());
                 }
+
+
+                parent.buttonToggle(parent.getButtons().getRandomizeButton(), true);
+                parent.buttonToggle(parent.getButtons().getPlayButton(), true);
             }
         };
     }

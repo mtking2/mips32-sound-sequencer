@@ -40,7 +40,7 @@ public class InstrumentMap extends HashMap<Object, Object> {
     private void init() {
         Scanner scanIn = new Scanner(System.in);
         try {
-            scanIn = new Scanner(new File(SequencerUtils.getPathToUtils()+"instrument_table.txt"));
+            scanIn = new Scanner(new File(SequencerUtils.getPathToResources()+"instrument_table.txt"));
         } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
         }
