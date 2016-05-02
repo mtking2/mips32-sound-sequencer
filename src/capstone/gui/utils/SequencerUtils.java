@@ -1,8 +1,6 @@
 package capstone.gui.utils;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Image;
+import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -170,6 +168,11 @@ public class SequencerUtils {
 		return answer;
 	}
 
+	/**
+	 * Get the path to the resources folder.
+	 *
+	 * @return the path to the resources folder
+	 */
     public static String getPathToResources() {
         StringBuilder builder = new StringBuilder();
         //builder.append(System.getProperty("user.dir"));
@@ -231,7 +234,7 @@ public class SequencerUtils {
         // Use first line to calculate number of beats
         // (Instrument data has been removed)
         int beats = contents.get(0).length() / 8;
-        System.out.println(beats + " : "+ contents.get(0));
+        //System.out.println(beats + " : "+ contents.get(0));
         notes.reset(NUMBER_OF_TRACKS, beats * 2);
 
         StringBuilder currentWord = new StringBuilder();
@@ -318,12 +321,19 @@ public class SequencerUtils {
 	 * @param components the note button components to set
 	 * @param notes the note information to match with buttons
 	 */
-	public static void resetNoteBackgrounds(Component[] components, 
+	public static void resetNoteBackgrounds(Component[] components, JPanel labels,
 			NoteCollection notes){
+
 		for(Component c : components){
 			if(c instanceof NoteButton)
 				resetNoteBackground((NoteButton) c, notes);
 		}
+        //labels.removeAll();
+
+        //for (int i=0; i<NUMBER_OF_TRACKS; i++)
+        //    labels.add(new JLabel("<html>Track "+(i++)+"<br>" + instrumentMap.get(notes.getNote(i, 0).getInstrument())+"</html>"));
+                //((JLabel) c).setText("Track "+(i++)+"\n" + instrumentMap.get(notes.getNote(i, 0).getInstrument()));
+
 	}
 
 	/**
@@ -362,6 +372,7 @@ public class SequencerUtils {
 			button.setIcon(null);
 			button.setText(SequencerUtils.intPitchToString(n.getPitch()));
 		}
+
 	}
 
 	/**
@@ -422,8 +433,9 @@ public class SequencerUtils {
 	 */
 	public static void toFile(Component parent, NoteCollection notes, String file) throws IOException {
 		JFileChooser fc = new JFileChooser();
-		fc.setSelectedFile(new File(getPathToDataStorage() + file));
-		int option = fc.showSaveDialog(parent);
+		fc.setSelectedFile(new File(file));
+        //System.out.println(System.getProperty("user.dir")+getPathToDataStorage()+file);
+        int option = fc.showSaveDialog(parent);
 		String filename = fc.getSelectedFile().getPath();
 
 		if (option == JFileChooser.APPROVE_OPTION) {
@@ -628,6 +640,12 @@ public class SequencerUtils {
      */
     private static int getPercentageFromVolumeValue(int volumeValue){ return (int) (volumeValue * 0.79); }
 
+    /**
+     * Counts the number of line within a given file.
+     * @param filename a file to read
+     * @return the number of lines in the given file.
+     * @throws IOException
+     */
     private static int getNumLines(String filename) throws IOException {
         LineNumberReader reader  = new LineNumberReader(new FileReader(filename));
         int count = 0;

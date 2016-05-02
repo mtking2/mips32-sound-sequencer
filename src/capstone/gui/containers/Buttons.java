@@ -1,6 +1,12 @@
 package capstone.gui.containers;
 
-import javax.swing.JButton;
+import capstone.gui.utils.SequencerUtils;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Class grouping together the buttons present on the sequencer.
@@ -32,10 +38,24 @@ public class Buttons {
 	 * Creates a new button container and initializes all buttons.
 	 */
 	public Buttons(){
-		play = new JButton("Play");
+        ImageIcon playIcon = null, stopIcon = null;
+        try {
+            Image img = ImageIO.read(new File(SequencerUtils.getPathToResources() + "images/play_icon.png"));
+            playIcon = new ImageIcon(img.getScaledInstance(25,25, java.awt.Image.SCALE_SMOOTH));
+
+            img = ImageIO.read(new File(SequencerUtils.getPathToResources() + "images/stop_icon.png"));
+            stopIcon = new ImageIcon(img.getScaledInstance(25,25, java.awt.Image.SCALE_SMOOTH));
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+		play = new JButton(playIcon);
+
 		play.setEnabled(false);
-		stop = new JButton("Stop");
+
+		stop = new JButton(stopIcon);
 		stop.setEnabled(false);
+
 		confirm = new JButton("Commit Changes");
 		reset = new JButton("Reset Changes");
 		clear = new JButton("Clear Note");

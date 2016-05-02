@@ -9,6 +9,7 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -19,8 +20,7 @@ import capstone.gui.containers.Sliders;
 import capstone.gui.utils.InstrumentMenu;
 import capstone.gui.utils.ListenerFactory;
 import capstone.gui.utils.SequencerUtils;
-import com.alee.laf.WebLookAndFeel;
-import com.alee.laf.button.WebButton;
+
 
 /**
  * A graphical interface that represents a music sequencer.
@@ -46,7 +46,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	private JPanel panel;
 
 	/** Panel on the sequencer. **/
-	private JPanel north, west, center;
+	private JPanel north, west, center, centerSubCenter, centerSubWest;
 	
 	/** The top menu **/
 	private JMenuBar menuBar;
@@ -75,17 +75,26 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	 * @param height how many pixels high to make the display
 	 */
 	public SequencerDisplay(String title, int width, int height){
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+
+        //this.setIconImage(new javax.swing.ImageIcon("../resources/images/icon.png").getImage());
+
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setTitle(title);
 		this.setResizable(false);
 		try {
             //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             //UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
-            UIManager.setLookAndFeel (new WebLookAndFeel());
-            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+            //UIManager.setLookAndFeel (new WebLookAndFeel());
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+
+
+
+
+
 		labels = new Labels();
 		
 		buttons = new Buttons();
@@ -107,6 +116,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		north.setLayout(new BorderLayout());
 		
 		notes = new NoteCollection(tracks, beats);
+        centerSubCenter = new JPanel(new GridLayout(tracks, beats));
+        centerSubWest = new JPanel(new GridLayout(tracks, 1));
 
         menuInit();
         setupButtons(false);
@@ -122,6 +133,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
         for(Component c : labels.getTopComponents())
             northSubWest.add(c);
+        center.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
         north.add(buttons.getRandomizeButton(), BorderLayout.EAST);
         north.add(northSubWest, BorderLayout.WEST);
@@ -165,7 +177,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		// File -> Save As, A - Mnemonic
 		saveMenuItem = new JMenuItem("Save As", KeyEvent.VK_S);
 		saveMenuItem.addActionListener(
-				ListenerFactory.getSaveAsListener(center.getComponents(), 
+				ListenerFactory.getSaveAsListener(center.getComponents(), centerSubWest,
 						this, 
 						notes));
 		fileMenu.add(saveMenuItem);
@@ -449,12 +461,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
             SequencerUtils.setRestIcon(currentButton);
             notes.setNote(currentNote.getTrack(), currentNote.getBeat(), currentNote);
-            SequencerUtils.resetNoteBackgrounds(center.getComponents(),notes);
+            SequencerUtils.resetNoteBackgrounds(center.getComponents(), centerSubWest,notes);
 			if (notes.allRests())
                 buttons.getPlayButton().setEnabled(false);
 		} else if(src.equals(buttons.getResetButton())){
 			if(notes.isModified()){
-
 
 				Note original = notes.getOriginalNote(SequencerUtils.track,
 													  SequencerUtils.beat);
@@ -466,7 +477,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 				notes.reset();
 
-				SequencerUtils.resetNoteBackgrounds(center.getComponents(), notes);
+				SequencerUtils.resetNoteBackgrounds(center.getComponents(), centerSubWest, notes);
 				buttons.getConfirmButton().setEnabled(false);
 				buttons.getResetButton().setEnabled(false);
 			} else {
@@ -545,7 +556,11 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		if(!loading) notes.reset(tracks, beats);
 		
 		center.removeAll();
-		center.setLayout(new GridLayout(tracks, beats));
+        center.setLayout(new BorderLayout());
+        centerSubCenter = new JPanel(new GridLayout(tracks, beats));
+        centerSubWest = new JPanel(new GridLayout(tracks, 1));
+
+        //center.setLayout(new GridLayout(tracks, beats));
 
 		for(int i = 0; i < tracks; i++){
 			for(int j = 0; j < beats; j++){
@@ -586,11 +601,15 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 				if(!loading) notes.setNote(i, j, note);
 
-				center.add(button);
+                centerSubCenter.add(button);
 			}
+            centerSubWest.add(new JLabel("Track "+(i+1)+"\n"));
 		}
-		
-		notes.commit();
+
+        center.add(centerSubCenter, BorderLayout.CENTER);
+        center.add(centerSubWest, BorderLayout.WEST);
+
+        notes.commit();
 
 		JButton confirm = buttons.getConfirmButton();
 		JButton reset = buttons.getResetButton();
@@ -612,22 +631,23 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
             flatMenuItem.removeActionListener(l);
 
 		confirm.addActionListener(
-				ListenerFactory.getConfirmListener(center.getComponents(), 
+				ListenerFactory.getConfirmListener(center.getComponents(), centerSubWest,
 						notes, this));
 		
 		reset.addActionListener(this);
         play.addActionListener(ListenerFactory.getPlayListener(
-                center.getComponents(), notes, this));
+                center.getComponents(), centerSubWest, notes, this));
         //stop.addActionListener(ListenerFactory.getStopListener(this));
         flatMenuItem.addActionListener(
                 ListenerFactory.getFlatListener(
-                        labels, center.getComponents(), notes, currentButton));
+                        labels, centerSubCenter.getComponents(), notes, currentButton));
         randomize.addActionListener(ListenerFactory.getRandomizeListener(this, notes));
 
 		confirm.setEnabled(false);
 		reset.setEnabled(false);
 		
 		createTrackSelectionArea();
+
 	}
 
 

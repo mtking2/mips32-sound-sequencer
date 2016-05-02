@@ -138,8 +138,7 @@ public class ListenerFactory {
 				Note current = notes.getNote(
 						currentButton.getTrack(), currentButton.getBeat());
 
-				labels.modifyPitchLabel(SequencerUtils.intPitchToString(
-						current.getPitch()).toString());
+				labels.modifyPitchLabel(SequencerUtils.intPitchToString(current.getPitch()));
 			}
 		};
 	}
@@ -176,13 +175,13 @@ public class ListenerFactory {
 	 * @param notes the notes that the user has entered
 	 * @return the created save ActionListener
 	 */
-	public static ActionListener getSaveAsListener(Component[] components,
+	public static ActionListener getSaveAsListener(Component[] components, JPanel labels,
 			Component parent, NoteCollection notes){
 		return new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				notes.commit();
-				SequencerUtils.resetNoteBackgrounds(components, notes);
+				SequencerUtils.resetNoteBackgrounds(components , labels, notes);
 				
 
 				
@@ -227,7 +226,7 @@ public class ListenerFactory {
 	 * @param parent the parent container
 	 * @return the created play ActionListener
 	 */
-	public static ActionListener getPlayListener(Component[] components,
+	public static ActionListener getPlayListener(Component[] components, JPanel labels,
 			NoteCollection notes, SequencerDisplay parent){
 		return new ActionListener(){
 			public void actionPerformed(ActionEvent e){
@@ -236,7 +235,7 @@ public class ListenerFactory {
                 parent.buttonToggle(parent.getButtons().getPlayButton(), false);
                 parent.buttonToggle(parent.getButtons().getRandomizeButton(), false);
 
-				SequencerUtils.resetNoteBackgrounds(components, notes);
+				SequencerUtils.resetNoteBackgrounds(components, labels, notes);
 
 				if(notes.allRests()){
 					JOptionPane.showMessageDialog(parent, "All notes are rests; "
@@ -334,7 +333,7 @@ public class ListenerFactory {
 	 * @param parent the parent container
 	 * @return the created commit ActionListener
 	 */
-	public static ActionListener getConfirmListener(Component[] components, 
+	public static ActionListener getConfirmListener(Component[] components, JPanel labels,
 			NoteCollection notes, SequencerDisplay parent){
 		return new ActionListener(){
 			@Override
@@ -345,11 +344,11 @@ public class ListenerFactory {
                     parent.buttonToggle(parent.getButtons().getPlayButton(), true);
 
 					notes.commit();
-					SequencerUtils.resetNoteBackgrounds(components, notes);
+					SequencerUtils.resetNoteBackgrounds(components, labels, notes);
 				} else {
 					JOptionPane.showMessageDialog(parent, "No notes have changed.");
 				}
-				SequencerUtils.resetNoteBackgrounds(components, notes);
+				SequencerUtils.resetNoteBackgrounds(components, labels, notes);
                 parent.update(parent.getGraphics());
 			}
 		};
@@ -478,7 +477,7 @@ public class ListenerFactory {
 
                     String randomizePath =  "java -jar "+SequencerUtils.getPathToResources()+
                                             "Mars40_CGP2.jar "+SequencerUtils.getPathToMIPS()+"randomizer.asm";
-                    System.out.println(randomizePath);
+                    //System.out.println(randomizePath);
                     Process randProc = Runtime.getRuntime().exec(randomizePath);
 
 

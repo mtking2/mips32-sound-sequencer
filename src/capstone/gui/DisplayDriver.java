@@ -22,7 +22,7 @@ public class DisplayDriver {
 	 */
 	public static void main(String[] args){
 		SequencerDisplay display = new SequencerDisplay("MIPS Sound Sequencer", 1400, 500);
-		
+
 		try {
 			SequencerUtils.saveRandomizerFile();
 		} catch (IOException e) {
