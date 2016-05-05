@@ -52,7 +52,11 @@ public class NoteCollection {
 	 * @return the note at the given track and beat
 	 */
 	public Note getNote(int track, int beat){
-		return diff[track][beat];
+        Note dif = new Note(0,0);
+        try {
+            dif = diff[track][beat];
+        } catch (ArrayIndexOutOfBoundsException e){}
+		return dif;
 	}
 	
 	/**

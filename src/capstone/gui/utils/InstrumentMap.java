@@ -1,8 +1,6 @@
 package capstone.gui.utils;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -38,12 +36,22 @@ public class InstrumentMap extends HashMap<Object, Object> {
      * into the <code>InstrumentMap</code>.
      */
     private void init() {
+        Scanner scanIn = new Scanner(getClass().getResourceAsStream("/info/instrument_table.txt"));
+
+        // old attempt to load instrument table for .jar support
+        /*
         Scanner scanIn = new Scanner(System.in);
         try {
-            scanIn = new Scanner(new File(SequencerUtils.getPathToResources()+"instrument_table.txt"));
+             use .replace() if the file path will contain any spaces in directory names
+            File file = new File(getClass().getResource("/instrument_table.txt").getFile().replace("%20"," ").replace("%20"," "));
+            File file = new File(getClass().getResource("/info/instrument_table.txt").getFile().replace("%20"," ").replace("!",""));
+            System.out.println(file);
+
         } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
         }
+        */
+
         int i = 0;
         while (scanIn.hasNextLine()) {
             String line = scanIn.nextLine();
@@ -61,6 +69,7 @@ public class InstrumentMap extends HashMap<Object, Object> {
                 this.put("type"+i++, line.substring(1));
             }
         }
+        scanIn.close();
 
     }
 

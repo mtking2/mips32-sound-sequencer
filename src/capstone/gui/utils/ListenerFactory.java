@@ -3,23 +3,12 @@ package capstone.gui.utils;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EventListener;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.JTextField;
-import javax.swing.JTree;
+import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -31,6 +20,7 @@ import capstone.gui.SequencerDisplay;
 import capstone.gui.containers.Labels;
 import capstone.gui.containers.NoteCollection;
 import capstone.gui.enums.TimeSignature;
+
 
 /**
   *	A factory object that creates objects that implement {@link EventListener} 
@@ -143,6 +133,30 @@ public class ListenerFactory {
 		};
 	}
 
+    /**
+     *	Creates the {@link ActionListener} that creates a new, empty sequence.
+     *
+     * @see ActionListener
+     * @param display the parent container
+     * @return the created exit ActionListener
+     */
+    public static ActionListener getNewListener (SequencerDisplay display) {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int option = JOptionPane.showConfirmDialog(display, "Are you sure you would like to reset the sequence?");
+                if(option == JOptionPane.YES_OPTION){
+                    display.setupButtons(false);
+                    display.update(display.getGraphics());
+                    display.repaint();
+                    display.setVisible(true);
+                    display.buttonToggle(display.getButtons().getPlayButton(), false);
+                }
+
+            }
+        };
+    }
+
 	/**
 	 *	Creates the {@link ActionListener} that exits the program.
 	 *
@@ -153,6 +167,7 @@ public class ListenerFactory {
 		return new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
+                SequencerUtils.playProc.destroy();
 				System.exit(0);
 				try {
 					Files.delete(Paths.get(
@@ -175,13 +190,13 @@ public class ListenerFactory {
 	 * @param notes the notes that the user has entered
 	 * @return the created save ActionListener
 	 */
-	public static ActionListener getSaveAsListener(Component[] components, JPanel labels,
+	public static ActionListener getSaveAsListener(Component[] components,
 			Component parent, NoteCollection notes){
 		return new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				notes.commit();
-				SequencerUtils.resetNoteBackgrounds(components , labels, notes);
+				SequencerUtils.resetNoteBackgrounds(components, notes);
 				
 
 				
@@ -198,7 +213,13 @@ public class ListenerFactory {
 			}
 		};
 	}
-	
+
+    /**
+     * Creates the {@link ActionListener} that loads a previously save .mss data file.
+     * @param parent the parent container
+     * @param notes the notes that the user has entered
+     * @return the created load ActionListener
+     */
 	public static ActionListener getLoadListener(SequencerDisplay parent, 
 			NoteCollection notes){
 		return new ActionListener(){
@@ -226,7 +247,7 @@ public class ListenerFactory {
 	 * @param parent the parent container
 	 * @return the created play ActionListener
 	 */
-	public static ActionListener getPlayListener(Component[] components, JPanel labels,
+	public static ActionListener getPlayListener(Component[] components,
 			NoteCollection notes, SequencerDisplay parent){
 		return new ActionListener(){
 			public void actionPerformed(ActionEvent e){
@@ -235,7 +256,7 @@ public class ListenerFactory {
                 parent.buttonToggle(parent.getButtons().getPlayButton(), false);
                 parent.buttonToggle(parent.getButtons().getRandomizeButton(), false);
 
-				SequencerUtils.resetNoteBackgrounds(components, labels, notes);
+				SequencerUtils.resetNoteBackgrounds(components, notes);
 
 				if(notes.allRests()){
 					JOptionPane.showMessageDialog(parent, "All notes are rests; "
@@ -253,8 +274,7 @@ public class ListenerFactory {
 						} else {
 							file = SequencerUtils.currentFileName;
 						}
-						
-						//SequencerUtils.toFile(parent, notes, file);
+
 						SequencerUtils.saveDataFile(notes, file);
                         SequencerUtils.saveMipsFile(file);
 					} catch (IOException ex) {
@@ -262,25 +282,28 @@ public class ListenerFactory {
 					}
 					
 					try {
-                        /*ProcessBuilder pb = new ProcessBuilder("java -jar \""+SequencerUtils.getPathToResources()+
+                        // old attempt to have playing process inherit STDOUT and STDERR to be used for debugging
+                        /*
+                        ProcessBuilder pb = new ProcessBuilder("java -jar \""+SequencerUtils.getPathToResources()+
                                                     "Mars40_CGP2.jar\" \""+SequencerUtils.getPathToMIPS()+"mips.asm\"");
                         //pb.directory(new File(SequencerUtils.getPathToResources()));
                         pb.inheritIO();
                         Process playProc = pb.start();
-                        playProc.waitFor();*/
+                        playProc.waitFor();
+                        */
 
 
 						String playPath =   "java -jar "+SequencerUtils.getPathToResources()+
-                                            "Mars40_CGP2.jar "+SequencerUtils.getPathToMIPS()+"mips.asm";
+                                "lib/Mars40_CGP2.jar " +SequencerUtils.getPathToMIPS()+"mips.asm";
 
-						System.out.println(playPath);
-						Process playProc = Runtime.getRuntime().exec(playPath);
+						//System.out.println(playPath); // debugging print
+						SequencerUtils.playProc = Runtime.getRuntime().exec(playPath);
 
 
 						ActionListener doStop = new ActionListener() {
 							@Override
 							public void actionPerformed(ActionEvent e) {
-								playProc.destroy();
+                                SequencerUtils.playProc.destroy();
                                 parent.buttonToggle(parent.getButtons().getStopButton(), false);
                                 parent.buttonToggle(parent.getButtons().getPlayButton(), true);
                                 parent.buttonToggle(parent.getButtons().getRandomizeButton(), true);
@@ -333,7 +356,7 @@ public class ListenerFactory {
 	 * @param parent the parent container
 	 * @return the created commit ActionListener
 	 */
-	public static ActionListener getConfirmListener(Component[] components, JPanel labels,
+	public static ActionListener getConfirmListener(Component[] components,
 			NoteCollection notes, SequencerDisplay parent){
 		return new ActionListener(){
 			@Override
@@ -344,11 +367,11 @@ public class ListenerFactory {
                     parent.buttonToggle(parent.getButtons().getPlayButton(), true);
 
 					notes.commit();
-					SequencerUtils.resetNoteBackgrounds(components, labels, notes);
+					SequencerUtils.resetNoteBackgrounds(components,notes);
 				} else {
 					JOptionPane.showMessageDialog(parent, "No notes have changed.");
 				}
-				SequencerUtils.resetNoteBackgrounds(components, labels, notes);
+				SequencerUtils.resetNoteBackgrounds(components, notes);
                 parent.update(parent.getGraphics());
 			}
 		};
@@ -461,33 +484,50 @@ public class ListenerFactory {
 	}
 
 
-
+    /**
+     * Creates the action listener that makes a call to our randomizer MIPS program
+     * through Mars++ and then makes calls responsible for loading the data of the generated
+     * sequence into the GUI o display.
+     * @param parent the parent container
+     * @param notes the notes that the user has entered
+     * @return the created randomizer ActionListener
+     */
 	public static ActionListener getRandomizeListener(SequencerDisplay parent, NoteCollection notes) {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //parent.buttonToggle(parent.getButtons().getRandomizeButton(), false);
+
                 try {
-                    /*String mips = SequencerUtils.getPathToMIPS();
+                    // old attempt to have randomizer process inherit STDOUT and STDERR to be used for debugging
+                    /*
+                    String mips = SequencerUtils.getPathToMIPS();
                     String randomizePath = "java -jar "+mips+"Mars40_CGP2.jar "+mips+"randomizer.asm";
                     ProcessBuilder pb = new ProcessBuilder(randomizePath);
                     pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
                     pb.redirectError(ProcessBuilder.Redirect.INHERIT);
-                    Process p = pb.start();*/
+                    Process p = pb.start();
+                    */
 
                     String randomizePath =  "java -jar "+SequencerUtils.getPathToResources()+
-                                            "Mars40_CGP2.jar "+SequencerUtils.getPathToMIPS()+"randomizer.asm";
-                    //System.out.println(randomizePath);
+                                            "lib/Mars40_CGP2.jar "+SequencerUtils.getPathToMIPS()+"randomizer.asm";
+
+                    //System.out.println(randomizePath); // debugging print
+
                     Process randProc = Runtime.getRuntime().exec(randomizePath);
-
-
-                    Thread.sleep(2000);
+                    randProc.waitFor();
                     randProc.destroyForcibly();
-                    SequencerUtils.loadFile(parent, notes, SequencerUtils.getPathToDataStorage()+"generated.mss");
+                    try {
+                        SequencerUtils.loadFile(parent, notes, SequencerUtils.getPathToDataStorage()+"generated.mss");
+                    } catch (IndexOutOfBoundsException ex) {
+                        JOptionPane.showMessageDialog(parent, "There was a glitch in the matrix when randomizing a sequence!\n\n" +
+                                "Mars/Mars++ is not a perfect MIPS simulator unfortunately :(\n\n" +
+                                "Try waiting on the process to finish or generating another one :)");
+                        parent.buttonToggle(parent.getButtons().getPlayButton(), false);
+                    }
+
                 } catch (IOException | InterruptedException ex) {
                     System.out.println(ex.getMessage());
                 }
-
 
                 parent.buttonToggle(parent.getButtons().getRandomizeButton(), true);
                 parent.buttonToggle(parent.getButtons().getPlayButton(), true);

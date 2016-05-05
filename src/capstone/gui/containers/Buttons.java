@@ -1,11 +1,8 @@
 package capstone.gui.containers;
 
-import capstone.gui.utils.SequencerUtils;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -40,10 +37,10 @@ public class Buttons {
 	public Buttons(){
         ImageIcon playIcon = null, stopIcon = null;
         try {
-            Image img = ImageIO.read(new File(SequencerUtils.getPathToResources() + "images/play_icon.png"));
-            playIcon = new ImageIcon(img.getScaledInstance(25,25, java.awt.Image.SCALE_SMOOTH));
+            Image img = ImageIO.read(getClass().getResource("/images/play_icon.png"));
+			playIcon = new ImageIcon(img.getScaledInstance(25,25, java.awt.Image.SCALE_SMOOTH));
 
-            img = ImageIO.read(new File(SequencerUtils.getPathToResources() + "images/stop_icon.png"));
+            img = ImageIO.read(getClass().getResource("/images/stop_icon.png"));
             stopIcon = new ImageIcon(img.getScaledInstance(25,25, java.awt.Image.SCALE_SMOOTH));
 
         } catch (IOException e) {

@@ -71,6 +71,9 @@ public class SequencerUtils {
 	private static final int REST_PITCH = 1000;
 		
 	////////////
+
+    /** Process responsible for calling Mars++ and playing the sequence. **/
+    public static Process playProc;
 	
 	/** The map of instruments to integer values **/
 	public static InstrumentMap instrumentMap = new InstrumentMap();
@@ -92,6 +95,9 @@ public class SequencerUtils {
 	
 	/** The current beat **/
 	public static int beat = 0;
+
+    /** The total number of beats per track **/
+    public static int beats;
 	
 	/** If slider change needs to be ignored **/
 	public static boolean ignoreStateChange = false;
@@ -101,7 +107,8 @@ public class SequencerUtils {
 	
 	/** If the sequencer is displaying flats **/
 	public static boolean flats = false;
-	
+
+    /** Holds the current filename for the data file. **/
 	public static String currentFileName = "data.mss";
 	
 	/**
@@ -157,7 +164,7 @@ public class SequencerUtils {
 	public static String getPathToMIPS(){
 		StringBuilder builder = new StringBuilder();
 
-		//builder.append(System.getProperty("user.dir"));
+		//builder.append(System.getProperty("user.dir")); // was needed in older version of project structure.
 
 		builder.append("src");
 		builder.append(File.separator + "capstone");
@@ -175,7 +182,7 @@ public class SequencerUtils {
 	 */
     public static String getPathToResources() {
         StringBuilder builder = new StringBuilder();
-        //builder.append(System.getProperty("user.dir"));
+        //builder.append(System.getProperty("user.dir")); // was needed in older version of project structure.
         builder.append("src");
         builder.append(File.separator + "capstone");
         builder.append(File.separator + "resources" + File.separator);
@@ -184,7 +191,23 @@ public class SequencerUtils {
         return answer;
     }
 
+    /**
+     * Get the path to the data storage folder.
+     *
+     * @return the path to the data storage folder
+     */
+    public static String getPathToDataStorage(){
+        return getPathToMIPS() + "data" + File.separator;
+    }
 
+    /**
+     * Helper method to aid in loading an existing data file.
+     *
+     * @param display {@link SequencerDisplay} object to use as a parent reference.
+     * @param notes {@link NoteCollection} to load values for each {@link Note} into.
+     * @param filename  data filename to which to load data from.
+     * @throws IOException if the file does not exist.
+     */
 	public static void loadFile(SequencerDisplay display, NoteCollection notes, String filename) throws IOException {
 
 		// Reset track and beat number
@@ -205,6 +228,13 @@ public class SequencerUtils {
         }
 	}
 
+    /**
+     * Helper method to aid populating the tracks with the appropriate data.
+     * @param display {@link SequencerDisplay} object to use as a parent reference.
+     * @param notes {@link NoteCollection} to load values for each {@link Note} into.
+     * @param filename  data filename to which to load data from.
+     * @throws IOException if the file does not exist.
+     */
     private static void loadHelper(SequencerDisplay display, NoteCollection notes, String filename) throws IOException {
         Path p = Paths.get(filename);
         List<String> contents = Files.readAllLines(p);
@@ -233,8 +263,11 @@ public class SequencerUtils {
 
         // Use first line to calculate number of beats
         // (Instrument data has been removed)
-        int beats = contents.get(0).length() / 8;
-        //System.out.println(beats + " : "+ contents.get(0));
+
+        beats = contents.get(0).length() / 8;
+
+
+        //System.out.println(beats + " : "+ contents.get(0)); // debugging print
         notes.reset(NUMBER_OF_TRACKS, beats * 2);
 
         StringBuilder currentWord = new StringBuilder();
@@ -267,11 +300,10 @@ public class SequencerUtils {
                         case 2: notes.editNoteVolume(track, count / 4, getPercentageFromVolumeValue(current));
                             break;
                     }
-                    //notes.setTrackInstrument(track, count / 4, instruments[track]);
-                    //System.out.println(instruments[track]);
+                    //System.out.println(instruments[track]); // debugging print
                     currentWord = new StringBuilder();
                 }
-				//System.out.println(track+" ---- "+count/4);
+				//System.out.println(track+" ---- "+count/4); // debugging print
                 count++;
             }
         }
@@ -301,7 +333,7 @@ public class SequencerUtils {
 	public static String getPathToUtils(){
 		StringBuilder builder = new StringBuilder();
 
-		//builder.append(System.getProperty("user.dir"));
+		//builder.append(System.getProperty("user.dir")); // was needed in older version of project structure.
 
 		builder.append(File.separator + "src");
 		builder.append(File.separator + "capstone");
@@ -310,10 +342,7 @@ public class SequencerUtils {
 
 		return builder.toString();
 	}
-	
-	public static String getPathToDataStorage(){
-		return getPathToMIPS() + "data" + File.separator;
-	}
+
 
 	/**
 	 * Reset the backgrounds of all notes.
@@ -321,19 +350,21 @@ public class SequencerUtils {
 	 * @param components the note button components to set
 	 * @param notes the note information to match with buttons
 	 */
-	public static void resetNoteBackgrounds(Component[] components, JPanel labels,
-			NoteCollection notes){
-
+	public static void resetNoteBackgrounds(Component[] components, NoteCollection notes){
 		for(Component c : components){
 			if(c instanceof NoteButton)
 				resetNoteBackground((NoteButton) c, notes);
 		}
-        //labels.removeAll();
 
-        //for (int i=0; i<NUMBER_OF_TRACKS; i++)
-        //    labels.add(new JLabel("<html>Track "+(i++)+"<br>" + instrumentMap.get(notes.getNote(i, 0).getInstrument())+"</html>"));
-                //((JLabel) c).setText("Track "+(i++)+"\n" + instrumentMap.get(notes.getNote(i, 0).getInstrument()));
+		// old attempt to have the track labels dynamic by displaying the current instrument of that track.
+        // Not 100% functional at the moment.
+        /*
+        labels.removeAll();
 
+        for (int i=0; i<NUMBER_OF_TRACKS; i++)
+            labels.add(new JLabel("<html>Track "+(i++)+"<br>" + instrumentMap.get(notes.getNote(i, 0).getInstrument())+"</html>"));
+                ((JLabel) c).setText("Track "+(i++)+"\n" + instrumentMap.get(notes.getNote(i, 0).getInstrument()));
+        */
 	}
 
 	/**
@@ -380,9 +411,10 @@ public class SequencerUtils {
 	 * 
 	 * @param button the button to modify
 	 */
-	public static void setRestIcon(JButton button) {
+	public static void setRestIcon(NoteButton button) {
 		try {
-            Image img = ImageIO.read(new File(getPathToResources()+"images/eighth_rest.png"));
+
+            Image img = ImageIO.read(Thread.currentThread().getContextClassLoader().getResource("images/eighth_rest.png"));
 			button.setIcon(new ImageIcon(img));
 		} catch (IOException e) {
 			System.out.println(e.getMessage());
@@ -434,7 +466,7 @@ public class SequencerUtils {
 	public static void toFile(Component parent, NoteCollection notes, String file) throws IOException {
 		JFileChooser fc = new JFileChooser();
 		fc.setSelectedFile(new File(file));
-        //System.out.println(System.getProperty("user.dir")+getPathToDataStorage()+file);
+        //System.out.println(System.getProperty("user.dir")+getPathToDataStorage()+file); // debugging print
         int option = fc.showSaveDialog(parent);
 		String filename = fc.getSelectedFile().getPath();
 
@@ -492,7 +524,7 @@ public class SequencerUtils {
 		builder.append(".data\n\n");
 		builder.append("filename:\t.asciiz\t" + "\"" + getPathToDataStorage()
 				+ "generated.mss" + "\"\n");
-		//System.out.println(getPathToDataStorage() );
+		//System.out.println(getPathToDataStorage()); // debugging print
 		String filename = "randomizer.asm";
 		
 		Path p = Paths.get(getPathToMIPS() + "randomizerStem.asm");
@@ -500,7 +532,7 @@ public class SequencerUtils {
 		byte[] randomizerBytes = Files.readAllBytes(p);
 		
 		File randomizer = new File(getPathToMIPS() + filename);
-		//System.out.println(getPathToMIPS());
+		//System.out.println(getPathToMIPS()); // debugging print
 		OutputStream stream = new FileOutputStream(randomizer);
 		
 		stream.write(builder.toString().getBytes());

@@ -8,18 +8,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="weblaf-complete-1.29" level="application" />
-    <orderEntry type="library" name="Mars40_CGP2" level="application" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/src/capstone/resources/Mars40_CGP2.jar!/" />
-        </CLASSES>
-        <JAVADOC>
-          <root url="jar://$MODULE_DIR$/src/capstone/resources/Mars40_CGP2.jar!/docs" />
-        </JAVADOC>
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="weblaf-complete-1.29" level="project" />
+    <orderEntry type="library" name="Mars40_CGP2" level="project" />
   </component>
 </module>

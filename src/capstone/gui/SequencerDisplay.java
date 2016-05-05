@@ -1,15 +1,10 @@
 package capstone.gui;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -20,6 +15,8 @@ import capstone.gui.containers.Sliders;
 import capstone.gui.utils.InstrumentMenu;
 import capstone.gui.utils.ListenerFactory;
 import capstone.gui.utils.SequencerUtils;
+import com.alee.laf.WebLookAndFeel;
+
 
 
 /**
@@ -76,22 +73,24 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 	 */
 	public SequencerDisplay(String title, int width, int height){
 
+        //this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent event) {
+                sequencerExit();
+            }
+        });
 
-        //this.setIconImage(new javax.swing.ImageIcon("../resources/images/icon.png").getImage());
-
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setTitle(title);
-		this.setResizable(false);
+		//this.setResizable(false);
+
 		try {
-            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
-            //UIManager.setLookAndFeel (new WebLookAndFeel());
-            UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+            UIManager.setLookAndFeel (new WebLookAndFeel());
+            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
-
-
 
 
 
@@ -146,6 +145,15 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		this.setSize(width, height);
 	}
 
+    /**
+     * Responsible for ending the playing process of the sequence is playing
+     * and then terminating the program.
+     */
+    public void sequencerExit() {
+        SequencerUtils.playProc.destroy();
+        System.exit(0);
+    }
+
 	/**
 	 * Initialize the menu at the top of the display.
 	 */
@@ -167,19 +175,15 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		viewMenu.setMnemonic(KeyEvent.VK_V);
 		menuBar.add(viewMenu);
 
-        //TODO new
-
 		// File->New, N - Mnemonic
 		newMenuItem = new JMenuItem("New", KeyEvent.VK_N);
-
+        newMenuItem.addActionListener(ListenerFactory.getNewListener(this));
 		fileMenu.add(newMenuItem);
 
 		// File -> Save As, A - Mnemonic
 		saveMenuItem = new JMenuItem("Save As", KeyEvent.VK_S);
 		saveMenuItem.addActionListener(
-				ListenerFactory.getSaveAsListener(center.getComponents(), centerSubWest,
-						this, 
-						notes));
+				ListenerFactory.getSaveAsListener(center.getComponents(), this, notes));
 		fileMenu.add(saveMenuItem);
 		
 		// File -> Load, L - Mnemonic
@@ -313,7 +317,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 					buttons.getResetButton().setEnabled(
 							notes.isModified());
 				}
-                //SequencerUtils.resetNoteBackgrounds(center.getComponents(),notes);
 			}
 		});
 
@@ -461,7 +464,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
             SequencerUtils.setRestIcon(currentButton);
             notes.setNote(currentNote.getTrack(), currentNote.getBeat(), currentNote);
-            SequencerUtils.resetNoteBackgrounds(center.getComponents(), centerSubWest,notes);
+            SequencerUtils.resetNoteBackgrounds(center.getComponents(), notes);
 			if (notes.allRests())
                 buttons.getPlayButton().setEnabled(false);
 		} else if(src.equals(buttons.getResetButton())){
@@ -477,7 +480,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 
 				notes.reset();
 
-				SequencerUtils.resetNoteBackgrounds(center.getComponents(), centerSubWest, notes);
+				SequencerUtils.resetNoteBackgrounds(center.getComponents(), notes);
 				buttons.getConfirmButton().setEnabled(false);
 				buttons.getResetButton().setEnabled(false);
 			} else {
@@ -518,7 +521,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 			getCurrentNoteFromCollection().setVolume(v);
 		} else if (sliders.isDurationAdjusting()){
 			int d = sliders.getDurationValue();
-			//labels.modifyDurationLabel("" + d);
             labels.modifyDurationLabel("" + d);
 			getCurrentNoteFromCollection().setDuration(d);
 		}
@@ -560,7 +562,6 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         centerSubCenter = new JPanel(new GridLayout(tracks, beats));
         centerSubWest = new JPanel(new GridLayout(tracks, 1));
 
-        //center.setLayout(new GridLayout(tracks, beats));
 
 		for(int i = 0; i < tracks; i++){
 			for(int j = 0; j < beats; j++){
@@ -579,7 +580,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
                     button.setBottomBgColor(Color.lightGray);
                     button.setTopBgColor(Color.lightGray);
                 } else {
-                    currentButton.setDefaultColor();
+                    button.setDefaultColor();
                     //button.setBackground(null);
                 }
 				
@@ -627,17 +628,26 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
         for(ActionListener l : play.getActionListeners())
             play.removeActionListener(l);
 
+        for(ActionListener l : randomize.getActionListeners())
+            randomize.removeActionListener(l);
+
         for(ActionListener l : flatMenuItem.getActionListeners())
             flatMenuItem.removeActionListener(l);
 
+        for(ActionListener l : newMenuItem.getActionListeners())
+            newMenuItem.removeActionListener(l);
+
 		confirm.addActionListener(
-				ListenerFactory.getConfirmListener(center.getComponents(), centerSubWest,
+				ListenerFactory.getConfirmListener(center.getComponents(),
 						notes, this));
 		
 		reset.addActionListener(this);
         play.addActionListener(ListenerFactory.getPlayListener(
-                center.getComponents(), centerSubWest, notes, this));
+                center.getComponents(), notes, this));
+
+        // no longer really needed since the action listener for stop button is now created dynamically in ListenerFactory.java
         //stop.addActionListener(ListenerFactory.getStopListener(this));
+        newMenuItem.addActionListener(ListenerFactory.getNewListener(this));
         flatMenuItem.addActionListener(
                 ListenerFactory.getFlatListener(
                         labels, centerSubCenter.getComponents(), notes, currentButton));
@@ -647,6 +657,7 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
 		reset.setEnabled(false);
 		
 		createTrackSelectionArea();
+
 
 	}
 

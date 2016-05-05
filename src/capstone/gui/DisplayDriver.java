@@ -21,12 +21,12 @@ public class DisplayDriver {
 	 * @param args unused
 	 */
 	public static void main(String[] args){
-		SequencerDisplay display = new SequencerDisplay("MIPS Sound Sequencer", 1400, 500);
+		SequencerDisplay display = new SequencerDisplay("MIPS Sound Sequencer", 1200, 425);
 
 		try {
 			SequencerUtils.saveRandomizerFile();
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(display, 
+			JOptionPane.showMessageDialog(display,
 					"Error saving randomizer to file: " + e.getMessage());
 		}
 		

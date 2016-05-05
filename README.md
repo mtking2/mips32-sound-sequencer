@@ -4,7 +4,7 @@
 
 This repository encompasses the entire project structure and all of the source code of our MIPS Sound Sequencer.
 
-Version: Dec. 2nd, 2015
+Version: May 5th, 2016
 
 Authors: Brad Westley & Michael King
 
@@ -39,3 +39,4 @@ JavaDoc for our GUI can be found at: http://agora.cs.wcu.edu/~mtking2/coursework
 ### Contact ###
 
 mtking2@catamount.wcu.edu
+bawestley1@catamount.wcu.edu
