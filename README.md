@@ -36,7 +36,9 @@ In short, run this on Linux. Linux is love. Linux is life.
 ### Documentation ###
 
 JavaDoc for our GUI can be found at: http://agora.cs.wcu.edu/~mtking2/coursework/cs/capstone/doc/
+
 ### Contact ###
 
 mtking2@catamount.wcu.edu
+
 bawestley1@catamount.wcu.edu
