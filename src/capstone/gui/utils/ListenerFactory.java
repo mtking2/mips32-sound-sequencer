@@ -167,16 +167,17 @@ public class ListenerFactory {
 		return new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-                SequencerUtils.playProc.destroy();
-				System.exit(0);
 				try {
 					Files.delete(Paths.get(
 							SequencerUtils.getPathToMIPS() 
-							+ "randomizerStem.asm"));
+							+ "randomizer.asm"));
 				} catch (IOException ex) {
 					System.out.println("Problem deleting randomizer file: "
 							+ ex.getMessage());
 				}
+				if (SequencerUtils.playProc != null)
+					SequencerUtils.playProc.destroy();
+				System.exit(0);
 			}
 		};
 	}

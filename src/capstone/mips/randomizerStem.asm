@@ -48,11 +48,11 @@ main:
 	jal writeToOutput	# Write to file
 
 	jal writeNL	# Write newline
-	
+
 	# Generate instruments
 	li $s2, 0	# $t1 = 0 (counter)
 
-	# First track is lead melody, second track is bass, 
+	# First track is lead melody, second track is bass,
 	# third & fourth tracks are percussion
 
 	# Generate track one instrument
@@ -78,7 +78,7 @@ main:
 
 	# Generate track 2 instrument
 	# - between 33 - 40 (we can change which instruments later if needed)
-	
+
 	li $v0, 42	# $v0 = 42 (random int in range)
 	li $a0, 0	# $a0 = 0 (randomizer id)
 	li $a1, 8	# $a1 = 8 (exclusive upper bound)
@@ -132,7 +132,7 @@ main:
 		add $t1, $t1, $t6	# $t1 = $t1 + $t6 (counter)
 
 		sb $t5, 0($t1)		# Write $t5 onto address on stack at $t1
-		
+
 		addi $t6, $t6, 1	# Increment counter
 		bne $t6, $t7, stackWriteLoop
 
@@ -148,7 +148,7 @@ main:
 
 		move $t4, $t2		# $t4 = $t2 (&scale)
 		add $t4, $t4, $t6	# $t4 = $t4 + $t0 (go to current interval in scale)
-		
+
 		sb $t3, 0($t4)	# Store interval into scale in data section
 
 		addi $t0, $t0, 1	# Increment counter
@@ -193,7 +193,7 @@ main:
 
 			durRange:
 			li $a0, 1000	# $a1 = 1000 (exclusive upper bound)
-			
+
 			j save
 
 			generatePitch:
@@ -246,7 +246,7 @@ main:
 
 			# If all types of values not processed, loop again
 			bne $s4, $t5, lineLoop
-		
+
 		addi $s2, $s2, 1	# Increment track counter
 		li $s4, 0		# Reset value type counter
 
@@ -332,7 +332,7 @@ main:
 
 			# If all types of values not processed, loop again
 			bne $s4, $t5, percussionOneLine
-		
+
 		addi $s2, $s2, 1	# Increment track counter
 		li $s4, 0		# Reset value type counter
 

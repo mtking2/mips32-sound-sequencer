@@ -150,7 +150,8 @@ public class SequencerDisplay extends JFrame implements ActionListener, ChangeLi
      * and then terminating the program.
      */
     public void sequencerExit() {
-        SequencerUtils.playProc.destroy();
+        if (SequencerUtils.playProc != null)
+            SequencerUtils.playProc.destroy();
         System.exit(0);
     }
 
