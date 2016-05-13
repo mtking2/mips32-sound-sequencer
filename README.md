@@ -19,7 +19,7 @@ Steps to execute program:
 * Clone this repository to your local machine.
 * Open the clone as an IntelliJ project. (the directory should show as an IntelliJ project within the IntelliJ file viewer automatically)
 + Locate the `DisplayDriver.java` class within the project structure.
-    * This class is in the following path: `mips-sound-sequencer/src/capstone/gui/DisplayDriver.java`
+    * This class is in the following path: `mips32-sound-sequencer/src/capstone/gui/DisplayDriver.java`
 + Right click on the DisplayDriver.java class, then click on run in the popup menu.
     * A secondary window may open here asking to setup up the Java SDK. Select the JDK version you downloaded (or already have) and then locate the installation directory of it from the browse viewer within this window.
 
@@ -35,7 +35,7 @@ In short, run this on Linux. Linux is love. Linux is life.
 
 ### Documentation ###
 
-JavaDoc for our GUI can be found at: http://agora.cs.wcu.edu/~mtking2/coursework/cs/capstone/doc/
+JavaDoc for our GUI can be found at: http://mtking2.github.io/coursework/cs/capstone/doc/
 
 ### Contact ###
 
