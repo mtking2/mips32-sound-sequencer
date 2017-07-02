@@ -1,4 +1,6 @@
-# README #
+# MIPS32 Sound Sequencer #
+
+A simple music sequencer and (sudo) random music generator. Created for my senior capstone project at Western Carolina University. Backend coded in MIPS32 assembly. Frontend coded in Java Swing.
 
 ### Purpose ###
 
